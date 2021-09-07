@@ -1,5 +1,6 @@
 import { i53, Ln_Nr, object_map, Reg, Word } from "./util.js";
-import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers} from "./instructions.js";
+import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports} from "./instructions.js";
+import { off } from "process";
 
 
 const Opcodes_operant_lengths: Record<Opcodes, i53> 
@@ -63,12 +64,21 @@ export function emulator_new(file: string) {
         const line_nr = instr_line_nrs[i]
         for (const operant of operant_strings[i]){
             let type: Value_Type, value: Word | Reg | Ln_Nr;
-            function parse_number(type: Value_Type, offset: number, radic?: i53){
+            function parse_number(type: Value_Type, offset: i53, radic?: i53){
                 const value = parseInt(operant.slice(offset), radic);
                 if (Number.isNaN(value)){
                     throw new Error(`invalid ${Value_Type[type]} ${operant} on line ${line_nr}\n${lines[line_nr]}`);
                 }
                 return [type, value];
+            }
+            function parse_port(offset: i53){
+                const port = operant.slice(offset).toUpperCase();
+                const port_nr: Word = IO_Ports[port as any] as any;
+                if (port_nr === undefined){
+                    throw new Error(`invalid port ${port} on line ${line_nr}\n${lines[line_nr]}
+supported ports are TEXT`);
+                }
+                return [Value_Type.Imm, port_nr];
             }
             switch (operant[0]){
                 case '.': {
@@ -84,6 +94,7 @@ export function emulator_new(file: string) {
                 } break;
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
                 case '#': [type, value] = parse_number(Value_Type.Ram, 1, 16); break;
+                case '%': [type, value] = parse_port(1); break;
                 default: [type, value] = parse_number(Value_Type.Imm, 0);
             }
             (operant_types[i] = operant_types[i] ?? []).push(type);
@@ -148,6 +159,17 @@ class Emulator implements Instruction_Ctx {
     }
     pop(): Word {
         return this.stack[this.stack_ptr++];
+    }
+    in(port: Word){
+        let str: string | null = "";
+        while (str != null && str.length === 0){
+            str = prompt("please enter a character");
+        }
+        if (!str){return 0;}
+        return str.charCodeAt(0);
+    }
+    out(port: Word, value: Word){
+        console.log(port, value);
     }
     run(){
         const max_cycles = 100;

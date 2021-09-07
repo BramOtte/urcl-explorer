@@ -24,7 +24,7 @@ export enum Opcodes {
     ASEQ
 }
 export enum Value_Type {
-    Reg, Imm, Ram,
+    Reg, Imm, Ram
 } 
 
 export enum Op_Type {
@@ -33,6 +33,9 @@ export enum Op_Type {
 
 export enum URCL_Headers {
     BITS, MINREG, RUN, MINSTACK
+}
+export enum IO_Ports {
+    TEXT
 }
 
 export interface Instruction_Ctx {
@@ -43,6 +46,8 @@ export interface Instruction_Ctx {
     pc: Word;
     push(a: Word): void;
     pop(): Word;
+    in(port: Word): Word;
+    out(port: Word, value: Word): void;
 }
 
 const {SET, GET, GET_RAM: GAM, SET_RAM: SAM} = Op_Type;
@@ -134,4 +139,8 @@ export const Opcodes_operants: Partial<Record<Opcodes, [Op_Type[], (ops: Arr<Wor
     //----- Complex Instructions
     [Opcodes.MLT ]: [[SET, GET, GET], (ops) => ops[0] = ops[1] * ops[2]],
     [Opcodes.DIV ]: [[SET, GET, GET], (ops) => ops[0] = ops[1] / ops[2]],
+
+    //----- IO Instructions
+    [Opcodes.IN  ]: [[SET, GET], (ops, s) => ops[0] = s.in(ops[1])],
+    [Opcodes.OUT ]: [[GET, GET], (ops, s) => s.out(ops[0], ops[1])],
 };
