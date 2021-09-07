@@ -10,7 +10,8 @@
     "typescript": "^4.4.2"
   },
   "scripts": {
+    "build": "tsc",
     "predeploy": "tsc",
-    "deploy": "gh-pages -d ./ --remove \"node_modules/*\""
+    "deploy": "gh-pages -d ./"
   }
 }

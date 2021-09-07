@@ -84,6 +84,8 @@ export function emulator_new(file) {
                         ;
                     }
                     break;
+                case 'R':
+                case 'r':
                 case '$':
                     [type, value] = parse_number(Value_Type.Reg, 1);
                     break;
