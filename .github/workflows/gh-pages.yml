@@ -1,5 +1,6 @@
 # This is a basic workflow to help you get started with Actions
 # https://www.youtube.com/watch?v=1npWH0rPOnI
+# https://github.com/marketplace/actions/deploy-your-app-to-github-pages
 name: gh-pages
 
 # Controls when the workflow will run
@@ -35,8 +36,9 @@ jobs:
         # You may pin to the exact commit or the version.
         # uses: crazy-max/ghaction-github-pages@db4476a01402e1a7ce05f41832040eef16d14925
         uses: crazy-max/ghaction-github-pages@v2.5.0
+        env:
+          PA_TOKEN: ${{ secrets.PA_TOKEN }}
         with:
-          GITHUB_TOKEN: repo
           # Git domain (default github.com)
           domain:  github.com # optional, default is github.com
           # GitHub repository where assets will be deployed (default $GITHUB_REPOSITORY)
