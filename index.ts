@@ -20,7 +20,10 @@ function onchange(){
     }
     console.log(emulator);
     output.innerText = `
-specs: ${JSON.stringify(emulator.specs, null, 2)}
+bits: ${emulator.bits}
+register-count: ${emulator.registers.length}
+stack-size: ${emulator.stack.length}
+heap-size: ${emulator.memory.length}
 registers: [${emulator.registers}]
 memory: [${emulator.memory.slice(0, 32)}]
 `.trim();

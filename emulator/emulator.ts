@@ -125,23 +125,29 @@ interface Program {
     readonly operant_values    : i53[][];
 }
 
-class Emulator {
+class Emulator implements Instruction_Ctx {
+    constructor(public program: Program){
+    }
     pc: i53 = 0;
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
-    specs: Instruction_Ctx = {
-        bits: 8,
-        get max_value(){
-            return (1 << this.bits) - 1;
-        },
-        get max_signed(){
-            return (1 << (this.bits-1)) - 1;
-        },
-        get sign_bit(){
-            return (1 << (this.bits-1));
-        }
+    stack = new Uint8Array(256);
+    stack_ptr = this.stack.length;
+    bits = 8;
+    get max_value(){
+        return (1 << this.bits) - 1;
     }
-    constructor(public program: Program){
+    get max_signed(){
+        return (1 << (this.bits-1)) - 1;
+    }
+    get sign_bit(){
+        return (1 << (this.bits-1));
+    }
+    push(value: Word): void {
+        this.stack[--this.stack_ptr] = value;
+    }
+    pop(): Word {
+        return this.stack[this.stack_ptr++];
     }
     run(){
         const max_cycles = 100;
@@ -164,19 +170,15 @@ class Emulator {
                 const op_type = op_types[i - min];
                 const op_value = op_values[i - min];
                 switch (operation){
-                    case Op_Type.PC: ops[i] = this.pc+1; min = 1; break;
                     case Op_Type.GET: ops[i] = this.read(op_type, op_value); break;
                     case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_type, op_value)]; break;
                 }
             }
-            func(ops, this.specs);
-            for (let i = 0, min = 0; i < op_operations.length; i++){
-                const op_type = op_types[i - min];
-                const op_value = op_values[i - min];
+            func(ops, this);
+            for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
-                    case Op_Type.PC: this.pc = ops[i]-1; min = 1; break;
-                    case Op_Type.SET: this.write(op_type, op_value, ops[i]);break;
-                    case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_type, op_value), ops[i]); break;
+                    case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
+                    case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_types[i], op_values[i]), ops[i]); break;
                 }
             }
             this.pc++;
