@@ -11,6 +11,6 @@
   },
   "scripts": {
     "predeploy": "tsc",
-    "deploy": "gh-pages -d ./"
+    "deploy": "gh-pages -d ./ --remove node_modules"
   }
 }
