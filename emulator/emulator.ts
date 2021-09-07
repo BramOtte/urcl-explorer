@@ -82,7 +82,7 @@ export function emulator_new(file: string) {
                     [type, value] = parse_number(Value_Type.Imm, 0);
                     value += i;;
                 } break;
-                case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
+                case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
                 case '#': [type, value] = parse_number(Value_Type.Ram, 1, 16); break;
                 default: [type, value] = parse_number(Value_Type.Imm, 0);
             }
