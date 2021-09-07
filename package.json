@@ -13,8 +13,5 @@
     "build": "tsc",
     "predeploy": "tsc",
     "deploy": "gh-pages -d ./"
-  },
-  "dependencies": {
-    "yarn": "^1.22.11"
   }
 }
