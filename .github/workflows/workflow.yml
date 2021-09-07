@@ -1,4 +1,4 @@
-name: Github Pages Deploy
+name: Node.js CI
 
 on:
   push:
@@ -13,22 +13,15 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.17.6]
+        node-version: [12.x, 14.x, 16.x]
         # See supported Node.js release schedule at https://nodejs.org/en/about/releases/
 
-    # https://www.youtube.com/watch?v=5I37iVCDUTU
     steps:
-      - uses: actions/checkout@v2
-      - name: Use Node.js ${{ matrix.node-version }}
-        uses: actions/setup-node@v2
-        with:
-          node-version: ${{ matrix.node-version }}
-          cache: 'npm'
-      - name: Install and build
-        run: npm install && npm run build
-        
-      - name: Deploy
-        uses: JamesIves/github-pages-deploy-action@4.1.1
-        with:
-          branch: gh-pages # The branch the action should deploy to.
-          folder: ./ # The folder the action should deploy. 
+    - uses: actions/checkout@v2
+    - name: Use Node.js ${{ matrix.node-version }}
+      uses: actions/setup-node@v2
+      with:
+        node-version: ${{ matrix.node-version }}
+        cache: 'npm'
+    - run: npm ci
+    - run: npm run deploy
