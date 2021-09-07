@@ -37,7 +37,7 @@ jobs:
         # uses: crazy-max/ghaction-github-pages@db4476a01402e1a7ce05f41832040eef16d14925
         uses: crazy-max/ghaction-github-pages@v2.5.0
         env:
-          PA_TOKEN: ${{ secrets.PA_TOKEN }}
+          GH_PAT: ${{ secrets.PA_TOKEN }}
         with:
           # Git domain (default github.com)
           domain:  github.com # optional, default is github.com
