@@ -1,0 +1,10 @@
+{
+  "type": "module",
+  "name": "urcl-emu-ts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.7.13"
+  }
+}
