@@ -1,0 +1,16 @@
+{
+  "type": "module",
+  "name": "urcl-emu-ts",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/node": "^16.7.13",
+    "gh-pages": "^3.2.3",
+    "typescript": "^4.4.2"
+  },
+  "scripts": {
+    "predeploy": "tsc",
+    "deploy": "gh-pages -d ./"
+  }
+}

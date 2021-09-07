@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URCL Explorer</title>
+    <style>
+        html, body {
+            margin: 0;
+        }
+        body {
+            --padding: 3ch;
+            width: calc(100vw - var(--padding)*2);
+            height: calc(100vh - var(--padding)*2);
+            padding: var(--padding);
+        }
+        main {
+            display: flex;
+            gap: 4ch;
+            flex-grow: 1;
+            width: 100%;
+            height: 100%;
+        }
+        main > * {
+            width: 100%;
+            resize: horizontal;
+        }
+    </style>
+</head>
+<body>
+    <main>
+        <div>
+            <h2>URCL Source</h2>
+            <pre id="urcl-source" contentEditable style="padding: 1ch; border: black solid 1px; border-radius: 2%;">
+IMM $1 3
+IMM $2 5
+ADD $3 $1 $2
+//#assert $3 == 8
+</pre>            
+        </div>
+        <div>
+            <h2>Output</h2>
+            <pre id="output"></pre>
+        </div>
+    </main>
+    <script type="module" src="js/index.js"></script>
+</body>
+</html>
