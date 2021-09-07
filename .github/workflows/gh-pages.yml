@@ -29,8 +29,9 @@ jobs:
         uses: actions/setup-node@v2.4.0
         with:
           node-version: 14.x
+      - run: npm ci
       - run: npm install yarn
-      - run: npm build
+      - run: yarn run build
       - name: Deploy to GitHub Pages
         # You may pin to the exact commit or the version.
         # uses: JamesIves/github-pages-deploy-action@0f24da7de3e7e135102609a4c9633b025be8411b
