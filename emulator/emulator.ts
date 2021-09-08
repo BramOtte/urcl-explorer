@@ -175,7 +175,7 @@ class Emulator implements Instruction_Ctx {
         const max_cycles = 100;
         let cycles = 0;
         for (;cycles < max_cycles; cycles++){
-            const pc = this.pc;
+            const pc = this.pc++;
             if (pc >= this.program.opcodes.length){break;}
             const opcode = this.program.opcodes[pc];
             if (opcode === Opcodes.HLT){
@@ -203,7 +203,6 @@ class Emulator implements Instruction_Ctx {
                     case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_types[i], op_values[i]), ops[i]); break;
                 }
             }
-            this.pc++;
         }
         if (cycles >= max_cycles){
             console.warn("reached max cycles");
