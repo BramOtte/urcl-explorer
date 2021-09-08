@@ -101,7 +101,6 @@ supported ports are TEXT`);
                     type = Value_Type.Imm;
                     const char_lit = JSON.parse(operant.replace(/'/g, '"'));
                     value = char_lit.charCodeAt(0);
-                    console.log(char_lit, value);
                 } break;
                 default: [type, value] = parse_number(Value_Type.Imm, 0);
             }
