@@ -1,13 +1,17 @@
 IMM $1 1
 IMM $2 1
 OUT %NUMB $1
+OUT %TEXT '\n'
 OUT %NUMB $2
+OUT %TEXT '\n'
 .loop
     ADD $1 $1 $2
     OUT %NUMB $1
+    OUT %TEXT '\n'
     BRC .stop $1 $2
     ADD $2 $1 $2
     OUT %NUMB $2
+    OUT %TEXT '\n'
     BNC .loop $1 $2
 .stop
 HLT
