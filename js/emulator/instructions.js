@@ -89,8 +89,65 @@ export var URCL_Headers;
 })(URCL_Headers || (URCL_Headers = {}));
 export var IO_Ports;
 (function (IO_Ports) {
+    // General
+    IO_Ports[IO_Ports["CPUBUS"] = 0] = "CPUBUS";
     IO_Ports[IO_Ports["TEXT"] = 1] = "TEXT";
     IO_Ports[IO_Ports["NUMB"] = 2] = "NUMB";
+    IO_Ports[IO_Ports["SUPPORTED"] = 5] = "SUPPORTED";
+    IO_Ports[IO_Ports["SPECIAL"] = 6] = "SPECIAL";
+    IO_Ports[IO_Ports["PROFILE"] = 7] = "PROFILE";
+    // Graphics
+    IO_Ports[IO_Ports["X"] = 8] = "X";
+    IO_Ports[IO_Ports["Y"] = 9] = "Y";
+    IO_Ports[IO_Ports["COLOR"] = 10] = "COLOR";
+    IO_Ports[IO_Ports["BUFFER"] = 11] = "BUFFER";
+    IO_Ports[IO_Ports["G_SPECIAL"] = 15] = "G_SPECIAL";
+    // Text
+    IO_Ports[IO_Ports["ASCII"] = 16] = "ASCII";
+    IO_Ports[IO_Ports["CHAR5"] = 17] = "CHAR5";
+    IO_Ports[IO_Ports["CHAR6"] = 18] = "CHAR6";
+    IO_Ports[IO_Ports["ASCII7"] = 19] = "ASCII7";
+    IO_Ports[IO_Ports["UTF8"] = 20] = "UTF8";
+    IO_Ports[IO_Ports["T_SPECIAL"] = 23] = "T_SPECIAL";
+    // Numbers
+    IO_Ports[IO_Ports["INT"] = 24] = "INT";
+    IO_Ports[IO_Ports["UINT"] = 25] = "UINT";
+    IO_Ports[IO_Ports["BIN"] = 26] = "BIN";
+    IO_Ports[IO_Ports["HEX"] = 27] = "HEX";
+    IO_Ports[IO_Ports["FLOAT"] = 28] = "FLOAT";
+    IO_Ports[IO_Ports["FIXED"] = 29] = "FIXED";
+    IO_Ports[IO_Ports["N_SPECIAL"] = 31] = "N_SPECIAL";
+    // Storage
+    IO_Ports[IO_Ports["ADDR"] = 32] = "ADDR";
+    IO_Ports[IO_Ports["BUS"] = 33] = "BUS";
+    IO_Ports[IO_Ports["PAGE"] = 34] = "PAGE";
+    IO_Ports[IO_Ports["S_SPECIAL"] = 39] = "S_SPECIAL";
+    // Miscellaneous
+    IO_Ports[IO_Ports["RNG"] = 40] = "RNG";
+    IO_Ports[IO_Ports["NOTE"] = 41] = "NOTE";
+    IO_Ports[IO_Ports["INSTR"] = 42] = "INSTR";
+    IO_Ports[IO_Ports["NLEG"] = 43] = "NLEG";
+    IO_Ports[IO_Ports["WAIT"] = 44] = "WAIT";
+    IO_Ports[IO_Ports["NADDR"] = 45] = "NADDR";
+    IO_Ports[IO_Ports["DATA"] = 46] = "DATA";
+    IO_Ports[IO_Ports["M_SPECIAL"] = 47] = "M_SPECIAL";
+    // User defined
+    IO_Ports[IO_Ports["UD1"] = 48] = "UD1";
+    IO_Ports[IO_Ports["UD2"] = 49] = "UD2";
+    IO_Ports[IO_Ports["UD3"] = 50] = "UD3";
+    IO_Ports[IO_Ports["UD4"] = 51] = "UD4";
+    IO_Ports[IO_Ports["UD5"] = 52] = "UD5";
+    IO_Ports[IO_Ports["UD6"] = 53] = "UD6";
+    IO_Ports[IO_Ports["UD7"] = 54] = "UD7";
+    IO_Ports[IO_Ports["UD8"] = 55] = "UD8";
+    IO_Ports[IO_Ports["UD9"] = 56] = "UD9";
+    IO_Ports[IO_Ports["UD10"] = 57] = "UD10";
+    IO_Ports[IO_Ports["UD11"] = 58] = "UD11";
+    IO_Ports[IO_Ports["UD12"] = 59] = "UD12";
+    IO_Ports[IO_Ports["UD13"] = 60] = "UD13";
+    IO_Ports[IO_Ports["UD14"] = 61] = "UD14";
+    IO_Ports[IO_Ports["UD15"] = 62] = "UD15";
+    IO_Ports[IO_Ports["UD16"] = 63] = "UD16";
 })(IO_Ports || (IO_Ports = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM } = Op_Type;
 export const Opcodes_operants = {

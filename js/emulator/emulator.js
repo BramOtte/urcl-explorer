@@ -69,7 +69,7 @@ export function emulator_new(file) {
                 return [type, value];
             }
             function parse_port(offset) {
-                const port = operant.slice(offset).toUpperCase();
+                const port = operant.slice(offset).toUpperCase().replace(/-/g, "_");
                 let port_nr = parseInt(port);
                 if (!Number.isNaN(port_nr)) {
                     return [Value_Type.Imm, port_nr];
