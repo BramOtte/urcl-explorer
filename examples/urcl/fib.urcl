@@ -10,8 +10,8 @@ OUT %TEXT '\n'
     OUT %TEXT '\n'
     BRC .stop $1 $2
     ADD $2 $1 $2
-    OUT %NUMB $2
-    OUT %TEXT '\n'
+    OUT %numb $2
+    OUT %1 '\n' // also %text
     BNC .loop $1 $2
 .stop
 HLT

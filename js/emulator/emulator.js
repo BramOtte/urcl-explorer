@@ -70,7 +70,11 @@ export function emulator_new(file) {
             }
             function parse_port(offset) {
                 const port = operant.slice(offset).toUpperCase();
-                const port_nr = IO_Ports[port];
+                let port_nr = parseInt(port);
+                if (!Number.isNaN(port_nr)) {
+                    return [Value_Type.Imm, port_nr];
+                }
+                port_nr = IO_Ports[port];
                 if (port_nr === undefined) {
                     throw new Error(`invalid port ${port} on line ${line_nr}\n${lines[line_nr]}
 supported ports are TEXT`);
