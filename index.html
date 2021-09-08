@@ -25,6 +25,10 @@
         main > * {
             width: 100%;
             resize: horizontal;
+            max-height: 500px
+        }
+        #stdout {
+            overflow-y: scroll;
         }
     </style>
 </head>
@@ -33,10 +37,23 @@
         <div>
             <h2>URCL Source</h2>
             <pre id="urcl-source" contentEditable style="padding: 1ch; border: black solid 1px; border-radius: 2%;">
-IMM $1 3
-IMM $2 5
-ADD $3 $1 $2
-//#assert $3 == 8
+IN $1 %NUMB
+IN $2 %NUMB
+OUT %NUMB $1
+OUT %TEXT '\n'
+OUT %NUMB $2
+OUT %TEXT '\n'
+.loop
+    ADD $1 $1 $2
+    OUT %NUMB $1
+    OUT %TEXT '\n'
+    BRC .stop $1 $2
+    ADD $2 $1 $2
+    OUT %NUMB $2
+    OUT %TEXT '\n'
+    BNC .loop $1 $2
+.stop
+HLT
 </pre>            
         </div>
         <div>

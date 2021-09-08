@@ -6,7 +6,7 @@ import { off } from "process";
 const Opcodes_operant_lengths: Record<Opcodes, i53> 
     = object_map(Opcodes_operants, (key, value) => {
         if (value === undefined){throw new Error("instruction definition undefined");}
-        return [key, (value[0][0] === Op_Type.PC) ? value[0].length-1 : value[0].length];
+        return [key, value[0].length];
     });
 
 export function emulator_new(file: string) {
@@ -35,7 +35,9 @@ export function emulator_new(file: string) {
             label_inst_i[line] = inst_i;
             label_ptrs[line] = inst_ptr; 
         } else {
-            const parts = line.split(" ").filter(str => str.length > 0).map(str => str.replace(/,/g, ""));
+            const parts = line
+                .replace(/' /g, "'\xA0").replace(/,/g, "")
+                .split(" ").filter(str => str.length > 0);
             const opcode_str = parts[0];
             const header: URCL_Headers | undefined = URCL_Headers[opcode_str as any] as any;
             if (header){
@@ -95,6 +97,12 @@ supported ports are TEXT`);
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
                 case '#': [type, value] = parse_number(Value_Type.Ram, 1, 16); break;
                 case '%': [type, value] = parse_port(1); break;
+                case '\'': {
+                    type = Value_Type.Imm;
+                    const char_lit = JSON.parse(operant.replace(/'/g, '"'));
+                    value = char_lit.charCodeAt(0);
+                    console.log(char_lit, value);
+                } break;
                 default: [type, value] = parse_number(Value_Type.Imm, 0);
             }
             (operant_types[i] = operant_types[i] ?? []).push(type);
@@ -145,6 +153,10 @@ class Emulator implements Instruction_Ctx {
     stack = new Uint8Array(256);
     stack_ptr = this.stack.length;
     bits = 8;
+    input_devices: {[K in IO_Ports]?: () => Promise<Word>} = {};
+    ouput_devices: {[K in IO_Ports]?: (value: Word) => Promise<void>} = {};
+    
+
     get max_value(){
         return (1 << this.bits) - 1;
     }
@@ -160,18 +172,23 @@ class Emulator implements Instruction_Ctx {
     pop(): Word {
         return this.stack[this.stack_ptr++];
     }
-    in(port: Word){
-        let str: string | null = "";
-        while (str != null && str.length === 0){
-            str = prompt("please enter a character");
+    async in(port: Word): Promise<number>{
+        const device = this.input_devices[port as IO_Ports];
+        if (device === undefined){
+            console.warn(`unsupported input device port ${port} (${IO_Ports[port]}) ${this.line()}`);
+            return 0;
         }
-        if (!str){return 0;}
-        return str.charCodeAt(0);
+        return device();
     }
-    out(port: Word, value: Word){
-        console.log(port, value);
+    async out(port: Word, value: Word): Promise<void>{
+        const device = this.ouput_devices[port as IO_Ports];
+        if (device === undefined){
+            console.warn(`unsupported output device port ${port} (${IO_Ports[port]}) ${this.line()}`);
+            return;
+        }
+        device(value);
     }
-    run(){
+    async run(){
         const max_cycles = 100;
         let cycles = 0;
         for (;cycles < max_cycles; cycles++){
@@ -196,7 +213,7 @@ class Emulator implements Instruction_Ctx {
                     case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_type, op_value)]; break;
                 }
             }
-            func(ops, this);
+            await func(ops, this);
             for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
                     case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
@@ -226,7 +243,7 @@ class Emulator implements Instruction_Ctx {
     }
     line(){
         const {instr_line_nrs, lines} = this.program;
-        const line_nr = instr_line_nrs[this.pc];
-        return `on line ${line_nr}, pc=${this.pc}\n${lines[line_nr]}`;
+        const line_nr = instr_line_nrs[this.pc-1];
+        return `on line ${line_nr}, pc=${this.pc-1}\n${lines[line_nr]}`;
     }
 }
