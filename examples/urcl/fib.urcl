@@ -1,0 +1,13 @@
+IMM $1 1
+IMM $2 1
+OUT %NUMB $1
+OUT %NUMB $2
+.loop
+    ADD $1 $1 $2
+    OUT %NUMB $1
+    BRC .stop $1 $2
+    ADD $2 $1 $2
+    OUT %NUMB $2
+    BNC .loop $1 $2
+.stop
+HLT

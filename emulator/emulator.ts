@@ -1,11 +1,12 @@
 import { i53, Ln_Nr, object_map, Reg, Word } from "./util.js";
-import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers} from "./instructions.js";
+import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports} from "./instructions.js";
+import { off } from "process";
 
 
 const Opcodes_operant_lengths: Record<Opcodes, i53> 
     = object_map(Opcodes_operants, (key, value) => {
         if (value === undefined){throw new Error("instruction definition undefined");}
-        return [key, (value[0][0] === Op_Type.PC) ? value[0].length-1 : value[0].length];
+        return [key, value[0].length];
     });
 
 export function emulator_new(file: string) {
@@ -34,7 +35,9 @@ export function emulator_new(file: string) {
             label_inst_i[line] = inst_i;
             label_ptrs[line] = inst_ptr; 
         } else {
-            const parts = line.split(" ").filter(str => str.length > 0).map(str => str.replace(/,/g, ""));
+            const parts = line
+                .replace(/' /g, "'\xA0").replace(/,/g, "")
+                .split(" ").filter(str => str.length > 0);
             const opcode_str = parts[0];
             const header: URCL_Headers | undefined = URCL_Headers[opcode_str as any] as any;
             if (header){
@@ -63,12 +66,21 @@ export function emulator_new(file: string) {
         const line_nr = instr_line_nrs[i]
         for (const operant of operant_strings[i]){
             let type: Value_Type, value: Word | Reg | Ln_Nr;
-            function parse_number(type: Value_Type, offset: number, radic?: i53){
+            function parse_number(type: Value_Type, offset: i53, radic?: i53){
                 const value = parseInt(operant.slice(offset), radic);
                 if (Number.isNaN(value)){
                     throw new Error(`invalid ${Value_Type[type]} ${operant} on line ${line_nr}\n${lines[line_nr]}`);
                 }
                 return [type, value];
+            }
+            function parse_port(offset: i53){
+                const port = operant.slice(offset).toUpperCase();
+                const port_nr: Word = IO_Ports[port as any] as any;
+                if (port_nr === undefined){
+                    throw new Error(`invalid port ${port} on line ${line_nr}\n${lines[line_nr]}
+supported ports are TEXT`);
+                }
+                return [Value_Type.Imm, port_nr];
             }
             switch (operant[0]){
                 case '.': {
@@ -84,6 +96,12 @@ export function emulator_new(file: string) {
                 } break;
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
                 case '#': [type, value] = parse_number(Value_Type.Ram, 1, 16); break;
+                case '%': [type, value] = parse_port(1); break;
+                case '\'': {
+                    type = Value_Type.Imm;
+                    const char_lit = JSON.parse(operant.replace(/'/g, '"'));
+                    value = char_lit.charCodeAt(0);
+                } break;
                 default: [type, value] = parse_number(Value_Type.Imm, 0);
             }
             (operant_types[i] = operant_types[i] ?? []).push(type);
@@ -125,29 +143,55 @@ interface Program {
     readonly operant_values    : i53[][];
 }
 
-class Emulator {
+class Emulator implements Instruction_Ctx {
+    constructor(public program: Program){
+    }
     pc: i53 = 0;
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
-    specs: Instruction_Ctx = {
-        bits: 8,
-        get max_value(){
-            return (1 << this.bits) - 1;
-        },
-        get max_signed(){
-            return (1 << (this.bits-1)) - 1;
-        },
-        get sign_bit(){
-            return (1 << (this.bits-1));
+    stack = new Uint8Array(256);
+    stack_ptr = this.stack.length;
+    bits = 8;
+    input_devices: {[K in IO_Ports]?: () => Promise<Word>} = {};
+    ouput_devices: {[K in IO_Ports]?: (value: Word) => Promise<void>} = {};
+    
+
+    get max_value(){
+        return (1 << this.bits) - 1;
+    }
+    get max_signed(){
+        return (1 << (this.bits-1)) - 1;
+    }
+    get sign_bit(){
+        return (1 << (this.bits-1));
+    }
+    push(value: Word): void {
+        this.stack[--this.stack_ptr] = value;
+    }
+    pop(): Word {
+        return this.stack[this.stack_ptr++];
+    }
+    async in(port: Word): Promise<number>{
+        const device = this.input_devices[port as IO_Ports];
+        if (device === undefined){
+            console.warn(`unsupported input device port ${port} (${IO_Ports[port]}) ${this.line()}`);
+            return 0;
         }
+        return device();
     }
-    constructor(public program: Program){
+    async out(port: Word, value: Word): Promise<void>{
+        const device = this.ouput_devices[port as IO_Ports];
+        if (device === undefined){
+            console.warn(`unsupported output device port ${port} (${IO_Ports[port]}) ${this.line()}`);
+            return;
+        }
+        device(value);
     }
-    run(){
+    async run(){
         const max_cycles = 100;
         let cycles = 0;
         for (;cycles < max_cycles; cycles++){
-            const pc = this.pc;
+            const pc = this.pc++;
             if (pc >= this.program.opcodes.length){break;}
             const opcode = this.program.opcodes[pc];
             if (opcode === Opcodes.HLT){
@@ -164,22 +208,17 @@ class Emulator {
                 const op_type = op_types[i - min];
                 const op_value = op_values[i - min];
                 switch (operation){
-                    case Op_Type.PC: ops[i] = this.pc+1; min = 1; break;
                     case Op_Type.GET: ops[i] = this.read(op_type, op_value); break;
                     case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_type, op_value)]; break;
                 }
             }
-            func(ops, this.specs);
-            for (let i = 0, min = 0; i < op_operations.length; i++){
-                const op_type = op_types[i - min];
-                const op_value = op_values[i - min];
+            await func(ops, this);
+            for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
-                    case Op_Type.PC: this.pc = ops[i]-1; min = 1; break;
-                    case Op_Type.SET: this.write(op_type, op_value, ops[i]);break;
-                    case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_type, op_value), ops[i]); break;
+                    case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
+                    case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_types[i], op_values[i]), ops[i]); break;
                 }
             }
-            this.pc++;
         }
         if (cycles >= max_cycles){
             console.warn("reached max cycles");
@@ -203,7 +242,7 @@ class Emulator {
     }
     line(){
         const {instr_line_nrs, lines} = this.program;
-        const line_nr = instr_line_nrs[this.pc];
-        return `on line ${line_nr}, pc=${this.pc}\n${lines[line_nr]}`;
+        const line_nr = instr_line_nrs[this.pc-1];
+        return `on line ${line_nr}, pc=${this.pc-1}\n${lines[line_nr]}`;
     }
 }
