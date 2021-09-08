@@ -252,6 +252,6 @@ export const Opcodes_operants = {
     [Opcodes.DIV]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] / ops[2]; }],
     //----- IO Instructions
     [Opcodes.IN]: [[SET, GET], async (ops, s) => { ops[0] = await s.in(ops[1]); }],
-    [Opcodes.OUT]: [[GET, GET], async (ops, s) => { await s.out(ops[0], ops[1]); }],
+    [Opcodes.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
 };
 //# sourceMappingURL=instructions.js.map

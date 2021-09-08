@@ -105,7 +105,7 @@ supported ports are TEXT`);
                     [type, value] = parse_number(Value_Type.Reg, 1);
                     break;
                 case '#':
-                    [type, value] = parse_number(Value_Type.Imm, 16);
+                    [type, value] = parse_number(Value_Type.Imm, 1);
                     break;
                 case '%':
                     [type, value] = parse_port(1);
@@ -158,7 +158,7 @@ class Emulator {
     stack_ptr = this.stack.length;
     bits = 8;
     input_devices = {};
-    ouput_devices = {};
+    output_devices = {};
     get max_value() {
         return (1 << this.bits) - 1;
     }
@@ -183,7 +183,7 @@ class Emulator {
         return device();
     }
     async out(port, value) {
-        const device = this.ouput_devices[port];
+        const device = this.output_devices[port];
         if (device === undefined) {
             console.warn(`unsupported output device port ${port} (${IO_Ports[port]}) ${this.line()}`);
             return;

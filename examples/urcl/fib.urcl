@@ -1,5 +1,13 @@
-IMM $1 1
-IMM $2 1
+CAL .prompt
+IN $1 %NUMB
+OUT %NUMB $1
+OUT %TEXT '\n'
+
+CAL .prompt
+IN $2 %NUMB
+OUT %NUMB $2
+OUT %TEXT '\n'
+
 OUT %NUMB $1
 OUT %TEXT '\n'
 OUT %NUMB $2
@@ -10,8 +18,26 @@ OUT %TEXT '\n'
     OUT %TEXT '\n'
     BRC .stop $1 $2
     ADD $2 $1 $2
-    OUT %numb $2
-    OUT %1 '\n' // also %text
+    OUT %NUMB $2
+    OUT %TEXT '\n'
     BNC .loop $1 $2
 .stop
 HLT
+.prompt
+    OUT %TEXT 'E'
+    OUT %TEXT 'n'
+    OUT %TEXT 't'
+    OUT %TEXT 'e'
+    OUT %TEXT 'r'
+    OUT %TEXT ' '
+    OUT %TEXT 'a'
+    OUT %TEXT ' '
+    OUT %TEXT 'n'
+    OUT %TEXT 'u'
+    OUT %TEXT 'm'
+    OUT %TEXT 'b'
+    OUT %TEXT 'e'
+    OUT %TEXT 'r'
+    OUT %TEXT ':'
+    OUT %TEXT ' '
+    RET

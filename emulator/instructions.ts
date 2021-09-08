@@ -59,8 +59,8 @@ export interface Instruction_Ctx {
     pc: Word;
     push(a: Word): void;
     pop(): Word;
-    in(port: Word): Promise<Word>;
-    out(port: Word, value: Word): Promise<void>;
+    in(port: Word): Word | Promise<Word>;
+    out(port: Word, value: Word): void;
 }
 
 type Instruction_Callback = (ops: Arr<Word>, ctx: Instruction_Ctx) => void | Promise<void>;
@@ -157,5 +157,5 @@ export const Opcodes_operants: Partial<Record<Opcodes, [Op_Type[], Instruction_C
 
     //----- IO Instructions
     [Opcodes.IN  ]: [[SET, GET], async (ops, s) => {ops[0] = await s.in(ops[1])}],
-    [Opcodes.OUT ]: [[GET, GET], async (ops, s) => {await s.out(ops[0], ops[1])}],
+    [Opcodes.OUT ]: [[GET, GET], (ops, s) => {s.out(ops[0], ops[1])}],
 };

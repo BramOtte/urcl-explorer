@@ -98,7 +98,7 @@ supported ports are TEXT`);
                     value += i;;
                 } break;
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
-                case '#': [type, value] = parse_number(Value_Type.Imm, 16); break;
+                case '#': [type, value] = parse_number(Value_Type.Imm, 1); break;
                 case '%': [type, value] = parse_port(1); break;
                 case '\'': case '"': {
                     type = Value_Type.Imm;
@@ -155,8 +155,8 @@ class Emulator implements Instruction_Ctx {
     stack = new Uint8Array(256);
     stack_ptr = this.stack.length;
     bits = 8;
-    input_devices: {[K in IO_Ports]?: () => Promise<Word>} = {};
-    ouput_devices: {[K in IO_Ports]?: (value: Word) => Promise<void>} = {};
+    input_devices: {[K in IO_Ports]?: () => Word | Promise<Word>} = {};
+    output_devices: {[K in IO_Ports]?: (value: Word) => void | Promise<void>} = {};
     
 
     get max_value(){
@@ -183,7 +183,7 @@ class Emulator implements Instruction_Ctx {
         return device();
     }
     async out(port: Word, value: Word): Promise<void>{
-        const device = this.ouput_devices[port as IO_Ports];
+        const device = this.output_devices[port as IO_Ports];
         if (device === undefined){
             console.warn(`unsupported output device port ${port} (${IO_Ports[port]}) ${this.line()}`);
             return;
