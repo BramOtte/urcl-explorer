@@ -1,6 +1,5 @@
 import { i53, Ln_Nr, object_map, Reg, Word } from "./util.js";
 import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports} from "./instructions.js";
-import { off } from "process";
 
 
 const Opcodes_operant_lengths: Record<Opcodes, i53> 
@@ -99,9 +98,9 @@ supported ports are TEXT`);
                     value += i;;
                 } break;
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
-                case '#': [type, value] = parse_number(Value_Type.Ram, 1, 16); break;
+                case '#': [type, value] = parse_number(Value_Type.Imm, 16); break;
                 case '%': [type, value] = parse_port(1); break;
-                case '\'': {
+                case '\'': case '"': {
                     type = Value_Type.Imm;
                     const char_lit = JSON.parse(operant.replace(/'/g, '"'));
                     value = char_lit.charCodeAt(0);
@@ -220,7 +219,7 @@ class Emulator implements Instruction_Ctx {
             for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
                     case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                    case Op_Type.SET_RAM: this.write(Value_Type.Ram, this.read(op_types[i], op_values[i]), ops[i]); break;
+                    case Op_Type.SET_RAM: this.memory[this.read(op_types[i], op_values[i])] = ops[i]; break;
                 }
             }
         }
@@ -231,7 +230,6 @@ class Emulator implements Instruction_Ctx {
     write(target: Value_Type, index: Word, value: Word){
         switch (target){
             case Value_Type.Reg: this.registers[index] = value;return;
-            case Value_Type.Ram: this.memory[index] = value;return;
             case Value_Type.Imm: throw new Error("Can't write to immediate");
             default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
         }
@@ -240,7 +238,6 @@ class Emulator implements Instruction_Ctx {
         switch (source){
             case Value_Type.Imm: return value;
             case Value_Type.Reg: return value === 0 ? 0 : this.registers[value];
-            case Value_Type.Ram: return this.memory[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

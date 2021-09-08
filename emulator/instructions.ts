@@ -24,7 +24,7 @@ export enum Opcodes {
     ASE
 }
 export enum Value_Type {
-    Reg, Imm, Ram
+    Reg, Imm
 } 
 
 export enum Op_Type {

@@ -72,7 +72,6 @@ export var Value_Type;
 (function (Value_Type) {
     Value_Type[Value_Type["Reg"] = 0] = "Reg";
     Value_Type[Value_Type["Imm"] = 1] = "Imm";
-    Value_Type[Value_Type["Ram"] = 2] = "Ram";
 })(Value_Type || (Value_Type = {}));
 export var Op_Type;
 (function (Op_Type) {

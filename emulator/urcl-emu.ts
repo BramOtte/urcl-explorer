@@ -6,7 +6,6 @@ import { IO_Ports } from "./instructions.js";
 
 const usage = `Usage: node urcl-emu.js <file name>`;
 
-declare const process: {argv: string[], stdout: {write(text: string): void}};
 console.log(argv);
 
 if (process.argv.length < 3){

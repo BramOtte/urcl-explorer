@@ -105,12 +105,13 @@ supported ports are TEXT`);
                     [type, value] = parse_number(Value_Type.Reg, 1);
                     break;
                 case '#':
-                    [type, value] = parse_number(Value_Type.Ram, 1, 16);
+                    [type, value] = parse_number(Value_Type.Imm, 16);
                     break;
                 case '%':
                     [type, value] = parse_port(1);
                     break;
                 case '\'':
+                case '"':
                     {
                         type = Value_Type.Imm;
                         const char_lit = JSON.parse(operant.replace(/'/g, '"'));
@@ -229,7 +230,7 @@ class Emulator {
                         this.write(op_types[i], op_values[i], ops[i]);
                         break;
                     case Op_Type.SET_RAM:
-                        this.write(Value_Type.Ram, this.read(op_types[i], op_values[i]), ops[i]);
+                        this.memory[this.read(op_types[i], op_values[i])] = ops[i];
                         break;
                 }
             }
@@ -243,9 +244,6 @@ class Emulator {
             case Value_Type.Reg:
                 this.registers[index] = value;
                 return;
-            case Value_Type.Ram:
-                this.memory[index] = value;
-                return;
             case Value_Type.Imm: throw new Error("Can't write to immediate");
             default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
         }
@@ -254,7 +252,6 @@ class Emulator {
         switch (source) {
             case Value_Type.Imm: return value;
             case Value_Type.Reg: return value === 0 ? 0 : this.registers[value];
-            case Value_Type.Ram: return this.memory[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }
