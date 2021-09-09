@@ -1,8 +1,8 @@
-import { i53, Ln_Nr, object_map, Reg, Word } from "./util.js";
-import {Opcodes, Op_Type, Value_Type, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports} from "./instructions.js";
+import { i53, Word, object_map } from "./util.js";
+import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports, Register} from "./instructions.js";
 
 
-const Opcodes_operant_lengths: Record<Opcodes, i53> 
+const Opcodes_operant_lengths: Record<Opcode, i53> 
     = object_map(Opcodes_operants, (key, value) => {
         if (value === undefined){throw new Error("instruction definition undefined");}
         return [key, value[0].length];
@@ -15,9 +15,9 @@ export function emulator_new(file: string) {
     
     const instr_line_nrs    : i53[] = [];
     const instr_ptrs        : i53[] = [];
-    const opcodes           : Opcodes[] = [];
+    const opcodes           : Opcode[] = [];
     const operant_strings   : string[][] = [];
-    const operant_types     : Value_Type[][] = [];
+    const operant_prims     : Operant_Prim[][] = [];
     const operant_values    : i53[][] = [];
 
     const lines = file.split('\n')
@@ -42,7 +42,7 @@ export function emulator_new(file: string) {
             if (header){
                 continue;
             }
-            const opcode: Opcodes | undefined = Opcodes[opcode_str as any] as any;
+            const opcode: Opcode | undefined = Opcode[opcode_str as any] as any;
             if (opcode === undefined){
                 throw new Error(`unknown opcode ${opcode_str} at line ${line_nr}\n${line}`);
             }
@@ -64,11 +64,11 @@ export function emulator_new(file: string) {
     for (let i = 0; i < opcodes.length; i++){
         const line_nr = instr_line_nrs[i]
         for (const operant of operant_strings[i]){
-            let type: Value_Type, value: Word | Reg | Ln_Nr;
-            function parse_number(type: Value_Type, offset: i53, radic?: i53){
+            let type: Operant_Prim, value: Word;
+            function parse_number(type: Operant_Prim, offset: i53, radic?: i53){
                 const value = parseInt(operant.slice(offset), radic);
                 if (Number.isNaN(value)){
-                    throw new Error(`invalid ${Value_Type[type]} ${operant} on line ${line_nr}\n${lines[line_nr]}`);
+                    throw new Error(`invalid ${Operant_Prim[type]} ${operant} on line ${line_nr}\n${lines[line_nr]}`);
                 }
                 return [type, value];
             }
@@ -76,38 +76,46 @@ export function emulator_new(file: string) {
                 const port = operant.slice(offset).toUpperCase().replace(/-/g, "_");
                 let port_nr: Word = parseInt(port);
                 if (!Number.isNaN(port_nr)){
-                    return [Value_Type.Imm, port_nr];
+                    return [Operant_Prim.Imm, port_nr];
                 }
                 port_nr = IO_Ports[port as any] as any;
                 if (port_nr === undefined){
                     throw new Error(`invalid port ${port} on line ${line_nr}\n${lines[line_nr]}
 supported ports are TEXT`);
                 }
-                return [Value_Type.Imm, port_nr];
+                return [Operant_Prim.Imm, port_nr];
             }
             switch (operant[0]){
                 case '.': {
-                    type = Value_Type.Imm;
+                    type = Operant_Prim.Imm;
                     value = label_inst_i[operant];
                     if (value === undefined){
                         throw new Error(`invalid label ${operant} on line ${line_nr}\n${lines[line_nr]}`);
                     }
                 } break;
                 case '+': case '-': {
-                    [type, value] = parse_number(Value_Type.Imm, 0);
+                    [type, value] = parse_number(Operant_Prim.Imm, 0);
                     value += i;;
                 } break;
-                case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
-                case 'M': case 'm': case '#': [type, value] = parse_number(Value_Type.Imm, 1); break;
+                case 'S': if (operant === "SP"){
+                    type = Operant_Prim.Reg; value = 0;
+                } else {
+                    throw new Error(`Unkown operant S on line ${line_nr}\n${lines[line_nr]}`);
+                } break;
+                case 'R': case 'r': case '$': {
+                    [type, value] = parse_number(Operant_Prim.Reg, 1);
+                    value += Register.Count;
+                }break;
+                case 'M': case 'm': case '#': [type, value] = parse_number(Operant_Prim.Imm, 1); break;
                 case '%': [type, value] = parse_port(1); break;
                 case '\'': case '"': {
-                    type = Value_Type.Imm;
+                    type = Operant_Prim.Imm;
                     const char_lit = JSON.parse(operant.replace(/'/g, '"'));
                     value = char_lit.charCodeAt(0);
                 } break;
-                default: [type, value] = parse_number(Value_Type.Imm, 0);
+                default: [type, value] = parse_number(Operant_Prim.Imm, 0);
             }
-            (operant_types[i] = operant_types[i] ?? []).push(type);
+            (operant_prims[i] = operant_prims[i] ?? []).push(type);
             (operant_values[i] = operant_values[i] ?? []).push(value);
         }
     }
@@ -120,7 +128,7 @@ supported ports are TEXT`);
         instr_ptrs     ,
         opcodes        ,
         operant_strings,
-        operant_types  ,
+        operant_prims  ,
         operant_values ,
     };
 
@@ -140,20 +148,26 @@ interface Program {
     readonly label_ptrs        : Record<string, Word>;
     readonly instr_line_nrs    : i53[];
     readonly instr_ptrs        : i53[];
-    readonly opcodes           : Opcodes[];
+    readonly opcodes           : Opcode[];
     readonly operant_strings   : string[][];
-    readonly operant_types     : Value_Type[][];
+    readonly operant_prims     : Operant_Prim[][];
     readonly operant_values    : i53[][];
 }
 
 class Emulator implements Instruction_Ctx {
     constructor(public program: Program){
+        this.stack_ptr = this.stack.length;
     }
     pc: i53 = 0;
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
-    stack = new Uint8Array(256);
-    stack_ptr = this.stack.length;
+    stack = new Uint8Array(255);
+    get stack_ptr(){
+        return this.registers[Register.SP];
+    }
+    set stack_ptr(value: Word){
+        this.registers[Register.SP] = value;
+    }
     bits = 8;
     input_devices: {[K in IO_Ports]?: () => Word | Promise<Word>} = {};
     output_devices: {[K in IO_Ports]?: (value: Word) => void | Promise<void>} = {};
@@ -197,28 +211,28 @@ class Emulator implements Instruction_Ctx {
             const pc = this.pc++;
             if (pc >= this.program.opcodes.length){break;}
             const opcode = this.program.opcodes[pc];
-            if (opcode === Opcodes.HLT){
+            if (opcode === Opcode.HLT){
                 break;
             }
             const instruction = Opcodes_operants[opcode];
             if (instruction === undefined){throw new Error(`unkown opcode ${opcode} ${this.line()}`);}
             const [op_operations, func] = instruction;
-            const op_types = this.program.operant_types[pc];
+            const op_types = this.program.operant_prims[pc];
             const op_values = this.program.operant_values[pc];
             const ops = op_operations.map(() => 0);
             let ram_offset = 0;
             for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
-                    case Op_Type.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
-                    case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
-                    case Op_Type.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
+                    case Operant_Operation.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
+                    case Operant_Operation.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
+                    case Operant_Operation.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
                 }
             }
             await func(ops, this);
             for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
-                    case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                    case Op_Type.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
+                    case Operant_Operation.SET: this.write(op_types[i], op_values[i], ops[i]); break;
+                    case Operant_Operation.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
                 }
             }
         }
@@ -226,17 +240,17 @@ class Emulator implements Instruction_Ctx {
             console.warn("reached max cycles");
         }
     }
-    write(target: Value_Type, index: Word, value: Word){
+    write(target: Operant_Prim, index: Word, value: Word){
         switch (target){
-            case Value_Type.Reg: this.registers[index] = value;return;
-            case Value_Type.Imm: throw new Error("Can't write to immediate");
+            case Operant_Prim.Reg: this.registers[index] = value;return;
+            case Operant_Prim.Imm: throw new Error("Can't write to immediate");
             default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
         }
     }
-    read(source: Value_Type, value: Word){
+    read(source: Operant_Prim, value: Word){
         switch (source){
-            case Value_Type.Imm: return value;
-            case Value_Type.Reg: return value === 0 ? 0 : this.registers[value];
+            case Operant_Prim.Imm: return value;
+            case Operant_Prim.Reg: return value === Register.Zero ? 0 : this.registers[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

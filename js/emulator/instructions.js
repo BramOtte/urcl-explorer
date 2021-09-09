@@ -1,95 +1,101 @@
 // export 
-export var Opcodes;
-(function (Opcodes) {
+export var Opcode;
+(function (Opcode) {
     // Core Instructions
-    Opcodes[Opcodes["ADD"] = 0] = "ADD";
-    Opcodes[Opcodes["RSH"] = 1] = "RSH";
-    Opcodes[Opcodes["LOD"] = 2] = "LOD";
-    Opcodes[Opcodes["STR"] = 3] = "STR";
-    Opcodes[Opcodes["BGE"] = 4] = "BGE";
-    Opcodes[Opcodes["NOR"] = 5] = "NOR";
-    Opcodes[Opcodes["IMM"] = 6] = "IMM";
+    Opcode[Opcode["ADD"] = 0] = "ADD";
+    Opcode[Opcode["RSH"] = 1] = "RSH";
+    Opcode[Opcode["LOD"] = 2] = "LOD";
+    Opcode[Opcode["STR"] = 3] = "STR";
+    Opcode[Opcode["BGE"] = 4] = "BGE";
+    Opcode[Opcode["NOR"] = 5] = "NOR";
+    Opcode[Opcode["IMM"] = 6] = "IMM";
     // Basic Instructions
-    Opcodes[Opcodes["SUB"] = 7] = "SUB";
-    Opcodes[Opcodes["JMP"] = 8] = "JMP";
-    Opcodes[Opcodes["MOV"] = 9] = "MOV";
-    Opcodes[Opcodes["NOP"] = 10] = "NOP";
-    Opcodes[Opcodes["LSH"] = 11] = "LSH";
-    Opcodes[Opcodes["INC"] = 12] = "INC";
-    Opcodes[Opcodes["DEC"] = 13] = "DEC";
-    Opcodes[Opcodes["NEG"] = 14] = "NEG";
-    Opcodes[Opcodes["AND"] = 15] = "AND";
-    Opcodes[Opcodes["OR"] = 16] = "OR";
-    Opcodes[Opcodes["NOT"] = 17] = "NOT";
-    Opcodes[Opcodes["XNOR"] = 18] = "XNOR";
-    Opcodes[Opcodes["XOR"] = 19] = "XOR";
-    Opcodes[Opcodes["NAND"] = 20] = "NAND";
-    Opcodes[Opcodes["BRL"] = 21] = "BRL";
-    Opcodes[Opcodes["BRG"] = 22] = "BRG";
-    Opcodes[Opcodes["BRE"] = 23] = "BRE";
-    Opcodes[Opcodes["BNE"] = 24] = "BNE";
-    Opcodes[Opcodes["BOD"] = 25] = "BOD";
-    Opcodes[Opcodes["BEV"] = 26] = "BEV";
-    Opcodes[Opcodes["BLE"] = 27] = "BLE";
-    Opcodes[Opcodes["BRZ"] = 28] = "BRZ";
-    Opcodes[Opcodes["BNZ"] = 29] = "BNZ";
-    Opcodes[Opcodes["BRN"] = 30] = "BRN";
-    Opcodes[Opcodes["BRP"] = 31] = "BRP";
-    Opcodes[Opcodes["PSH"] = 32] = "PSH";
-    Opcodes[Opcodes["POP"] = 33] = "POP";
-    Opcodes[Opcodes["CAL"] = 34] = "CAL";
-    Opcodes[Opcodes["RET"] = 35] = "RET";
-    Opcodes[Opcodes["HLT"] = 36] = "HLT";
-    Opcodes[Opcodes["CPY"] = 37] = "CPY";
-    Opcodes[Opcodes["BRC"] = 38] = "BRC";
-    Opcodes[Opcodes["BNC"] = 39] = "BNC";
+    Opcode[Opcode["SUB"] = 7] = "SUB";
+    Opcode[Opcode["JMP"] = 8] = "JMP";
+    Opcode[Opcode["MOV"] = 9] = "MOV";
+    Opcode[Opcode["NOP"] = 10] = "NOP";
+    Opcode[Opcode["LSH"] = 11] = "LSH";
+    Opcode[Opcode["INC"] = 12] = "INC";
+    Opcode[Opcode["DEC"] = 13] = "DEC";
+    Opcode[Opcode["NEG"] = 14] = "NEG";
+    Opcode[Opcode["AND"] = 15] = "AND";
+    Opcode[Opcode["OR"] = 16] = "OR";
+    Opcode[Opcode["NOT"] = 17] = "NOT";
+    Opcode[Opcode["XNOR"] = 18] = "XNOR";
+    Opcode[Opcode["XOR"] = 19] = "XOR";
+    Opcode[Opcode["NAND"] = 20] = "NAND";
+    Opcode[Opcode["BRL"] = 21] = "BRL";
+    Opcode[Opcode["BRG"] = 22] = "BRG";
+    Opcode[Opcode["BRE"] = 23] = "BRE";
+    Opcode[Opcode["BNE"] = 24] = "BNE";
+    Opcode[Opcode["BOD"] = 25] = "BOD";
+    Opcode[Opcode["BEV"] = 26] = "BEV";
+    Opcode[Opcode["BLE"] = 27] = "BLE";
+    Opcode[Opcode["BRZ"] = 28] = "BRZ";
+    Opcode[Opcode["BNZ"] = 29] = "BNZ";
+    Opcode[Opcode["BRN"] = 30] = "BRN";
+    Opcode[Opcode["BRP"] = 31] = "BRP";
+    Opcode[Opcode["PSH"] = 32] = "PSH";
+    Opcode[Opcode["POP"] = 33] = "POP";
+    Opcode[Opcode["CAL"] = 34] = "CAL";
+    Opcode[Opcode["RET"] = 35] = "RET";
+    Opcode[Opcode["HLT"] = 36] = "HLT";
+    Opcode[Opcode["CPY"] = 37] = "CPY";
+    Opcode[Opcode["BRC"] = 38] = "BRC";
+    Opcode[Opcode["BNC"] = 39] = "BNC";
     // Complex Instructions
-    Opcodes[Opcodes["MLT"] = 40] = "MLT";
-    Opcodes[Opcodes["DIV"] = 41] = "DIV";
-    Opcodes[Opcodes["MOD"] = 42] = "MOD";
-    Opcodes[Opcodes["BSR"] = 43] = "BSR";
-    Opcodes[Opcodes["BSL"] = 44] = "BSL";
-    Opcodes[Opcodes["SRS"] = 45] = "SRS";
-    Opcodes[Opcodes["BSS"] = 46] = "BSS";
-    Opcodes[Opcodes["SETE"] = 47] = "SETE";
-    Opcodes[Opcodes["SETNE"] = 48] = "SETNE";
-    Opcodes[Opcodes["SETG"] = 49] = "SETG";
-    Opcodes[Opcodes["SETL"] = 50] = "SETL";
-    Opcodes[Opcodes["SETGE"] = 51] = "SETGE";
-    Opcodes[Opcodes["SETLE"] = 52] = "SETLE";
-    Opcodes[Opcodes["SETC"] = 53] = "SETC";
-    Opcodes[Opcodes["SETNC"] = 54] = "SETNC";
-    Opcodes[Opcodes["LLOD"] = 55] = "LLOD";
-    Opcodes[Opcodes["LSTR"] = 56] = "LSTR";
+    Opcode[Opcode["MLT"] = 40] = "MLT";
+    Opcode[Opcode["DIV"] = 41] = "DIV";
+    Opcode[Opcode["MOD"] = 42] = "MOD";
+    Opcode[Opcode["BSR"] = 43] = "BSR";
+    Opcode[Opcode["BSL"] = 44] = "BSL";
+    Opcode[Opcode["SRS"] = 45] = "SRS";
+    Opcode[Opcode["BSS"] = 46] = "BSS";
+    Opcode[Opcode["SETE"] = 47] = "SETE";
+    Opcode[Opcode["SETNE"] = 48] = "SETNE";
+    Opcode[Opcode["SETG"] = 49] = "SETG";
+    Opcode[Opcode["SETL"] = 50] = "SETL";
+    Opcode[Opcode["SETGE"] = 51] = "SETGE";
+    Opcode[Opcode["SETLE"] = 52] = "SETLE";
+    Opcode[Opcode["SETC"] = 53] = "SETC";
+    Opcode[Opcode["SETNC"] = 54] = "SETNC";
+    Opcode[Opcode["LLOD"] = 55] = "LLOD";
+    Opcode[Opcode["LSTR"] = 56] = "LSTR";
     // IO Instructions
-    Opcodes[Opcodes["IN"] = 57] = "IN";
-    Opcodes[Opcodes["OUT"] = 58] = "OUT";
+    Opcode[Opcode["IN"] = 57] = "IN";
+    Opcode[Opcode["OUT"] = 58] = "OUT";
     //----- Debug Instructions
     // assert equals
-    Opcodes[Opcodes["ASE"] = 59] = "ASE";
-})(Opcodes || (Opcodes = {}));
-export var Value_Type;
-(function (Value_Type) {
-    Value_Type[Value_Type["Reg"] = 0] = "Reg";
-    Value_Type[Value_Type["Imm"] = 1] = "Imm";
-})(Value_Type || (Value_Type = {}));
-export var Pre_Value_Type;
-(function (Pre_Value_Type) {
-    Pre_Value_Type[Pre_Value_Type["Reg"] = 0] = "Reg";
-    Pre_Value_Type[Pre_Value_Type["Imm"] = 1] = "Imm";
-    Pre_Value_Type[Pre_Value_Type["Port"] = 2] = "Port";
-    Pre_Value_Type[Pre_Value_Type["Memory"] = 3] = "Memory";
-    Pre_Value_Type[Pre_Value_Type["Label"] = 4] = "Label";
-    Pre_Value_Type[Pre_Value_Type["Char"] = 5] = "Char";
-})(Pre_Value_Type || (Pre_Value_Type = {}));
-export var Op_Type;
-(function (Op_Type) {
-    Op_Type[Op_Type["SET"] = 0] = "SET";
-    Op_Type[Op_Type["GET"] = 1] = "GET";
-    Op_Type[Op_Type["GET_RAM"] = 2] = "GET_RAM";
-    Op_Type[Op_Type["SET_RAM"] = 3] = "SET_RAM";
-    Op_Type[Op_Type["RAM_OFFSET"] = 4] = "RAM_OFFSET";
-})(Op_Type || (Op_Type = {}));
+    Opcode[Opcode["ASE"] = 59] = "ASE";
+})(Opcode || (Opcode = {}));
+export var Register;
+(function (Register) {
+    Register[Register["Zero"] = 0] = "Zero";
+    Register[Register["SP"] = 1] = "SP";
+    Register[Register["Count"] = 2] = "Count";
+})(Register || (Register = {}));
+export var Operant_Prim;
+(function (Operant_Prim) {
+    Operant_Prim[Operant_Prim["Reg"] = 0] = "Reg";
+    Operant_Prim[Operant_Prim["Imm"] = 1] = "Imm";
+})(Operant_Prim || (Operant_Prim = {}));
+export var Operant_Type;
+(function (Operant_Type) {
+    Operant_Type[Operant_Type["Reg"] = 0] = "Reg";
+    Operant_Type[Operant_Type["Imm"] = 1] = "Imm";
+    Operant_Type[Operant_Type["Port"] = 2] = "Port";
+    Operant_Type[Operant_Type["Memory"] = 3] = "Memory";
+    Operant_Type[Operant_Type["Label"] = 4] = "Label";
+    Operant_Type[Operant_Type["Char"] = 5] = "Char";
+})(Operant_Type || (Operant_Type = {}));
+export var Operant_Operation;
+(function (Operant_Operation) {
+    Operant_Operation[Operant_Operation["SET"] = 0] = "SET";
+    Operant_Operation[Operant_Operation["GET"] = 1] = "GET";
+    Operant_Operation[Operant_Operation["GET_RAM"] = 2] = "GET_RAM";
+    Operant_Operation[Operant_Operation["SET_RAM"] = 3] = "SET_RAM";
+    Operant_Operation[Operant_Operation["RAM_OFFSET"] = 4] = "RAM_OFFSET";
+})(Operant_Operation || (Operant_Operation = {}));
 export var URCL_Headers;
 (function (URCL_Headers) {
     URCL_Headers[URCL_Headers["BITS"] = 0] = "BITS";
@@ -159,149 +165,149 @@ export var IO_Ports;
     IO_Ports[IO_Ports["UD15"] = 62] = "UD15";
     IO_Ports[IO_Ports["UD16"] = 63] = "UD16";
 })(IO_Ports || (IO_Ports = {}));
-const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Op_Type;
+const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {
     //----- Core Instructions
     // Add Op2 to Op3 then put result into Op1
-    [Opcodes.ADD]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] + ops[2]; }],
+    [Opcode.ADD]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] + ops[2]; }],
     // Unsigned right shift Op2 once then put result into Op1
-    [Opcodes.RSH]: [[SET, GET], (ops) => { ops[0] = ops[1] >>> 1; }],
+    [Opcode.RSH]: [[SET, GET], (ops) => { ops[0] = ops[1] >>> 1; }],
     // Copy RAM value pointed to by Op2 into Op1
-    [Opcodes.LOD]: [[SET, GAM], (ops) => { ops[0] = ops[1]; }],
+    [Opcode.LOD]: [[SET, GAM], (ops) => { ops[0] = ops[1]; }],
     // Copy Op2 into RAM value pointed to by Op1
-    [Opcodes.STR]: [[SAM, GET], (ops) => { ops[0] = ops[1]; }],
+    [Opcode.STR]: [[SAM, GET], (ops) => { ops[0] = ops[1]; }],
     // Branch to address specified by Op1 if Op2 is more than or equal to Op3
-    [Opcodes.BGE]: [[GET, GET, GET], (ops, s) => { if (ops[1] >= ops[2])
+    [Opcode.BGE]: [[GET, GET, GET], (ops, s) => { if (ops[1] >= ops[2])
             s.pc = ops[0]; }],
     // Bitwise NOR Op2 and Op3 then put result into Op1
-    [Opcodes.NOR]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] | ops[2]); }],
+    [Opcode.NOR]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] | ops[2]); }],
     // Load immediate
-    [Opcodes.IMM]: [[SET, GET], (ops) => { ops[0] = ops[1]; }],
+    [Opcode.IMM]: [[SET, GET], (ops) => { ops[0] = ops[1]; }],
     //----- Basic Instructions
     // Subtract Op3 from Op2 then put result into Op1
-    [Opcodes.SUB]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] - ops[2]; }],
+    [Opcode.SUB]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] - ops[2]; }],
     // Branch to address specified by Op1
-    [Opcodes.JMP]: [[GET], (ops, s) => { s.pc = ops[0]; }],
+    [Opcode.JMP]: [[GET], (ops, s) => { s.pc = ops[0]; }],
     // Copy Op2 to Op1
-    [Opcodes.MOV]: [[SET, GET], (ops) => { ops[0] = ops[1]; }],
+    [Opcode.MOV]: [[SET, GET], (ops) => { ops[0] = ops[1]; }],
     // Copy Op2 to Op1
-    [Opcodes.NOP]: [[], () => { }],
+    [Opcode.NOP]: [[], () => { }],
     // Left shift Op2 once then put result into Op1
-    [Opcodes.LSH]: [[SET, GET], (ops) => { ops[0] = ops[1] << 1; }],
+    [Opcode.LSH]: [[SET, GET], (ops) => { ops[0] = ops[1] << 1; }],
     // Add 1 to Op2 then put result into Op1
-    [Opcodes.INC]: [[SET, GET], (ops) => { ops[0] = ops[1] + 1; }],
+    [Opcode.INC]: [[SET, GET], (ops) => { ops[0] = ops[1] + 1; }],
     // Subtract 1 from Op2 then put result into Op1
-    [Opcodes.DEC]: [[SET, GET], (ops) => { ops[0] = ops[1] - 1; }],
+    [Opcode.DEC]: [[SET, GET], (ops) => { ops[0] = ops[1] - 1; }],
     // Calculates the 2s complement of Op2 then puts answer into Op1
-    [Opcodes.NEG]: [[SET, GET], (ops) => { ops[0] = -ops[1]; }],
+    [Opcode.NEG]: [[SET, GET], (ops) => { ops[0] = -ops[1]; }],
     // Bitwise AND Op2 and Op3 then put result into Op1
-    [Opcodes.AND]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] & ops[2]; }],
+    [Opcode.AND]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] & ops[2]; }],
     // Bitwise OR Op2 and Op3 then put result into Op1
-    [Opcodes.OR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] | ops[2]; }],
+    [Opcode.OR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] | ops[2]; }],
     // Bitwise NOT of Op2 then put result into Op1
-    [Opcodes.NOT]: [[SET, GET], (ops) => { ops[0] = ~ops[1]; }],
+    [Opcode.NOT]: [[SET, GET], (ops) => { ops[0] = ~ops[1]; }],
     // Bitwise XNOR Op2 and Op3 then put result into Op1
-    [Opcodes.XNOR]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] ^ ops[2]); }],
+    [Opcode.XNOR]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] ^ ops[2]); }],
     // Bitwise XOR Op2 and Op3 then put result into Op1
-    [Opcodes.XOR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] ^ ops[2]; }],
+    [Opcode.XOR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] ^ ops[2]; }],
     // Bitwise NAND Op2 and Op3 then put result into Op1
-    [Opcodes.NAND]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] & ops[2]); }],
+    [Opcode.NAND]: [[SET, GET, GET], (ops) => { ops[0] = ~(ops[1] & ops[2]); }],
     // Branch to address specified by Op1 if Op2 is less than Op3
-    [Opcodes.BRL]: [[GET, GET, GET], (ops, s) => { if (ops[1] < ops[2])
+    [Opcode.BRL]: [[GET, GET, GET], (ops, s) => { if (ops[1] < ops[2])
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is more than Op3
-    [Opcodes.BRG]: [[GET, GET, GET], (ops, s) => { if (ops[1] > ops[2])
+    [Opcode.BRG]: [[GET, GET, GET], (ops, s) => { if (ops[1] > ops[2])
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is equal to Op3
-    [Opcodes.BRE]: [[GET, GET, GET], (ops, s) => { if (ops[1] === ops[2])
+    [Opcode.BRE]: [[GET, GET, GET], (ops, s) => { if (ops[1] === ops[2])
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is not equal to Op3
-    [Opcodes.BNE]: [[GET, GET, GET], (ops, s) => { if (ops[1] !== ops[2])
+    [Opcode.BNE]: [[GET, GET, GET], (ops, s) => { if (ops[1] !== ops[2])
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is Odd (AKA the lowest bit is active)
-    [Opcodes.BOD]: [[GET, GET], (ops, s) => { if (ops[1] & 1)
+    [Opcode.BOD]: [[GET, GET], (ops, s) => { if (ops[1] & 1)
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is Even (AKA the lowest bit is not active)
-    [Opcodes.BEV]: [[GET, GET], (ops, s) => { if (!(ops[1] & 1))
+    [Opcode.BEV]: [[GET, GET], (ops, s) => { if (!(ops[1] & 1))
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is less than or equal to Op3
-    [Opcodes.BLE]: [[GET, GET, GET], (ops, s) => { if (ops[1] <= ops[2])
+    [Opcode.BLE]: [[GET, GET, GET], (ops, s) => { if (ops[1] <= ops[2])
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 equal to 0
-    [Opcodes.BRZ]: [[GET, GET], (ops, s) => { if (ops[1] === 0)
+    [Opcode.BRZ]: [[GET, GET], (ops, s) => { if (ops[1] === 0)
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if Op2 is not equal to 0
-    [Opcodes.BNZ]: [[GET, GET], (ops, s) => { if (ops[1] !== 0)
+    [Opcode.BNZ]: [[GET, GET], (ops, s) => { if (ops[1] !== 0)
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if the result of the previous instruction is negative (AKA the upper most bit is active)
-    [Opcodes.BRN]: [[GET, GET], (ops, s) => { if (ops[1] & s.sign_bit)
+    [Opcode.BRN]: [[GET, GET], (ops, s) => { if (ops[1] & s.sign_bit)
             s.pc = ops[0]; }],
     // Branch to address specified by Op1 if the result of the previous instruction is positive (AKA the upper most bit is not active)
-    [Opcodes.BRP]: [[GET, GET], (ops, s) => { if (!(ops[1] & s.sign_bit))
+    [Opcode.BRP]: [[GET, GET], (ops, s) => { if (!(ops[1] & s.sign_bit))
             s.pc = ops[0]; }],
     // Push Op1 onto the value stack
-    [Opcodes.PSH]: [[GET], (ops, s) => { s.push(ops[0]); }],
+    [Opcode.PSH]: [[GET], (ops, s) => { s.push(ops[0]); }],
     // Pop from the value stack into Op1
-    [Opcodes.POP]: [[SET], (ops, s) => { ops[0] = s.pop(); }],
+    [Opcode.POP]: [[SET], (ops, s) => { ops[0] = s.pop(); }],
     // Pushes the address of the next instruction onto the stack then branches to Op1
-    [Opcodes.CAL]: [[GET], (ops, s) => { s.push(s.pc); s.pc = ops[0]; }],
+    [Opcode.CAL]: [[GET], (ops, s) => { s.push(s.pc); s.pc = ops[0]; }],
     // Pops from the stack, then branches to that value
-    [Opcodes.RET]: [[], (_, s) => { s.pc = s.pop(); }],
+    [Opcode.RET]: [[], (_, s) => { s.pc = s.pop(); }],
     // Stop Execution emediately after opcode is read
-    [Opcodes.HLT]: [[], () => { }],
+    [Opcode.HLT]: [[], () => { }],
     // Copies the value located at the RAM location pointed to by Op2 into the RAM position pointed to by Op1.
-    [Opcodes.CPY]: [[SAM, GAM], (ops) => { ops[0] = ops[1]; }],
+    [Opcode.CPY]: [[SAM, GAM], (ops) => { ops[0] = ops[1]; }],
     // Branch to Op1 if Op2 + Op3 gives a carry out
-    [Opcodes.BRC]: [[GET, GET, GET], (ops, s) => { if (ops[1] + ops[2] > s.max_value)
+    [Opcode.BRC]: [[GET, GET, GET], (ops, s) => { if (ops[1] + ops[2] > s.max_value)
             s.pc = ops[0]; }],
     // Branch to Op1 if Op2 + Op3 does not give a carry out
-    [Opcodes.BNC]: [[GET, GET, GET], (ops, s) => { if (ops[1] + ops[2] <= s.max_value)
+    [Opcode.BNC]: [[GET, GET, GET], (ops, s) => { if (ops[1] + ops[2] <= s.max_value)
             s.pc = ops[0]; }],
     //----- Complex Instructions
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1
-    [Opcodes.MLT]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] * ops[2]; }],
+    [Opcode.MLT]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] * ops[2]; }],
     // Unsigned division of Op2 by Op3 then put answer into Op1
-    [Opcodes.DIV]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] / ops[2]; }],
+    [Opcode.DIV]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] / ops[2]; }],
     // Unsigned modulus of Op2 by Op3 then put answer into Op1
-    [Opcodes.MOD]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] % ops[2]; }],
+    [Opcode.MOD]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] % ops[2]; }],
     // Right shift Op2, Op3 times then put result into Op1
-    [Opcodes.BSR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] >>> ops[2]; }],
+    [Opcode.BSR]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] >>> ops[2]; }],
     // Left shift Op2, Op3 times then put result into Op1
-    [Opcodes.BSL]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] << ops[2]; }],
+    [Opcode.BSL]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] << ops[2]; }],
     // Signed right shift Op2 once then put result into Op1
-    [Opcodes.SRS]: [[SET, GET], (ops) => { ops[0] = ops[1] >> 1; }],
+    [Opcode.SRS]: [[SET, GET], (ops) => { ops[0] = ops[1] >> 1; }],
     // Signed right shift Op2, Op3 times then put result into Op1
-    [Opcodes.BSS]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] >> ops[2]; }],
+    [Opcode.BSS]: [[SET, GET, GET], (ops) => { ops[0] = ops[1] >> ops[2]; }],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETE]: [[SET, GET, GET], (ops, s) => { if (ops[1] === ops[2])
+    [Opcode.SETE]: [[SET, GET, GET], (ops, s) => { if (ops[1] === ops[2])
             ops[0] = s.max_value; }],
     // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETNE]: [[SET, GET, GET], (ops, s) => { if (ops[1] !== ops[2])
+    [Opcode.SETNE]: [[SET, GET, GET], (ops, s) => { if (ops[1] !== ops[2])
             ops[0] = s.max_value; }],
     // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETG]: [[SET, GET, GET], (ops, s) => { if (ops[1] > ops[2])
+    [Opcode.SETG]: [[SET, GET, GET], (ops, s) => { if (ops[1] > ops[2])
             ops[0] = s.max_value; }],
     // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETL]: [[SET, GET, GET], (ops, s) => { if (ops[1] < ops[2])
+    [Opcode.SETL]: [[SET, GET, GET], (ops, s) => { if (ops[1] < ops[2])
             ops[0] = s.max_value; }],
     // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETGE]: [[SET, GET, GET], (ops, s) => { if (ops[1] >= ops[2])
+    [Opcode.SETGE]: [[SET, GET, GET], (ops, s) => { if (ops[1] >= ops[2])
             ops[0] = s.max_value; }],
     // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcodes.SETLE]: [[SET, GET, GET], (ops, s) => { if (ops[1] <= ops[2])
+    [Opcode.SETLE]: [[SET, GET, GET], (ops, s) => { if (ops[1] <= ops[2])
             ops[0] = s.max_value; }],
     // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcodes.SETC]: [[SET, GET, GET], (ops, s) => { if (ops[1] + ops[2] > s.max_value)
+    [Opcode.SETC]: [[SET, GET, GET], (ops, s) => { if (ops[1] + ops[2] > s.max_value)
             ops[0] = s.max_value; }],
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcodes.SETNC]: [[SET, GET, GET], (ops, s) => { if (ops[1] + ops[2] <= s.max_value)
+    [Opcode.SETNC]: [[SET, GET, GET], (ops, s) => { if (ops[1] + ops[2] <= s.max_value)
             ops[0] = s.max_value; }],
     // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
-    [Opcodes.LLOD]: [[SET, RAO, GAM], (ops) => { ops[0] = ops[2]; }],
+    [Opcode.LLOD]: [[SET, RAO, GAM], (ops) => { ops[0] = ops[2]; }],
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
-    [Opcodes.LLOD]: [[RAO, SAM, GET], (ops) => { ops[1] = ops[2]; }],
+    [Opcode.LLOD]: [[RAO, SAM, GET], (ops) => { ops[1] = ops[2]; }],
     //----- IO Instructions
-    [Opcodes.IN]: [[SET, GET], async (ops, s) => { ops[0] = await s.in(ops[1]); }],
-    [Opcodes.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
+    [Opcode.IN]: [[SET, GET], async (ops, s) => { ops[0] = await s.in(ops[1]); }],
+    [Opcode.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
 };
 //# sourceMappingURL=instructions.js.map
