@@ -98,7 +98,7 @@ supported ports are TEXT`);
                     value += i;;
                 } break;
                 case 'R': case 'r': case '$': [type, value] = parse_number(Value_Type.Reg, 1); break;
-                case '#': [type, value] = parse_number(Value_Type.Imm, 1); break;
+                case 'M': case 'm': case '#': [type, value] = parse_number(Value_Type.Imm, 1); break;
                 case '%': [type, value] = parse_port(1); break;
                 case '\'': case '"': {
                     type = Value_Type.Imm;
@@ -191,7 +191,7 @@ class Emulator implements Instruction_Ctx {
         device(value);
     }
     async run(){
-        const max_cycles = 100;
+        const max_cycles = 1_000_000;
         let cycles = 0;
         for (;cycles < max_cycles; cycles++){
             const pc = this.pc++;

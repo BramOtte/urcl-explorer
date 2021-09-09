@@ -104,6 +104,8 @@ supported ports are TEXT`);
                 case '$':
                     [type, value] = parse_number(Value_Type.Reg, 1);
                     break;
+                case 'M':
+                case 'm':
                 case '#':
                     [type, value] = parse_number(Value_Type.Imm, 1);
                     break;
@@ -191,7 +193,7 @@ class Emulator {
         device(value);
     }
     async run() {
-        const max_cycles = 100;
+        const max_cycles = 1_000_000;
         let cycles = 0;
         for (; cycles < max_cycles; cycles++) {
             const pc = this.pc++;
