@@ -13,16 +13,22 @@ export class Console_IO {
     private async read(): Promise<void>{
         return new Promise((res) => {
             this.input.read(() => {
+                this.fully_read = false;
                 res();
             })
         });
     }
-
+    private fully_read = true;
     async text_in(): Promise<Word>{
-        if (this.input.text){
+        if (!this.input.text && !this.fully_read){
+            this.fully_read = true;
+            return 0;
+        }
+        if (!this.input.text){
             await this.read();
         }
         const char_code = this.input.text.charCodeAt(0);
+        this.input.text = this.input.text.slice(1);
         return char_code;
     }
     text_out(value: Word): void {

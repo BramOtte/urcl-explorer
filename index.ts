@@ -34,7 +34,7 @@ const console_io = new Console_IO({
 );
     
 source_input.addEventListener("input", onchange);
-fetch("examples/urcl/fib.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

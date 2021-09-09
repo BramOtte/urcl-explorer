@@ -1,26 +1,21 @@
 CAL .prompt
-IN $1 %NUMB
-OUT %NUMB $1
-OUT %TEXT '\n'
-
+MOV $2 $1
 CAL .prompt
-IN $2 %NUMB
-OUT %NUMB $2
-OUT %TEXT '\n'
+MOV $3 $1
 
-OUT %NUMB $1
-OUT %TEXT '\n'
 OUT %NUMB $2
+OUT %TEXT '\n'
+OUT %NUMB $3
 OUT %TEXT '\n'
 .loop
-    ADD $1 $1 $2
-    OUT %NUMB $1
-    OUT %TEXT '\n'
-    BRC .stop $1 $2
-    ADD $2 $1 $2
+    ADD $2 $2 $3
     OUT %NUMB $2
     OUT %TEXT '\n'
-    BNC .loop $1 $2
+    BRC .stop $2 $3
+    ADD $3 $2 $3
+    OUT %NUMB $3
+    OUT %TEXT '\n'
+    BNC .loop $2 $3
 .stop
 HLT
 .prompt
@@ -40,4 +35,7 @@ HLT
     OUT %TEXT 'r'
     OUT %TEXT ':'
     OUT %TEXT ' '
+    IN $1 %NUMB
+    OUT %NUMB $1
+    OUT %TEXT '\n'
     RET
