@@ -222,7 +222,7 @@ class Emulator {
                         ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset];
                         break;
                     case Op_Type.RAM_OFFSET:
-                        ram_offset = op_types[i];
+                        ram_offset = this.read(op_types[i], op_values[i]);
                         break;
                 }
             }

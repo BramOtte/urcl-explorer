@@ -211,7 +211,7 @@ class Emulator implements Instruction_Ctx {
                 switch (op_operations[i]){
                     case Op_Type.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
                     case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
-                    case Op_Type.RAM_OFFSET: ram_offset = op_types[i]; break;
+                    case Op_Type.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
                 }
             }
             await func(ops, this);
