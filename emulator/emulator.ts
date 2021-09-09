@@ -206,20 +206,19 @@ class Emulator implements Instruction_Ctx {
             const op_types = this.program.operant_types[pc];
             const op_values = this.program.operant_values[pc];
             const ops = op_operations.map(() => 0);
-            for (let i = 0, min = 0; i < op_operations.length; i++){
-                const operation = op_operations[i];
-                const op_type = op_types[i - min];
-                const op_value = op_values[i - min];
-                switch (operation){
-                    case Op_Type.GET: ops[i] = this.read(op_type, op_value); break;
-                    case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_type, op_value)]; break;
+            let ram_offset = 0;
+            for (let i = 0; i < op_operations.length; i++){
+                switch (op_operations[i]){
+                    case Op_Type.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
+                    case Op_Type.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
+                    case Op_Type.RAM_OFFSET: ram_offset = op_types[i]; break;
                 }
             }
             await func(ops, this);
             for (let i = 0; i < op_operations.length; i++){
                 switch (op_operations[i]){
                     case Op_Type.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                    case Op_Type.SET_RAM: this.memory[this.read(op_types[i], op_values[i])] = ops[i]; break;
+                    case Op_Type.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
                 }
             }
         }

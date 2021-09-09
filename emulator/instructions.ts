@@ -23,12 +23,18 @@ export enum Opcodes {
     // assert equals
     ASE
 }
+
 export enum Value_Type {
     Reg, Imm
-} 
+}
+
+export enum Pre_Value_Type {
+    Reg = Value_Type.Reg, Imm = Value_Type.Imm,
+    Port, Memory, Label, Char
+}
 
 export enum Op_Type {
-    SET, GET, GET_RAM, SET_RAM
+    SET, GET, GET_RAM, SET_RAM, RAM_OFFSET
 }
 
 export enum URCL_Headers {
@@ -65,7 +71,7 @@ export interface Instruction_Ctx {
 
 type Instruction_Callback = (ops: Arr<Word>, ctx: Instruction_Ctx) => void | Promise<void>;
 
-const {SET, GET, GET_RAM: GAM, SET_RAM: SAM} = Op_Type;
+const {SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO} = Op_Type;
 export const Opcodes_operants: Partial<Record<Opcodes, [Op_Type[], Instruction_Callback]>> = {
     //----- Core Instructions
     // Add Op2 to Op3 then put result into Op1
@@ -152,8 +158,40 @@ export const Opcodes_operants: Partial<Record<Opcodes, [Op_Type[], Instruction_C
     [Opcodes.BNC ]: [[GET, GET, GET], (ops, s) => {if (ops[1] + ops[2] <= s.max_value) s.pc = ops[0]}],
 
     //----- Complex Instructions
-    [Opcodes.MLT ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] * ops[2]}],
-    [Opcodes.DIV ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] / ops[2]}],
+    // Multiply Op2 by Op3 then put the lower half of the answer into Op1
+    [Opcodes.MLT  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] * ops[2]}],
+    // Unsigned division of Op2 by Op3 then put answer into Op1
+    [Opcodes.DIV  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] / ops[2]}],
+    // Unsigned modulus of Op2 by Op3 then put answer into Op1
+    [Opcodes.MOD  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] % ops[2]}],
+    // Right shift Op2, Op3 times then put result into Op1
+    [Opcodes.BSR  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] >>> ops[2]}],
+    // Left shift Op2, Op3 times then put result into Op1
+    [Opcodes.BSL  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] << ops[2]}],
+    // Signed right shift Op2 once then put result into Op1
+    [Opcodes.SRS  ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] >> 1}],
+    // Signed right shift Op2, Op3 times then put result into Op1
+    [Opcodes.BSS  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] >> ops[2]}],
+    // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETE ]: [[SET, GET, GET], (ops, s) => {if (ops[1] === ops[2]) ops[0] = s.max_value}],
+    // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETNE]: [[SET, GET, GET], (ops, s) => {if (ops[1] !== ops[2]) ops[0] = s.max_value}],
+    // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETG ]: [[SET, GET, GET], (ops, s) => {if (ops[1] > ops[2]) ops[0] = s.max_value}],
+    // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETL ]: [[SET, GET, GET], (ops, s) => {if (ops[1] < ops[2]) ops[0] = s.max_value}],
+    // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETGE]: [[SET, GET, GET], (ops, s) => {if (ops[1] >= ops[2]) ops[0] = s.max_value}],
+    // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
+    [Opcodes.SETLE]: [[SET, GET, GET], (ops, s) => {if (ops[1] <= ops[2]) ops[0] = s.max_value}],
+    // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
+    [Opcodes.SETC ]: [[SET, GET, GET], (ops, s) => {if (ops[1] + ops[2] > s.max_value) ops[0] = s.max_value}],
+    // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
+    [Opcodes.SETNC]: [[SET, GET, GET], (ops, s) => {if (ops[1] + ops[2] <= s.max_value) ops[0] = s.max_value}],
+    // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
+    [Opcodes.LLOD ]: [[SET, RAO, GAM], (ops) => {ops[0] = ops[2]}],
+    // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
+    [Opcodes.LLOD ]: [[RAO, SAM, GET], (ops) => {ops[1] = ops[2]}],
 
     //----- IO Instructions
     [Opcodes.IN  ]: [[SET, GET], async (ops, s) => {ops[0] = await s.in(ops[1])}],

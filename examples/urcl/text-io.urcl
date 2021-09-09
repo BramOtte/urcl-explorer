@@ -1,28 +1,31 @@
-.loop
-    OUT %TEXT 'W'
-    OUT %TEXT 'h'
-    OUT %TEXT 'o'
-    OUT %TEXT ' '
-    OUT %TEXT 'a'
-    OUT %TEXT 'r'
-    OUT %TEXT 'e'
-    OUT %TEXT ' '
-    OUT %TEXT 'y'
-    OUT %TEXT 'o'
-    OUT %TEXT 'u'
-    OUT %TEXT '?'
-        
-    IMM $1 #0
-    CAL .text_in
-    OUT %TEXT '\n'
-    OUT %TEXT 'H'
-    OUT %TEXT 'e'
-    OUT %TEXT 'l'
-    OUT %TEXT 'l'
-    OUT %TEXT 'o'
-    OUT %TEXT ' '
-    IMM $1 #0
-    CAL .text_out
+OUT %TEXT 'W'
+OUT %TEXT 'h'
+OUT %TEXT 'o'
+OUT %TEXT ' '
+OUT %TEXT 'a'
+OUT %TEXT 'r'
+OUT %TEXT 'e'
+OUT %TEXT ' '
+OUT %TEXT 'y'
+OUT %TEXT 'o'
+OUT %TEXT 'u'
+OUT %TEXT '?'
+OUT %TEXT ':'
+OUT %TEXT ' '
+
+    
+IMM $1 #0
+CAL .text_in
+OUT %TEXT '\n'
+OUT %TEXT 'H'
+OUT %TEXT 'e'
+OUT %TEXT 'l'
+OUT %TEXT 'l'
+OUT %TEXT 'o'
+OUT %TEXT ' '
+IMM $1 #0
+CAL .text_out
+HLT
 
 .text_in // start: in $1 char*, ch: $2 var
     IN $2 %TEXT
