@@ -1,5 +1,5 @@
 import { i53, Word, object_map } from "./util.js";
-import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Headers, IO_Ports, Register} from "./instructions.js";
+import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Ports, Register} from "./instructions.js";
 
 
 const Opcodes_operant_lengths: Record<Opcode, i53> 
@@ -38,7 +38,7 @@ export function emulator_new(file: string) {
                 .replace(/' /g, "'\xA0").replace(/,/g, "")
                 .split(" ").filter(str => str.length > 0);
             const opcode_str = parts[0];
-            const header: URCL_Headers | undefined = URCL_Headers[opcode_str as any] as any;
+            const header: URCL_Header | undefined = URCL_Header[opcode_str as any] as any;
             if (header){
                 continue;
             }
@@ -97,11 +97,6 @@ supported ports are TEXT`);
                     [type, value] = parse_number(Operant_Prim.Imm, 0);
                     value += i;;
                 } break;
-                case 'S': if (operant === "SP"){
-                    type = Operant_Prim.Reg; value = 0;
-                } else {
-                    throw new Error(`Unkown operant S on line ${line_nr}\n${lines[line_nr]}`);
-                } break;
                 case 'R': case 'r': case '$': {
                     [type, value] = parse_number(Operant_Prim.Reg, 1);
                     value += Register.Count;
@@ -113,7 +108,23 @@ supported ports are TEXT`);
                     const char_lit = JSON.parse(operant.replace(/'/g, '"'));
                     value = char_lit.charCodeAt(0);
                 } break;
-                default: [type, value] = parse_number(Operant_Prim.Imm, 0);
+                default: {
+                    value = parseInt(operant);
+                    if (!Number.isNaN(value)){
+                        type = Operant_Prim.Imm;
+                        [type, value] = parse_number(Operant_Prim.Imm, 0);
+                        break;
+                    }
+                    const register:  Register | undefined = Register[operant as any] as any;
+                    console.log(register);
+                    if (register) {
+                        type = Operant_Prim.Reg;
+                        value = register;
+                        break
+                    }
+                    throw new Error(`invalid operant ${operant} on line ${line_nr}\n${lines[line_nr]}`);
+                    
+                }
             }
             (operant_prims[i] = operant_prims[i] ?? []).push(type);
             (operant_values[i] = operant_values[i] ?? []).push(value);
@@ -250,7 +261,7 @@ class Emulator implements Instruction_Ctx {
     read(source: Operant_Prim, value: Word){
         switch (source){
             case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return value === Register.Zero ? 0 : this.registers[value];
+            case Operant_Prim.Reg: return value === Register["$0"] ? 0 : this.registers[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

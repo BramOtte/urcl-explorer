@@ -25,7 +25,7 @@ export enum Opcode {
 }
 
 export enum Register {
-    Zero, SP, Count
+    "$0", PC, SP, Count
 }
 
 export enum Operant_Prim {
@@ -41,9 +41,25 @@ export enum Operant_Operation {
     SET, GET, GET_RAM, SET_RAM, RAM_OFFSET
 }
 
-export enum URCL_Headers {
-    BITS, MINREG, RUN, MINSTACK
+export enum URCL_Header {
+    BITS, MINREG, MINHEAP, RUN, MINSTACK
 }
+
+export enum Header_Operant {
+    "==", "<=", ">=", 
+}
+export enum Header_Run {
+    ROM, RAM
+}
+
+export const urcl_headers = {
+    [URCL_Header.BITS]: {def: 8},
+    [URCL_Header.MINREG]: {def: 8},
+    [URCL_Header.MINHEAP]: {def: 16},
+    [URCL_Header.RUN]: {def: Header_Run.ROM},
+    [URCL_Header.MINSTACK]: {def: 8},
+}
+
 export enum IO_Ports {
     // General
     CPUBUS, TEXT, NUMB, SUPPORTED = 5, SPECIAL, PROFILE,

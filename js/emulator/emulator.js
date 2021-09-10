@@ -1,5 +1,5 @@
 import { object_map } from "./util.js";
-import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Headers, IO_Ports, Register } from "./instructions.js";
+import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Ports, Register } from "./instructions.js";
 const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
         throw new Error("instruction definition undefined");
@@ -36,7 +36,7 @@ export function emulator_new(file) {
                 .replace(/' /g, "'\xA0").replace(/,/g, "")
                 .split(" ").filter(str => str.length > 0);
             const opcode_str = parts[0];
-            const header = URCL_Headers[opcode_str];
+            const header = URCL_Header[opcode_str];
             if (header) {
                 continue;
             }
@@ -99,15 +99,6 @@ supported ports are TEXT`);
                         ;
                     }
                     break;
-                case 'S':
-                    if (operant === "SP") {
-                        type = Operant_Prim.Reg;
-                        value = 0;
-                    }
-                    else {
-                        throw new Error(`Unkown operant S on line ${line_nr}\n${lines[line_nr]}`);
-                    }
-                    break;
                 case 'R':
                 case 'r':
                 case '$':
@@ -132,7 +123,22 @@ supported ports are TEXT`);
                         value = char_lit.charCodeAt(0);
                     }
                     break;
-                default: [type, value] = parse_number(Operant_Prim.Imm, 0);
+                default: {
+                    value = parseInt(operant);
+                    if (!Number.isNaN(value)) {
+                        type = Operant_Prim.Imm;
+                        [type, value] = parse_number(Operant_Prim.Imm, 0);
+                        break;
+                    }
+                    const register = Register[operant];
+                    console.log(register);
+                    if (register) {
+                        type = Operant_Prim.Reg;
+                        value = register;
+                        break;
+                    }
+                    throw new Error(`invalid operant ${operant} on line ${line_nr}\n${lines[line_nr]}`);
+                }
             }
             (operant_prims[i] = operant_prims[i] ?? []).push(type);
             (operant_values[i] = operant_values[i] ?? []).push(value);
@@ -272,7 +278,7 @@ class Emulator {
     read(source, value) {
         switch (source) {
             case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return value === Register.Zero ? 0 : this.registers[value];
+            case Operant_Prim.Reg: return value === Register["$0"] ? 0 : this.registers[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

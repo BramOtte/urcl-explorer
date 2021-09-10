@@ -70,9 +70,10 @@ export var Opcode;
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
-    Register[Register["Zero"] = 0] = "Zero";
-    Register[Register["SP"] = 1] = "SP";
-    Register[Register["Count"] = 2] = "Count";
+    Register[Register["$0"] = 0] = "$0";
+    Register[Register["PC"] = 1] = "PC";
+    Register[Register["SP"] = 2] = "SP";
+    Register[Register["Count"] = 3] = "Count";
 })(Register || (Register = {}));
 export var Operant_Prim;
 (function (Operant_Prim) {
@@ -96,13 +97,32 @@ export var Operant_Operation;
     Operant_Operation[Operant_Operation["SET_RAM"] = 3] = "SET_RAM";
     Operant_Operation[Operant_Operation["RAM_OFFSET"] = 4] = "RAM_OFFSET";
 })(Operant_Operation || (Operant_Operation = {}));
-export var URCL_Headers;
-(function (URCL_Headers) {
-    URCL_Headers[URCL_Headers["BITS"] = 0] = "BITS";
-    URCL_Headers[URCL_Headers["MINREG"] = 1] = "MINREG";
-    URCL_Headers[URCL_Headers["RUN"] = 2] = "RUN";
-    URCL_Headers[URCL_Headers["MINSTACK"] = 3] = "MINSTACK";
-})(URCL_Headers || (URCL_Headers = {}));
+export var URCL_Header;
+(function (URCL_Header) {
+    URCL_Header[URCL_Header["BITS"] = 0] = "BITS";
+    URCL_Header[URCL_Header["MINREG"] = 1] = "MINREG";
+    URCL_Header[URCL_Header["MINHEAP"] = 2] = "MINHEAP";
+    URCL_Header[URCL_Header["RUN"] = 3] = "RUN";
+    URCL_Header[URCL_Header["MINSTACK"] = 4] = "MINSTACK";
+})(URCL_Header || (URCL_Header = {}));
+export var Header_Operant;
+(function (Header_Operant) {
+    Header_Operant[Header_Operant["=="] = 0] = "==";
+    Header_Operant[Header_Operant["<="] = 1] = "<=";
+    Header_Operant[Header_Operant[">="] = 2] = ">=";
+})(Header_Operant || (Header_Operant = {}));
+export var Header_Run;
+(function (Header_Run) {
+    Header_Run[Header_Run["ROM"] = 0] = "ROM";
+    Header_Run[Header_Run["RAM"] = 1] = "RAM";
+})(Header_Run || (Header_Run = {}));
+export const urcl_headers = {
+    [URCL_Header.BITS]: { def: 8 },
+    [URCL_Header.MINREG]: { def: 8 },
+    [URCL_Header.MINHEAP]: { def: 16 },
+    [URCL_Header.RUN]: { def: Header_Run.ROM },
+    [URCL_Header.MINSTACK]: { def: 8 },
+};
 export var IO_Ports;
 (function (IO_Ports) {
     // General
