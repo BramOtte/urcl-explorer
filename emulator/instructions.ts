@@ -21,35 +21,38 @@ export enum Opcode {
 
     //----- Debug Instructions
     // assert equals
-    ASE
+    ASE, _Count
 }
 
 export enum Register {
-    "$0", PC, SP, Count
+    "r0" = 0, "r1" = 0, "$0" = 0, 
+    Zero = 0, PC, SP,
+    _Count
 }
 
 export enum Operant_Prim {
-    Reg, Imm
+    Reg, Imm, _Count
 }
 
 export enum Operant_Type {
     Reg = Operant_Prim.Reg, Imm = Operant_Prim.Imm,
-    Port, Memory, Label, Char
+    Port, Memory, Label, Char,
+    _Count
 }
 
 export enum Operant_Operation {
-    SET, GET, GET_RAM, SET_RAM, RAM_OFFSET
+    SET, GET, GET_RAM, SET_RAM, RAM_OFFSET, _Count
 }
 
 export enum URCL_Header {
-    BITS, MINREG, MINHEAP, RUN, MINSTACK
+    BITS, MINREG, MINHEAP, RUN, MINSTACK, _Count
 }
 
 export enum Header_Operant {
-    "==", "<=", ">=", 
+    "==", "<=", ">=", _Count
 }
 export enum Header_Run {
-    ROM, RAM
+    ROM, RAM, _Count
 }
 
 export const urcl_headers = {
@@ -75,6 +78,7 @@ export enum IO_Ports {
     RNG, NOTE, INSTR, NLEG, WAIT, NADDR, DATA, M_SPECIAL,
     // User defined
     UD1, UD2, UD3, UD4, UD5, UD6, UD7, UD8, UD9, UD10, UD11, UD12, UD13, UD14, UD15, UD16,
+    _Count
 }
 
 export interface Instruction_Ctx {

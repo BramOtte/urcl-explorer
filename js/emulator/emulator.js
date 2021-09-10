@@ -104,7 +104,7 @@ supported ports are TEXT`);
                 case '$':
                     {
                         [type, value] = parse_number(Operant_Prim.Reg, 1);
-                        value += Register.Count;
+                        value += Register._Count;
                     }
                     break;
                 case 'M':

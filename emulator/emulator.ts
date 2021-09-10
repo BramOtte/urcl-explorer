@@ -99,7 +99,7 @@ supported ports are TEXT`);
                 } break;
                 case 'R': case 'r': case '$': {
                     [type, value] = parse_number(Operant_Prim.Reg, 1);
-                    value += Register.Count;
+                    value += Register._Count;
                 }break;
                 case 'M': case 'm': case '#': [type, value] = parse_number(Operant_Prim.Imm, 1); break;
                 case '%': [type, value] = parse_port(1); break;
