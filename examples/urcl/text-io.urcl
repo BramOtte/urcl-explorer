@@ -1,3 +1,11 @@
+BITS == 16
+MINREG 8
+MINHEAP 16
+RUN RAM
+MINSTACK 8
+
+BITS == 8
+
 OUT %TEXT 'W'
 OUT %TEXT 'h'
 OUT %TEXT 'o'
@@ -45,3 +53,4 @@ HLT
     .text_out_end
     RET
 
+    

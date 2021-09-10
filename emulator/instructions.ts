@@ -1,4 +1,4 @@
-import { Arr, enum_count, i53, Word } from "./util.js";
+import { Arr, enum_count, i53, object_map, Word } from "./util.js";
 
 // export 
 export enum Opcode {
@@ -25,19 +25,18 @@ export enum Opcode {
 }
 
 export enum Register {
-    "r0" = 0, "r1" = 0, "$0" = 0, 
-    Zero = 0, PC, SP
+    R0 = 0, PC, SP
 }
 export const register_count = enum_count(Register);
 console.log(register_count);
 
 export enum Operant_Prim {
-    Reg, Imm
+    Reg, Imm,
 }
 
 export enum Operant_Type {
     Reg = Operant_Prim.Reg, Imm = Operant_Prim.Imm,
-    Port, Memory, Label, Char
+    Memory, Label,
 }
 
 export enum Operant_Operation {
@@ -56,15 +55,21 @@ export enum Header_Run {
     ROM, RAM
 }
 
-export const urcl_headers = {
-    [URCL_Header.BITS]: {def: 8},
+interface URCL_Header_Def {
+    def: number,
+    def_operant?: Header_Operant,
+    in?: Record<string, unknown>
+}
+
+export const urcl_headers: Record<URCL_Header, URCL_Header_Def> = {
+    [URCL_Header.BITS]: {def: 8, def_operant: Header_Operant["=="]},
     [URCL_Header.MINREG]: {def: 8},
     [URCL_Header.MINHEAP]: {def: 16},
-    [URCL_Header.RUN]: {def: Header_Run.ROM},
+    [URCL_Header.RUN]: {def: Header_Run.ROM, in: Header_Run},
     [URCL_Header.MINSTACK]: {def: 8},
 }
 
-export enum IO_Ports {
+export enum IO_Port {
     // General
     CPUBUS, TEXT, NUMB, SUPPORTED = 5, SPECIAL, PROFILE,
     // Graphics
@@ -221,3 +226,8 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.IN  ]: [[SET, GET], async (ops, s) => {ops[0] = await s.in(ops[1])}],
     [Opcode.OUT ]: [[GET, GET], (ops, s) => {s.out(ops[0], ops[1])}],
 };
+export const Opcodes_operant_lengths: Record<Opcode, i53> 
+    = object_map(Opcodes_operants, (key, value) => {
+        if (value === undefined){throw new Error("instruction definition undefined");}
+        return [key, value[0].length];
+    });

@@ -1,4 +1,4 @@
-import { enum_count } from "./util.js";
+import { enum_count, object_map } from "./util.js";
 // export 
 export var Opcode;
 (function (Opcode) {
@@ -71,10 +71,7 @@ export var Opcode;
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
-    Register[Register["r0"] = 0] = "r0";
-    Register[Register["r1"] = 0] = "r1";
-    Register[Register["$0"] = 0] = "$0";
-    Register[Register["Zero"] = 0] = "Zero";
+    Register[Register["R0"] = 0] = "R0";
     Register[Register["PC"] = 1] = "PC";
     Register[Register["SP"] = 2] = "SP";
 })(Register || (Register = {}));
@@ -89,10 +86,8 @@ export var Operant_Type;
 (function (Operant_Type) {
     Operant_Type[Operant_Type["Reg"] = 0] = "Reg";
     Operant_Type[Operant_Type["Imm"] = 1] = "Imm";
-    Operant_Type[Operant_Type["Port"] = 2] = "Port";
-    Operant_Type[Operant_Type["Memory"] = 3] = "Memory";
-    Operant_Type[Operant_Type["Label"] = 4] = "Label";
-    Operant_Type[Operant_Type["Char"] = 5] = "Char";
+    Operant_Type[Operant_Type["Memory"] = 2] = "Memory";
+    Operant_Type[Operant_Type["Label"] = 3] = "Label";
 })(Operant_Type || (Operant_Type = {}));
 export var Operant_Operation;
 (function (Operant_Operation) {
@@ -122,74 +117,74 @@ export var Header_Run;
     Header_Run[Header_Run["RAM"] = 1] = "RAM";
 })(Header_Run || (Header_Run = {}));
 export const urcl_headers = {
-    [URCL_Header.BITS]: { def: 8 },
+    [URCL_Header.BITS]: { def: 8, def_operant: Header_Operant["=="] },
     [URCL_Header.MINREG]: { def: 8 },
     [URCL_Header.MINHEAP]: { def: 16 },
-    [URCL_Header.RUN]: { def: Header_Run.ROM },
+    [URCL_Header.RUN]: { def: Header_Run.ROM, in: Header_Run },
     [URCL_Header.MINSTACK]: { def: 8 },
 };
-export var IO_Ports;
-(function (IO_Ports) {
+export var IO_Port;
+(function (IO_Port) {
     // General
-    IO_Ports[IO_Ports["CPUBUS"] = 0] = "CPUBUS";
-    IO_Ports[IO_Ports["TEXT"] = 1] = "TEXT";
-    IO_Ports[IO_Ports["NUMB"] = 2] = "NUMB";
-    IO_Ports[IO_Ports["SUPPORTED"] = 5] = "SUPPORTED";
-    IO_Ports[IO_Ports["SPECIAL"] = 6] = "SPECIAL";
-    IO_Ports[IO_Ports["PROFILE"] = 7] = "PROFILE";
+    IO_Port[IO_Port["CPUBUS"] = 0] = "CPUBUS";
+    IO_Port[IO_Port["TEXT"] = 1] = "TEXT";
+    IO_Port[IO_Port["NUMB"] = 2] = "NUMB";
+    IO_Port[IO_Port["SUPPORTED"] = 5] = "SUPPORTED";
+    IO_Port[IO_Port["SPECIAL"] = 6] = "SPECIAL";
+    IO_Port[IO_Port["PROFILE"] = 7] = "PROFILE";
     // Graphics
-    IO_Ports[IO_Ports["X"] = 8] = "X";
-    IO_Ports[IO_Ports["Y"] = 9] = "Y";
-    IO_Ports[IO_Ports["COLOR"] = 10] = "COLOR";
-    IO_Ports[IO_Ports["BUFFER"] = 11] = "BUFFER";
-    IO_Ports[IO_Ports["G_SPECIAL"] = 15] = "G_SPECIAL";
+    IO_Port[IO_Port["X"] = 8] = "X";
+    IO_Port[IO_Port["Y"] = 9] = "Y";
+    IO_Port[IO_Port["COLOR"] = 10] = "COLOR";
+    IO_Port[IO_Port["BUFFER"] = 11] = "BUFFER";
+    IO_Port[IO_Port["G_SPECIAL"] = 15] = "G_SPECIAL";
     // Text
-    IO_Ports[IO_Ports["ASCII"] = 16] = "ASCII";
-    IO_Ports[IO_Ports["CHAR5"] = 17] = "CHAR5";
-    IO_Ports[IO_Ports["CHAR6"] = 18] = "CHAR6";
-    IO_Ports[IO_Ports["ASCII7"] = 19] = "ASCII7";
-    IO_Ports[IO_Ports["UTF8"] = 20] = "UTF8";
-    IO_Ports[IO_Ports["T_SPECIAL"] = 23] = "T_SPECIAL";
+    IO_Port[IO_Port["ASCII"] = 16] = "ASCII";
+    IO_Port[IO_Port["CHAR5"] = 17] = "CHAR5";
+    IO_Port[IO_Port["CHAR6"] = 18] = "CHAR6";
+    IO_Port[IO_Port["ASCII7"] = 19] = "ASCII7";
+    IO_Port[IO_Port["UTF8"] = 20] = "UTF8";
+    IO_Port[IO_Port["T_SPECIAL"] = 23] = "T_SPECIAL";
     // Numbers
-    IO_Ports[IO_Ports["INT"] = 24] = "INT";
-    IO_Ports[IO_Ports["UINT"] = 25] = "UINT";
-    IO_Ports[IO_Ports["BIN"] = 26] = "BIN";
-    IO_Ports[IO_Ports["HEX"] = 27] = "HEX";
-    IO_Ports[IO_Ports["FLOAT"] = 28] = "FLOAT";
-    IO_Ports[IO_Ports["FIXED"] = 29] = "FIXED";
-    IO_Ports[IO_Ports["N_SPECIAL"] = 31] = "N_SPECIAL";
+    IO_Port[IO_Port["INT"] = 24] = "INT";
+    IO_Port[IO_Port["UINT"] = 25] = "UINT";
+    IO_Port[IO_Port["BIN"] = 26] = "BIN";
+    IO_Port[IO_Port["HEX"] = 27] = "HEX";
+    IO_Port[IO_Port["FLOAT"] = 28] = "FLOAT";
+    IO_Port[IO_Port["FIXED"] = 29] = "FIXED";
+    IO_Port[IO_Port["N_SPECIAL"] = 31] = "N_SPECIAL";
     // Storage
-    IO_Ports[IO_Ports["ADDR"] = 32] = "ADDR";
-    IO_Ports[IO_Ports["BUS"] = 33] = "BUS";
-    IO_Ports[IO_Ports["PAGE"] = 34] = "PAGE";
-    IO_Ports[IO_Ports["S_SPECIAL"] = 39] = "S_SPECIAL";
+    IO_Port[IO_Port["ADDR"] = 32] = "ADDR";
+    IO_Port[IO_Port["BUS"] = 33] = "BUS";
+    IO_Port[IO_Port["PAGE"] = 34] = "PAGE";
+    IO_Port[IO_Port["S_SPECIAL"] = 39] = "S_SPECIAL";
     // Miscellaneous
-    IO_Ports[IO_Ports["RNG"] = 40] = "RNG";
-    IO_Ports[IO_Ports["NOTE"] = 41] = "NOTE";
-    IO_Ports[IO_Ports["INSTR"] = 42] = "INSTR";
-    IO_Ports[IO_Ports["NLEG"] = 43] = "NLEG";
-    IO_Ports[IO_Ports["WAIT"] = 44] = "WAIT";
-    IO_Ports[IO_Ports["NADDR"] = 45] = "NADDR";
-    IO_Ports[IO_Ports["DATA"] = 46] = "DATA";
-    IO_Ports[IO_Ports["M_SPECIAL"] = 47] = "M_SPECIAL";
+    IO_Port[IO_Port["RNG"] = 40] = "RNG";
+    IO_Port[IO_Port["NOTE"] = 41] = "NOTE";
+    IO_Port[IO_Port["INSTR"] = 42] = "INSTR";
+    IO_Port[IO_Port["NLEG"] = 43] = "NLEG";
+    IO_Port[IO_Port["WAIT"] = 44] = "WAIT";
+    IO_Port[IO_Port["NADDR"] = 45] = "NADDR";
+    IO_Port[IO_Port["DATA"] = 46] = "DATA";
+    IO_Port[IO_Port["M_SPECIAL"] = 47] = "M_SPECIAL";
     // User defined
-    IO_Ports[IO_Ports["UD1"] = 48] = "UD1";
-    IO_Ports[IO_Ports["UD2"] = 49] = "UD2";
-    IO_Ports[IO_Ports["UD3"] = 50] = "UD3";
-    IO_Ports[IO_Ports["UD4"] = 51] = "UD4";
-    IO_Ports[IO_Ports["UD5"] = 52] = "UD5";
-    IO_Ports[IO_Ports["UD6"] = 53] = "UD6";
-    IO_Ports[IO_Ports["UD7"] = 54] = "UD7";
-    IO_Ports[IO_Ports["UD8"] = 55] = "UD8";
-    IO_Ports[IO_Ports["UD9"] = 56] = "UD9";
-    IO_Ports[IO_Ports["UD10"] = 57] = "UD10";
-    IO_Ports[IO_Ports["UD11"] = 58] = "UD11";
-    IO_Ports[IO_Ports["UD12"] = 59] = "UD12";
-    IO_Ports[IO_Ports["UD13"] = 60] = "UD13";
-    IO_Ports[IO_Ports["UD14"] = 61] = "UD14";
-    IO_Ports[IO_Ports["UD15"] = 62] = "UD15";
-    IO_Ports[IO_Ports["UD16"] = 63] = "UD16";
-})(IO_Ports || (IO_Ports = {}));
+    IO_Port[IO_Port["UD1"] = 48] = "UD1";
+    IO_Port[IO_Port["UD2"] = 49] = "UD2";
+    IO_Port[IO_Port["UD3"] = 50] = "UD3";
+    IO_Port[IO_Port["UD4"] = 51] = "UD4";
+    IO_Port[IO_Port["UD5"] = 52] = "UD5";
+    IO_Port[IO_Port["UD6"] = 53] = "UD6";
+    IO_Port[IO_Port["UD7"] = 54] = "UD7";
+    IO_Port[IO_Port["UD8"] = 55] = "UD8";
+    IO_Port[IO_Port["UD9"] = 56] = "UD9";
+    IO_Port[IO_Port["UD10"] = 57] = "UD10";
+    IO_Port[IO_Port["UD11"] = 58] = "UD11";
+    IO_Port[IO_Port["UD12"] = 59] = "UD12";
+    IO_Port[IO_Port["UD13"] = 60] = "UD13";
+    IO_Port[IO_Port["UD14"] = 61] = "UD14";
+    IO_Port[IO_Port["UD15"] = 62] = "UD15";
+    IO_Port[IO_Port["UD16"] = 63] = "UD16";
+})(IO_Port || (IO_Port = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {
     //----- Core Instructions
@@ -335,4 +330,10 @@ export const Opcodes_operants = {
     [Opcode.IN]: [[SET, GET], async (ops, s) => { ops[0] = await s.in(ops[1]); }],
     [Opcode.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
 };
+export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {
+    if (value === undefined) {
+        throw new Error("instruction definition undefined");
+    }
+    return [key, value[0].length];
+});
 //# sourceMappingURL=instructions.js.map

@@ -1,6 +1,5 @@
 # TODO
 ## URCL standart
-* Headers and multiple word lengths 8-32
 * &values (aka imm macros) 
     * &BITS = bit count
     * &UHALF = upper half of bits (in 8 bits it would be 0b11110000)
@@ -11,14 +10,13 @@
 * multiline commments
 * marcos
 * DW
-* put stack into memory
+
 
 ## Misc
-* Refactor out parser code from emulator
 * Fix freezing when there is a lot of IO
 * Display with Buffer
 * v-sync
-* fix view of memory and registers
+* fix view of memory and registers in html
 * add line numbers to source code
 * visualize PC in source code
 * sound device
@@ -40,3 +38,6 @@
 * support URCL binary format
 
 # DONE
+* Refactor out parser code from emulator
+* put stack into memory
+* Headers and multiple word lengths 8-32

@@ -1,9 +1,11 @@
 // emulator cli
-import { emulator_new } from "./emulator.js";
 import * as fs from "fs";
-import { argv, stdin, stdout } from "process";
-import { IO_Ports } from "./instructions.js";
+import { argv, exit, stdin, stdout } from "process";
+import { IO_Port } from "./instructions.js";
 import { Console_IO } from "./devices/console-io.js";
+import { Emulator } from "./emulator.js";
+import { compile } from "./compiler.js";
+import { parse } from "./parser.js";
 const usage = `Usage: node urcl-emu.js <file name>`;
 console.log(argv);
 if (process.argv.length < 3) {
@@ -13,7 +15,7 @@ const file_name = argv[2];
 // TODO: handle error
 const file = fs.readFileSync(file_name, { "encoding": "utf-8" }).toString();
 console.log(file);
-const emulator = emulator_new(file);
+const emulator = new Emulator();
 const console_io = new Console_IO({
     read(callback) {
         stdin.resume();
@@ -25,10 +27,18 @@ const console_io = new Console_IO({
     },
     text: "",
 }, (text) => { stdout.write(text); });
-emulator.input_devices[IO_Ports.TEXT] = console_io.text_in.bind(console_io);
-emulator.input_devices[IO_Ports.NUMB] = console_io.numb_in.bind(console_io);
-emulator.output_devices[IO_Ports.TEXT] = console_io.text_out.bind(console_io);
-emulator.output_devices[IO_Ports.NUMB] = console_io.numb_out.bind(console_io);
+emulator.input_devices[IO_Port.TEXT] = console_io.text_in.bind(console_io);
+emulator.input_devices[IO_Port.NUMB] = console_io.numb_in.bind(console_io);
+emulator.output_devices[IO_Port.TEXT] = console_io.text_out.bind(console_io);
+emulator.output_devices[IO_Port.NUMB] = console_io.numb_out.bind(console_io);
+const code = parse(file);
+if (code.errors.length > 0) {
+    console.log(code.errors, code.warnings);
+    exit(1);
+}
+console.log(code.warnings);
+const [program, debug_info] = compile(code);
+emulator.load_program(program, debug_info);
 await emulator.run();
 console.log("program halted");
 //# sourceMappingURL=urcl-emu.js.map
