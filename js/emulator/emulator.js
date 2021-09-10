@@ -1,5 +1,5 @@
 import { object_map } from "./util.js";
-import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Ports, Register } from "./instructions.js";
+import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Ports, Register, register_count } from "./instructions.js";
 const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
         throw new Error("instruction definition undefined");
@@ -104,7 +104,7 @@ supported ports are TEXT`);
                 case '$':
                     {
                         [type, value] = parse_number(Operant_Prim.Reg, 1);
-                        value += Register._Count;
+                        value += register_count;
                     }
                     break;
                 case 'M':

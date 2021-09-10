@@ -1,5 +1,5 @@
 import { i53, Word, object_map } from "./util.js";
-import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Ports, Register} from "./instructions.js";
+import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Ports, Register, register_count} from "./instructions.js";
 
 
 const Opcodes_operant_lengths: Record<Opcode, i53> 
@@ -99,7 +99,7 @@ supported ports are TEXT`);
                 } break;
                 case 'R': case 'r': case '$': {
                     [type, value] = parse_number(Operant_Prim.Reg, 1);
-                    value += Register._Count;
+                    value += register_count;
                 }break;
                 case 'M': case 'm': case '#': [type, value] = parse_number(Operant_Prim.Imm, 1); break;
                 case '%': [type, value] = parse_port(1); break;

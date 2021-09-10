@@ -1,4 +1,4 @@
-import { Arr, i53, Word } from "./util.js";
+import { Arr, enum_count, i53, Word } from "./util.js";
 
 // export 
 export enum Opcode {
@@ -21,38 +21,39 @@ export enum Opcode {
 
     //----- Debug Instructions
     // assert equals
-    ASE, _Count
+    ASE
 }
 
 export enum Register {
     "r0" = 0, "r1" = 0, "$0" = 0, 
-    Zero = 0, PC, SP,
-    _Count
+    Zero = 0, PC, SP
 }
+export const register_count = enum_count(Register);
+console.log(register_count);
 
 export enum Operant_Prim {
-    Reg, Imm, _Count
+    Reg, Imm
 }
 
 export enum Operant_Type {
     Reg = Operant_Prim.Reg, Imm = Operant_Prim.Imm,
-    Port, Memory, Label, Char,
-    _Count
+    Port, Memory, Label, Char
 }
 
 export enum Operant_Operation {
-    SET, GET, GET_RAM, SET_RAM, RAM_OFFSET, _Count
+    SET, GET, GET_RAM, SET_RAM, RAM_OFFSET
 }
 
 export enum URCL_Header {
-    BITS, MINREG, MINHEAP, RUN, MINSTACK, _Count
+    BITS, MINREG, MINHEAP, RUN, MINSTACK
 }
 
+
 export enum Header_Operant {
-    "==", "<=", ">=", _Count
+    "==", "<=", ">="
 }
 export enum Header_Run {
-    ROM, RAM, _Count
+    ROM, RAM
 }
 
 export const urcl_headers = {
@@ -78,7 +79,6 @@ export enum IO_Ports {
     RNG, NOTE, INSTR, NLEG, WAIT, NADDR, DATA, M_SPECIAL,
     // User defined
     UD1, UD2, UD3, UD4, UD5, UD6, UD7, UD8, UD9, UD10, UD11, UD12, UD13, UD14, UD15, UD16,
-    _Count
 }
 
 export interface Instruction_Ctx {

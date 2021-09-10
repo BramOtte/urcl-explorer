@@ -1,3 +1,4 @@
+import { enum_count } from "./util.js";
 // export 
 export var Opcode;
 (function (Opcode) {
@@ -67,7 +68,6 @@ export var Opcode;
     //----- Debug Instructions
     // assert equals
     Opcode[Opcode["ASE"] = 59] = "ASE";
-    Opcode[Opcode["_Count"] = 60] = "_Count";
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
@@ -77,13 +77,13 @@ export var Register;
     Register[Register["Zero"] = 0] = "Zero";
     Register[Register["PC"] = 1] = "PC";
     Register[Register["SP"] = 2] = "SP";
-    Register[Register["_Count"] = 3] = "_Count";
 })(Register || (Register = {}));
+export const register_count = enum_count(Register);
+console.log(register_count);
 export var Operant_Prim;
 (function (Operant_Prim) {
     Operant_Prim[Operant_Prim["Reg"] = 0] = "Reg";
     Operant_Prim[Operant_Prim["Imm"] = 1] = "Imm";
-    Operant_Prim[Operant_Prim["_Count"] = 2] = "_Count";
 })(Operant_Prim || (Operant_Prim = {}));
 export var Operant_Type;
 (function (Operant_Type) {
@@ -93,7 +93,6 @@ export var Operant_Type;
     Operant_Type[Operant_Type["Memory"] = 3] = "Memory";
     Operant_Type[Operant_Type["Label"] = 4] = "Label";
     Operant_Type[Operant_Type["Char"] = 5] = "Char";
-    Operant_Type[Operant_Type["_Count"] = 6] = "_Count";
 })(Operant_Type || (Operant_Type = {}));
 export var Operant_Operation;
 (function (Operant_Operation) {
@@ -102,7 +101,6 @@ export var Operant_Operation;
     Operant_Operation[Operant_Operation["GET_RAM"] = 2] = "GET_RAM";
     Operant_Operation[Operant_Operation["SET_RAM"] = 3] = "SET_RAM";
     Operant_Operation[Operant_Operation["RAM_OFFSET"] = 4] = "RAM_OFFSET";
-    Operant_Operation[Operant_Operation["_Count"] = 5] = "_Count";
 })(Operant_Operation || (Operant_Operation = {}));
 export var URCL_Header;
 (function (URCL_Header) {
@@ -111,20 +109,17 @@ export var URCL_Header;
     URCL_Header[URCL_Header["MINHEAP"] = 2] = "MINHEAP";
     URCL_Header[URCL_Header["RUN"] = 3] = "RUN";
     URCL_Header[URCL_Header["MINSTACK"] = 4] = "MINSTACK";
-    URCL_Header[URCL_Header["_Count"] = 5] = "_Count";
 })(URCL_Header || (URCL_Header = {}));
 export var Header_Operant;
 (function (Header_Operant) {
     Header_Operant[Header_Operant["=="] = 0] = "==";
     Header_Operant[Header_Operant["<="] = 1] = "<=";
     Header_Operant[Header_Operant[">="] = 2] = ">=";
-    Header_Operant[Header_Operant["_Count"] = 3] = "_Count";
 })(Header_Operant || (Header_Operant = {}));
 export var Header_Run;
 (function (Header_Run) {
     Header_Run[Header_Run["ROM"] = 0] = "ROM";
     Header_Run[Header_Run["RAM"] = 1] = "RAM";
-    Header_Run[Header_Run["_Count"] = 2] = "_Count";
 })(Header_Run || (Header_Run = {}));
 export const urcl_headers = {
     [URCL_Header.BITS]: { def: 8 },
@@ -194,7 +189,6 @@ export var IO_Ports;
     IO_Ports[IO_Ports["UD14"] = 61] = "UD14";
     IO_Ports[IO_Ports["UD15"] = 62] = "UD15";
     IO_Ports[IO_Ports["UD16"] = 63] = "UD16";
-    IO_Ports[IO_Ports["_Count"] = 64] = "_Count";
 })(IO_Ports || (IO_Ports = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {

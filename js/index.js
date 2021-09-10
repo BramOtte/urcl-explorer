@@ -46,6 +46,7 @@ function onchange() {
         emulator.output_devices[IO_Ports.NUMB] = console_io.numb_out.bind(console_io);
         emulator.output_devices[IO_Ports.TEXT] = console_io.text_out.bind(console_io);
         emulator.input_devices[IO_Ports.TEXT] = console_io.text_in.bind(console_io);
+        console.log(emulator.program);
         emulator.run();
     }
     catch (e) {
