@@ -36,14 +36,8 @@ interface Instruction_Out {
     readonly label_inst_i      : Record<string, i53>;
 }
 
-const parse_defaults = {
-    hi: 0
-}
-
-export function parse(source: string, options_partial: Partial<typeof parse_defaults> = {})
-    : Parser_output
+export function parse(source: string): Parser_output
 {
-    const options: typeof parse_defaults = Object.assign({...options_partial}, parse_defaults);
     const out = new Parser_output();
     out.lines = source.split('\n').map(line =>
         line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim()
@@ -75,7 +69,10 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
     boolean
 {
     const [header_str, opOrVal_str, val_str] = line.split(" ") as (string | undefined)[];
-    const header: URCL_Header | undefined = URCL_Header[header_str as any] as any;
+    if (header_str === undefined){
+        return false;
+    }
+    const header: URCL_Header | undefined = URCL_Header[header_str.toUpperCase() as any] as any;
     if (header === undefined){
         return false;
     }
@@ -83,13 +80,13 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
     if (header_def.def_operant !== undefined){
         if (opOrVal_str === undefined){
             errors.push(warn(line_nr,
-                `Missing operant for ${header_str}, must be ${enum_strings(Header_Operant)}`
+                `Missing operant for header ${header_str}, must be ${enum_strings(Header_Operant)}`
             )); 
         }
         const operant = enum_from_str(Header_Operant, opOrVal_str||"");
         if (operant === undefined && opOrVal_str !== undefined){
             errors.push(warn(line_nr,
-                `Unknown operant ${opOrVal_str} for ${header_str}, must be ${enum_strings(Header_Operant)}`
+                `Unknown operant ${opOrVal_str} for header ${header_str}, must be ${enum_strings(Header_Operant)}`
             )); 
         }
         const value= check_value(val_str);
@@ -106,14 +103,14 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
 
     function check_value(value: string | undefined): number | undefined {
         if (value === undefined){
-            errors.push(warn(line_nr, `Missing value for ${header_str}`));
+            errors.push(warn(line_nr, `Missing value for header ${header_str}`));
             return undefined;
         }
         if (header_def.in){
             const num = enum_from_str(header_def.in, value.toUpperCase());
             if (num === undefined){
                 errors.push(warn(line_nr, 
-                    `Value ${value} for ${header_str} most be one of: ${enum_strings(header_def.in)}`
+                    `Value ${value} for header ${header_str} most be one of: ${enum_strings(header_def.in)}`
                 ));
                 return undefined;
             }
@@ -122,7 +119,7 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
             const num = parseFloat(value);
             if (!Number.isInteger(num)){
                 errors.push(warn(line_nr,
-                    `Value ${value} for ${header_str} must be an integer`
+                    `Value ${value} for header ${header_str} must be an integer`
                 ));
                 return undefined;
             }
@@ -154,7 +151,7 @@ function split_instruction
 {
     const [opcode_str, ...ops] = line
         .replace(/' /g, "'\xA0").replace(/,/g, "").split(" ");
-    const opcode = enum_from_str(Opcode, opcode_str);
+    const opcode = enum_from_str(Opcode, opcode_str.toUpperCase());
     if (opcode === undefined){
         return false;
     }

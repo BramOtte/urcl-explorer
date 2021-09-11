@@ -6,8 +6,6 @@ export class Emulator implements Instruction_Ctx {
     public program!: Program;
     public debug_info!: Debug_Info;
     constructor(){
-        // const a = []
-        // a.fill
     }
     load_program(program: Program, debug_info: Debug_Info){
         this.program = program, this.debug_info = debug_info;
@@ -30,9 +28,8 @@ export class Emulator implements Instruction_Ctx {
             WordArray = Uint32Array;
             this.bits = 32;
         } else {
-            throw new Error("maximum of 32 bits");
+            throw new Error(`BITS = ${bits} exceeds 32 bits`);
         }
-        console.log("bits", bits);
         if (registers >= this.max_value){
             throw new Error(`Too many registers ${registers}, must be <= ${this.max_value}`)
         }
