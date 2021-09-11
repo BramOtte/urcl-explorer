@@ -40,12 +40,12 @@ export class Emulator {
             throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap + stack}, must be <= ${this.max_value + 1}`);
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-        this.memory = new WordArray(this.buffer, registers, heap + stack).fill(0);
+        this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, heap + stack).fill(0);
         this.stack_ptr = this.memory.length - 1;
         this.pc = 0;
     }
     pc = 0;
-    buffer = new ArrayBuffer(1024 * 1024);
+    buffer = new ArrayBuffer(1024 * 1024 * 512);
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
     get stack_ptr() {
@@ -58,7 +58,7 @@ export class Emulator {
     input_devices = {};
     output_devices = {};
     get max_value() {
-        return (1 << this.bits) - 1;
+        return 0xff_ff_ff_ff >>> (32 - this.bits);
     }
     get max_signed() {
         return (1 << (this.bits - 1)) - 1;

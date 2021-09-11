@@ -19,7 +19,7 @@ export class Emulator implements Instruction_Ctx {
         if (run === Header_Run.RAM){
             throw new Error("emulator currently doesn't support running in ram");
         }
-        let WordArray: {new(buffer: ArrayBuffer, offet: number, length: number): Arr<number>};
+        let WordArray;
         if (bits <= 8){
             WordArray = Uint8Array;
             this.bits = 8;
@@ -40,14 +40,14 @@ export class Emulator implements Instruction_Ctx {
             throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap+stack}, must be <= ${this.max_value+1}`);
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-        this.memory = new WordArray(this.buffer, registers, heap + stack).fill(0);
+        this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, heap + stack).fill(0);
 
         this.stack_ptr = this.memory.length-1;
         this.pc = 0;
     }
 
     pc: i53 = 0;
-    buffer = new ArrayBuffer(1024*1024);
+    buffer = new ArrayBuffer(1024*1024*512);
     registers: Arr = new Uint8Array(32);
     memory: Arr = new Uint8Array(256);
     get stack_ptr(){
@@ -62,7 +62,7 @@ export class Emulator implements Instruction_Ctx {
     
 
     get max_value(){
-        return (1 << this.bits) - 1;
+        return 0xff_ff_ff_ff >>> (32 - this.bits);
     }
     get max_signed(){
         return (1 << (this.bits-1)) - 1;
