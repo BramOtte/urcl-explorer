@@ -1,6 +1,6 @@
 export var Color_Mode;
 (function (Color_Mode) {
-    Color_Mode[Color_Mode["GRB"] = 0] = "GRB";
+    Color_Mode[Color_Mode["RGB"] = 0] = "RGB";
     Color_Mode[Color_Mode["Mono"] = 1] = "Mono";
     Color_Mode[Color_Mode["Bin"] = 2] = "Bin";
 })(Color_Mode || (Color_Mode = {}));
@@ -112,7 +112,7 @@ export class Display {
     }
     short_to_full(short) {
         switch (this._color_mode) {
-            case Color_Mode.GRB: {
+            case Color_Mode.RGB: {
                 const blue_bits = 0 | this.used_bits / 3;
                 const blue_mask = (1 << blue_bits) - 1;
                 const red_bits = 0 | (this.used_bits - blue_bits) / 2;
@@ -137,7 +137,7 @@ export class Display {
     }
     full_to_short(full) {
         switch (this._color_mode) {
-            case Color_Mode.GRB: {
+            case Color_Mode.RGB: {
                 const blue_bits = 0 | this.used_bits / 3;
                 const blue_mask = (1 << blue_bits) - 1;
                 const red_bits = 0 | (this.used_bits - blue_bits) / 2;

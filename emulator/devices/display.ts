@@ -1,5 +1,5 @@
 export enum Color_Mode {
-    GRB, Mono, Bin
+    RGB, Mono, Bin
 }
 
 export class Display {
@@ -105,7 +105,7 @@ export class Display {
     }
     private short_to_full(short: number){
         switch (this._color_mode){
-        case Color_Mode.GRB: {
+        case Color_Mode.RGB: {
             const blue_bits = 0| this.used_bits / 3;
             const blue_mask = (1 << blue_bits) - 1;
             const red_bits = 0| (this.used_bits - blue_bits) / 2;
@@ -131,7 +131,7 @@ export class Display {
     }
     private full_to_short(full: number){
         switch (this._color_mode){
-        case Color_Mode.GRB: {
+        case Color_Mode.RGB: {
             const blue_bits = 0| this.used_bits / 3;
             const blue_mask = (1 << blue_bits) - 1;
             const red_bits = 0| (this.used_bits - blue_bits) / 2;
