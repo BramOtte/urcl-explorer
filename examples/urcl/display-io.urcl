@@ -12,5 +12,5 @@ OUT %BUFFER 1
         BRL .x_loop r1 r2
     INC r3 r3
     BRL .y_loop r3 r4
-OUT %BUFFER 0
+OUT %BUFFER 2
     

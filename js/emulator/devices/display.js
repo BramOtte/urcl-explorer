@@ -1,13 +1,21 @@
+export var Color_Mode;
+(function (Color_Mode) {
+    Color_Mode[Color_Mode["GRB"] = 0] = "GRB";
+    Color_Mode[Color_Mode["Mono"] = 1] = "Mono";
+    Color_Mode[Color_Mode["Bin"] = 2] = "Bin";
+})(Color_Mode || (Color_Mode = {}));
 export class Display {
     bits;
+    _color_mode;
     ctx;
     image;
     ints;
     buffer_enabled = 0;
     x = 0;
     y = 0;
-    constructor(canvas, width, height, bits) {
+    constructor(canvas, width, height, bits, _color_mode = Color_Mode.Bin) {
         this.bits = bits;
+        this._color_mode = _color_mode;
         const ctx = canvas.getContext("2d");
         if (!ctx) {
             throw new Error("unable to get 2d rendering context");
@@ -26,6 +34,19 @@ export class Display {
         this.width = width;
         this.height = height;
         this.ctx.putImageData(this.image, 0, 0);
+    }
+    set color_mode(mode) {
+        const displayed = this.ctx.getImageData(0, 0, this.width, this.height);
+        const data = displayed.data;
+        const ints = new Uint32Array(data.buffer, data.byteOffset, data.byteLength / Uint32Array.BYTES_PER_ELEMENT);
+        for (let i = 0; i < ints.length; i++) {
+            ints[i] = this.full_to_short(ints[i]);
+        }
+        this._color_mode = mode;
+        for (let i = 0; i < ints.length; i++) {
+            ints[i] = this.short_to_full(ints[i]);
+        }
+        this.ctx.putImageData(displayed, 0, 0);
     }
     x_in() {
         return this.width;
@@ -90,31 +111,53 @@ export class Display {
         return Math.min(this.bits, 24);
     }
     short_to_full(short) {
-        const red_bits = 0 | this.used_bits / 3;
-        const red_mask = (1 << red_bits) - 1;
-        const blue_bits = 0 | (this.used_bits - red_bits) / 2;
-        const blue_mask = (1 << blue_bits) - 1;
-        const green_bits = this.used_bits - red_bits - blue_bits;
-        const green_mask = (1 << green_bits) - 1;
-        const green_offset = red_bits;
-        const blue_offset = green_offset + green_bits;
-        return ((short & red_mask) * 255 / red_mask)
-            | ((((short >>> green_offset) & green_mask) * 255 / green_mask) << 8)
-            | ((((short >>> blue_offset) & blue_mask) * 255 / blue_mask) << 16)
-            | 0xff_00_00_00;
+        switch (this._color_mode) {
+            case Color_Mode.GRB: {
+                const red_bits = 0 | this.used_bits / 3;
+                const red_mask = (1 << red_bits) - 1;
+                const blue_bits = 0 | (this.used_bits - red_bits) / 2;
+                const blue_mask = (1 << blue_bits) - 1;
+                const green_bits = this.used_bits - red_bits - blue_bits;
+                const green_mask = (1 << green_bits) - 1;
+                const green_offset = red_bits;
+                const blue_offset = green_offset + green_bits;
+                return ((short & red_mask) * 255 / red_mask)
+                    | ((((short >>> green_offset) & green_mask) * 255 / green_mask) << 8)
+                    | ((((short >>> blue_offset) & blue_mask) * 255 / blue_mask) << 16)
+                    | 0xff_00_00_00;
+            }
+            case Color_Mode.Mono: {
+                return short * ((1 << 24) - 1) / ((1 << this.bits) - 1) | 0xff_00_00_00;
+            }
+            case Color_Mode.Bin: {
+                return short > 0 ? 0xff_ff_ff_ff : 0xff_00_00_00;
+            }
+            default: return 0xff_ff_00_ff;
+        }
     }
     full_to_short(full) {
-        const red_bits = 0 | this.used_bits / 3;
-        const red_mask = (1 << red_bits) - 1;
-        const blue_bits = 0 | (this.used_bits - red_bits) / 2;
-        const blue_mask = (1 << blue_bits) - 1;
-        const green_bits = this.used_bits - red_bits - blue_bits;
-        const green_mask = (1 << green_bits) - 1;
-        const green_offset = red_bits;
-        const blue_offset = green_offset + green_bits;
-        return (full & red_mask)
-            | (((full >>> 8) & green_mask) << green_offset)
-            | (((full >>> 16) & blue_mask) << blue_offset);
+        switch (this._color_mode) {
+            case Color_Mode.GRB: {
+                const red_bits = 0 | this.used_bits / 3;
+                const red_mask = (1 << red_bits) - 1;
+                const blue_bits = 0 | (this.used_bits - red_bits) / 2;
+                const blue_mask = (1 << blue_bits) - 1;
+                const green_bits = this.used_bits - red_bits - blue_bits;
+                const green_mask = (1 << green_bits) - 1;
+                const green_offset = red_bits;
+                const blue_offset = green_offset + green_bits;
+                return (full & red_mask)
+                    | (((full >>> 8) & green_mask) << green_offset)
+                    | (((full >>> 16) & blue_mask) << blue_offset);
+            }
+            case Color_Mode.Mono: {
+                return 0 | (full & 0x00_ff_ff_ff) * ((1 << this.bits) - 1) / ((1 << 24) - 1);
+            }
+            case Color_Mode.Bin: {
+                return (full & 0x00_ff_ff_ff) > 0 ? 1 : 0;
+            }
+            default: return 0;
+        }
     }
     get width() {
         return this.ctx.canvas.width;

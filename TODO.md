@@ -14,7 +14,6 @@
 
 ## Misc
 * Fix freezing when there is a lot of IO
-* Display with Buffer
 * v-sync
 * fix view of memory and registers in html
 * add line numbers to source code
@@ -41,3 +40,4 @@
 * Refactor out parser code from emulator
 * put stack into memory
 * Headers and multiple word lengths 8-32
+* Display with Buffer
