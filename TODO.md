@@ -14,6 +14,9 @@
 
 ## Misc
 * Fix freezing when there is a lot of IO
+* add fixed clock speed
+* check if all array access is bounds checked
+* exclude general purpose registers from MINREG
 * v-sync
 * fix view of memory and registers in html
 * add line numbers to source code

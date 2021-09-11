@@ -7,7 +7,7 @@ OUT %BUFFER 1
     IMM r1 0
     .x_loop
         OUT %X r1
-        OUT %COLOR 0b11_111_000
+        OUT %COLOR 0b000_111_11
         INC r1 r1
         BRL .x_loop r1 r2
     INC r3 r3
@@ -17,7 +17,7 @@ IMM r3 0
 .loop1
     OUT %X r1
     OUT %Y r3
-    OUT %COLOR 0b00_000_111
+    OUT %COLOR 0b111_000_00
     INC r1 r1
     INC r3 r3
     BRL .loop1 r1 r2  
@@ -28,7 +28,7 @@ DEC r3 r3
 .loop2
     OUT %X r1
     OUT %Y r3
-    OUT %COLOR 0b00_000_111
+    OUT %COLOR 0b00_100_00
     INC r1 r1
     DEC r3 r3
     BRL .loop2 r1 r2
