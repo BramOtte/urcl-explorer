@@ -77,7 +77,7 @@ export class Emulator {
         }
         return device();
     }
-    async out(port, value) {
+    out(port, value) {
         const device = this.output_devices[port];
         if (device === undefined) {
             console.warn(`unsupported output device port ${port} (${IO_Port[port]}) ${this.line()}`);
@@ -86,7 +86,7 @@ export class Emulator {
         device(value);
     }
     async run() {
-        const max_cycles = 1_000_000;
+        const max_cycles = 100_000;
         let cycles = 0;
         for (; cycles < max_cycles; cycles++) {
             const pc = this.pc++;

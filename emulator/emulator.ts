@@ -81,7 +81,7 @@ export class Emulator implements Instruction_Ctx {
         }
         return device();
     }
-    async out(port: Word, value: Word): Promise<void>{
+    out(port: Word, value: Word): void{
         const device = this.output_devices[port as IO_Port];
         if (device === undefined){
             console.warn(`unsupported output device port ${port} (${IO_Port[port]}) ${this.line()}`);
@@ -90,7 +90,7 @@ export class Emulator implements Instruction_Ctx {
         device(value);
     }
     async run(){
-        const max_cycles = 1_000_000;
+        const max_cycles = 100_000;
         let cycles = 0;
         for (;cycles < max_cycles; cycles++){
             const pc = this.pc++;

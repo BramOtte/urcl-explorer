@@ -1,6 +1,15 @@
 import { Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Prim, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
 import { enum_count, enum_from_str, enum_strings, i53, is_digit, warn, Warning, Word } from "./util.js";
 
+function my_parse_int(x: string){
+    x = x.replace(/\_/g, "");
+    if (x.startsWith("0b")){
+        return parseInt(x.slice(2), 2);
+    }
+    return parseInt(x);
+}
+
+
 interface Header_Value {
     value: number,
     line_nr?: number,
@@ -116,7 +125,7 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
             }
             return num;
         } else {
-            const num = parseFloat(value);
+            const num = my_parse_int(value);
             if (!Number.isInteger(num)){
                 errors.push(warn(line_nr,
                     `Value ${value} for header ${header_str} must be an integer`
@@ -199,21 +208,21 @@ function parse_operant(
             return [Operant_Type.Imm, value];
         }
         case '+': case '-': {
-            const value = parseInt(operant);
+            const value = my_parse_int(operant);
             if (!Number.isInteger(value)){
                 errors.push(warn(line_nr, `Invalid relative address ${operant}`)); return undefined;
             }
             return [Operant_Type.Label, value + inst_i];
         }
         case 'R': case 'r': case '$': {
-            const value = parseInt(operant.slice(1));
+            const value = my_parse_int(operant.slice(1));
             if (!Number.isInteger(value)){
                 errors.push(warn(line_nr, `Invalid register ${operant}`)); return undefined;
             }
             return [Operant_Type.Reg, value + register_count-1];
         }
         case 'M': case 'm': case '#': {
-            const value = parseInt(operant.slice(1));
+            const value = my_parse_int(operant.slice(1));
             if (!Number.isInteger(value)){
                 errors.push(warn(line_nr, `Invalid memory address ${operant}`)); return undefined;
             }
@@ -222,7 +231,7 @@ function parse_operant(
         case '%': {
             let port;
             if (is_digit(operant, 1)){
-                port = parseInt(operant.slice(1));
+                port = my_parse_int(operant.slice(1));
                 if (!Number.isInteger(port)){
                     errors.push(warn(line_nr, `Invalid port number ${operant}`)); return undefined;
                 }
@@ -245,7 +254,7 @@ function parse_operant(
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];
         }
         default: {
-            const value = parseInt(operant);
+            const value = my_parse_int(operant);
             if (!Number.isInteger(value)){
                 errors.push(warn(line_nr, `Invalid immediate ${operant}`)); return undefined;
             }

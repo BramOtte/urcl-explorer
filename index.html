@@ -17,7 +17,7 @@
         }
         main {
             display: flex;
-            gap: 4ch;
+            gap: 2rem;
             flex-grow: 1;
             width: 100%;
             height: 100%;
@@ -28,13 +28,20 @@
             width: max-content;
             height: 100%;
             resize: horizontal;
+            flex-basis: 100%;
         }
         #stdout {
-            overflow-y: scroll;
+            overflow-y: auto;
         }
         textarea {
             width: 500px;
-            flex-basis: 100%;
+            height: 100%;
+        }
+        canvas {
+            background-color: black;
+            image-rendering: crisp-edges;
+            image-rendering: pixelated;
+            border: 0.1rem solid rgb(53, 53, 53);
         }
     </style>
 </head>
@@ -47,9 +54,18 @@
         <div>
             <h2>Output</h2>
             <pre id="output"></pre>
-            <h2>Console</h2>
-            <pre id="stdout"></pre>
-            <input id="stdin" type="text">
+            <div style="display: flex; gap: 2rem;">
+                <div>
+                    <h2>Console</h2>
+                    <pre id="stdout"></pre>
+                    <input id="stdin" type="text">
+                </div>
+                <div style="width: 100%;">
+                <canvas style="width: 100%; display: block;" width="32" height="32">
+                    
+                </canvas>
+                </div>
+            </div>
         </div>
     </main>
     <script type="module" src="js/index.js"></script>
