@@ -48,6 +48,16 @@ function change_color_mode(){
     console.log(color_mode_input.value, color_mode);
     display.color_mode = color_mode ?? display.color_mode;
 }
+const width_input = document.getElementById("display-width") as HTMLInputElement;
+const height_input = document.getElementById("display-height") as HTMLInputElement;
+width_input.addEventListener("input", resize_display);
+height_input.addEventListener("input", resize_display);
+resize_display();
+function resize_display(){
+    const width = parseInt(width_input.value) || 16;
+    const height = parseInt(height_input.value) || 16;
+    display.resize(width, height);
+}
 
 const emulator = new Emulator();
 emulator.input_devices[IO_Port.NUMB] = console_io.numb_in.bind(console_io);
@@ -64,16 +74,22 @@ emulator.output_devices[IO_Port.Y] = display.y_out.bind(display);
 emulator.input_devices[IO_Port.BUFFER] = display.buffer_in.bind(display);
 emulator.output_devices[IO_Port.BUFFER] = display.buffer_out.bind(display);
 
-onchange();
-source_input.addEventListener("input", onchange);
+const run_button = document.getElementById("run-button") as HTMLButtonElement;
+run_button.addEventListener("click", run);
+run();
+source_input.addEventListener("input", run);
 fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }
     source_input.value = text;
-    onchange();
+    run();
 });
-async function onchange(){
+
+
+async function run(){
+    run_button.disabled = true;
+    run_button.innerText = "Running...";
 try {
     display.buffer_out(0);
     output_element.innerText = "";
@@ -84,6 +100,7 @@ try {
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => "ERROR: " + expand_warning(v, parsed.lines)+"\n").join("");
         output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines)+"\n").join("");
+        run_button.innerText = "Compile Error";
         return;
     }
     output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines)+"\n").join("");
@@ -97,12 +114,13 @@ register-count: ${emulator.registers.length}
 memory-size: ${emulator.memory.length}
 registers: [${emulator.registers}]
 `;
-
-
-    await emulator.run();
-
+    const pause = emulator.run();
+    run_button.disabled = false;
+    await pause;
 } catch (e) {
+    run_button.innerText = "Error";
     output_element.innerText += e;
     throw e;
 }
+    run_button.innerText = "Run";
 }

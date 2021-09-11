@@ -86,7 +86,7 @@ export class Emulator {
         device(value);
     }
     async run() {
-        const max_cycles = 100_000;
+        const max_cycles = 1_000_000;
         let cycles = 0;
         for (; cycles < max_cycles; cycles++) {
             const pc = this.pc++;

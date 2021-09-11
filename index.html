@@ -52,8 +52,11 @@
             <textarea id="urcl-source"></textarea>            
         </div>
         <div>
-            <h2>Output</h2>
-            <pre id="output"></pre>
+            <div>
+                <button id="run-button">Run</button>
+                <h2>Output</h2>
+                <pre id="output"></pre>
+            </div>
             <div style="display: flex; gap: 2rem;">
                 <div>
                     <h2>Console</h2>
@@ -67,6 +70,9 @@
                         <option value="Mono">Mono</option>
                         <option value="Bin">Bin</option>
                     </select>
+                    <br>
+                    width <input type="number" id="display-width" value="32"><br>
+                    height <input type="number" id="display-height" value="32">
                     <canvas style="width: 100%; display: block;" width="32" height="32"></canvas>
                 </div>
             </div>
