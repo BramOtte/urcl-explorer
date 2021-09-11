@@ -53,6 +53,7 @@ fetch("examples/urcl/fib.urcl").then(res => res.text()).then((text) => {
     onchange();
 });
 async function onchange(){
+try {
     output_element.innerText = "";
     console_output.innerText = "";
     console.timeEnd("running");
@@ -79,5 +80,8 @@ async function onchange(){
 // registers: [${emulator.registers}]
 // memory: [${emulator.memory.slice(0, 32)}]
 // `.trim();
-    
+} catch (e) {
+    output_element.innerText += e;
+    throw e;
+}
 }

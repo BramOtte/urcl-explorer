@@ -1,4 +1,4 @@
-import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register } from "./instructions.js";
+import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run } from "./instructions.js";
 export class Emulator {
     program;
     debug_info;
@@ -12,6 +12,10 @@ export class Emulator {
         const heap = program.headers[URCL_Header.MINHEAP].value;
         const stack = program.headers[URCL_Header.MINSTACK].value;
         const registers = program.headers[URCL_Header.MINREG].value;
+        const run = program.headers[URCL_Header.RUN].value;
+        if (run === Header_Run.RAM) {
+            throw new Error("emulator currently doesn't support running in ram");
+        }
         let WordArray;
         if (bits <= 8) {
             WordArray = Uint8Array;
@@ -28,9 +32,16 @@ export class Emulator {
         else {
             throw new Error("maximum of 32 bits");
         }
+        console.log("bits", bits);
+        if (registers >= this.max_value) {
+            throw new Error(`Too many registers ${registers}, must be <= ${this.max_value}`);
+        }
+        if (heap + stack > this.max_value) {
+            throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap + stack}, must be <= ${this.max_value + 1}`);
+        }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-        this.memory = new WordArray(this.buffer, registers, registers + heap).fill(0);
-        this.stack_ptr = stack - 1;
+        this.memory = new WordArray(this.buffer, registers, heap + stack).fill(0);
+        this.stack_ptr = this.memory.length - 1;
         this.pc = 0;
     }
     pc = 0;

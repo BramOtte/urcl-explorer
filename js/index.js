@@ -47,31 +47,37 @@ fetch("examples/urcl/fib.urcl").then(res => res.text()).then((text) => {
     onchange();
 });
 async function onchange() {
-    output_element.innerText = "";
-    console_output.innerText = "";
-    console.timeEnd("running");
-    console.time("compiling");
-    const source = source_input.value;
-    const parsed = parse(source);
-    if (parsed.errors.length > 0) {
-        output_element.innerText = parsed.errors.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
+    try {
+        output_element.innerText = "";
+        console_output.innerText = "";
+        console.timeEnd("running");
+        console.time("compiling");
+        const source = source_input.value;
+        const parsed = parse(source);
+        if (parsed.errors.length > 0) {
+            output_element.innerText = parsed.errors.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
+            output_element.innerText += parsed.warnings.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
+            return;
+        }
         output_element.innerText += parsed.warnings.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
-        return;
+        const [program, debug_info] = compile(parsed);
+        emulator.load_program(program, debug_info);
+        console.timeEnd("compiling");
+        console.time("running");
+        await emulator.run();
+        console.timeEnd("running");
+        //     output_element.innerText = `
+        // bits: ${emulator.bits}
+        // register-count: ${emulator.registers.length}
+        // stack-size: ${emulator.stack.length}
+        // heap-size: ${emulator.memory.length}
+        // registers: [${emulator.registers}]
+        // memory: [${emulator.memory.slice(0, 32)}]
+        // `.trim();
     }
-    output_element.innerText += parsed.warnings.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
-    const [program, debug_info] = compile(parsed);
-    emulator.load_program(program, debug_info);
-    console.timeEnd("compiling");
-    console.time("running");
-    await emulator.run();
-    console.timeEnd("running");
-    //     output_element.innerText = `
-    // bits: ${emulator.bits}
-    // register-count: ${emulator.registers.length}
-    // stack-size: ${emulator.stack.length}
-    // heap-size: ${emulator.memory.length}
-    // registers: [${emulator.registers}]
-    // memory: [${emulator.memory.slice(0, 32)}]
-    // `.trim();
+    catch (e) {
+        output_element.innerText += e;
+        throw e;
+    }
 }
 //# sourceMappingURL=index.js.map
