@@ -3,6 +3,7 @@ import { Console_IO } from "./emulator/devices/console-io.js";
 import { Emulator } from "./emulator/emulator.js";
 import { IO_Port } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
+import { expand_warning } from "./emulator/util.js";
 const source_input = document.getElementById("urcl-source");
 if (!source_input) {
     throw new Error("unable to get source input");
@@ -50,30 +51,23 @@ async function onchange() {
     try {
         output_element.innerText = "";
         console_output.innerText = "";
-        console.timeEnd("running");
-        console.time("compiling");
         const source = source_input.value;
         const parsed = parse(source);
         if (parsed.errors.length > 0) {
-            output_element.innerText = parsed.errors.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
-            output_element.innerText += parsed.warnings.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
+            output_element.innerText = parsed.errors.map(v => "ERROR: " + expand_warning(v, parsed.lines) + "\n").join("");
+            output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines) + "\n").join("");
             return;
         }
-        output_element.innerText += parsed.warnings.map(v => v.message + `\n\ton line ${v.line_nr}`).join("\n");
+        output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines) + "\n").join("");
         const [program, debug_info] = compile(parsed);
         emulator.load_program(program, debug_info);
-        console.timeEnd("compiling");
-        console.time("running");
+        output_element.innerText += `
+bits: ${emulator.bits}
+register-count: ${emulator.registers.length}
+memory-size: ${emulator.memory.length}
+registers: [${emulator.registers}]
+`;
         await emulator.run();
-        console.timeEnd("running");
-        //     output_element.innerText = `
-        // bits: ${emulator.bits}
-        // register-count: ${emulator.registers.length}
-        // stack-size: ${emulator.stack.length}
-        // heap-size: ${emulator.memory.length}
-        // registers: [${emulator.registers}]
-        // memory: [${emulator.memory.slice(0, 32)}]
-        // `.trim();
     }
     catch (e) {
         output_element.innerText += e;

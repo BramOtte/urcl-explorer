@@ -2,6 +2,20 @@ export type i53 = number;
 export type Reg = number;
 export type Word = number;
 export type Ln_Nr = number;
+
+export interface Warning {
+    line_nr: number,
+    message: string
+}
+export function warn(line_nr: number, message: string): Warning {
+    return {line_nr, message};
+}
+export function expand_warning(warning: Warning, lines: string[]){
+    const {message, line_nr} = warning;
+    return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
+}
+
+
 export interface Arr<T = number, L extends number = number> {
     [K: number]: T, 
     length: L,

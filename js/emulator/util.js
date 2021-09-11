@@ -1,3 +1,10 @@
+export function warn(line_nr, message) {
+    return { line_nr, message };
+}
+export function expand_warning(warning, lines) {
+    const { message, line_nr } = warning;
+    return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
+}
 export function object_map(obj, callback) {
     const res = {};
     for (const key in obj) {

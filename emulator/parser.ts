@@ -1,13 +1,5 @@
 import { Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Prim, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
-import { enum_count, enum_from_str, enum_strings, i53, is_digit, Word } from "./util.js";
-
-interface Warning {
-    line_nr: number,
-    message: string
-}
-function warn(line_nr: number, message: string): Warning {
-    return {line_nr, message};
-}
+import { enum_count, enum_from_str, enum_strings, i53, is_digit, warn, Warning, Word } from "./util.js";
 
 interface Header_Value {
     value: number,
@@ -53,7 +45,9 @@ export function parse(source: string, options_partial: Partial<typeof parse_defa
 {
     const options: typeof parse_defaults = Object.assign({...options_partial}, parse_defaults);
     const out = new Parser_output();
-    out.lines = source.split('\n');
+    out.lines = source.split('\n').map(line =>
+        line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim()
+    );
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++){
         out.headers[i as URCL_Header] = {value: urcl_headers[i as URCL_Header].def};
@@ -62,11 +56,10 @@ export function parse(source: string, options_partial: Partial<typeof parse_defa
 
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
-        const trimmed = line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim();
-        if (trimmed === ""){continue;};
-        if (parse_header(trimmed, line_nr, out.headers, out.warnings)){continue;}
-        if (parse_label(trimmed, line_nr, inst_i, out, out.warnings)){continue;}
-        if (split_instruction(trimmed, line_nr, inst_i, out, out.errors)){
+        if (line === ""){continue;};
+        if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
+        if (parse_label(line, line_nr, inst_i, out, out.warnings)){continue;}
+        if (split_instruction(line, line_nr, inst_i, out, out.errors)){
             inst_i++; continue;
         }
         out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
@@ -249,7 +242,7 @@ function parse_operant(
             try {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"')) as string;
             } catch (e) {
-                errors.push(warn(line_nr, `Invalid character ${operant}\n\t${e}`));
+                errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
             }
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];

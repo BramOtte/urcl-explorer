@@ -1,8 +1,5 @@
 import { Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
-import { enum_count, enum_from_str, enum_strings, is_digit } from "./util.js";
-function warn(line_nr, message) {
-    return { line_nr, message };
-}
+import { enum_count, enum_from_str, enum_strings, is_digit, warn } from "./util.js";
 export class Parser_output {
     errors = [];
     warnings = [];
@@ -22,7 +19,7 @@ const parse_defaults = {
 export function parse(source, options_partial = {}) {
     const options = Object.assign({ ...options_partial }, parse_defaults);
     const out = new Parser_output();
-    out.lines = source.split('\n');
+    out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim());
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++) {
         out.headers[i] = { value: urcl_headers[i].def };
@@ -30,18 +27,17 @@ export function parse(source, options_partial = {}) {
     }
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++) {
         const line = out.lines[line_nr];
-        const trimmed = line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim();
-        if (trimmed === "") {
+        if (line === "") {
             continue;
         }
         ;
-        if (parse_header(trimmed, line_nr, out.headers, out.warnings)) {
+        if (parse_header(line, line_nr, out.headers, out.warnings)) {
             continue;
         }
-        if (parse_label(trimmed, line_nr, inst_i, out, out.warnings)) {
+        if (parse_label(line, line_nr, inst_i, out, out.warnings)) {
             continue;
         }
-        if (split_instruction(trimmed, line_nr, inst_i, out, out.errors)) {
+        if (split_instruction(line, line_nr, inst_i, out, out.errors)) {
             inst_i++;
             continue;
         }
@@ -220,7 +216,7 @@ function parse_operant(operant, line_nr, inst_i, labels, errors) {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"'));
             }
             catch (e) {
-                errors.push(warn(line_nr, `Invalid character ${operant}\n\t${e}`));
+                errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
             }
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];
