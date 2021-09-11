@@ -47,6 +47,8 @@ emulator.input_devices[IO_Port.X] = display.x_in.bind(display);
 emulator.output_devices[IO_Port.X] = display.x_out.bind(display);
 emulator.input_devices[IO_Port.Y] = display.y_in.bind(display);
 emulator.output_devices[IO_Port.Y] = display.y_out.bind(display);
+emulator.input_devices[IO_Port.BUFFER] = display.buffer_in.bind(display);
+emulator.output_devices[IO_Port.BUFFER] = display.buffer_out.bind(display);
 onchange();
 source_input.addEventListener("input", onchange);
 fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {

@@ -3,7 +3,7 @@ export class Display {
     ctx;
     image;
     ints;
-    buffer = 0;
+    buffer_enabled = 0;
     x = 0;
     y = 0;
     constructor(canvas, width, height, bits) {
@@ -35,7 +35,6 @@ export class Display {
     }
     x_out(value) {
         this.x = value;
-        console.log(value);
     }
     y_out(value) {
         this.y = value;
@@ -54,8 +53,33 @@ export class Display {
             return;
         }
         this.ints[this.x + this.y * this.width] = this.short_to_full(color);
-        if (!this.buffer) {
+        if (!this.buffer_enabled) {
             this.ctx.putImageData(this.image, 0, 0);
+        }
+    }
+    buffer_in() {
+        return this.buffer_enabled;
+    }
+    buffer_out(value) {
+        switch (value) {
+            case 0:
+                {
+                    this.ctx.putImageData(this.image, 0, 0);
+                    this.ints.fill(0xff_00_00_00);
+                    this.buffer_enabled = 0;
+                }
+                ;
+                break;
+            case 1:
+                {
+                    this.buffer_enabled = 1;
+                }
+                break;
+            case 2:
+                {
+                    this.ctx.putImageData(this.image, 0, 0);
+                }
+                break;
         }
     }
     in_bounce(x, y) {

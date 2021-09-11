@@ -2,7 +2,7 @@ export class Display {
     private ctx: CanvasRenderingContext2D
     private image: ImageData;
     private ints: Uint32Array;
-    private buffer = 0;
+    private buffer_enabled: 1 | 0 = 0;
     private x = 0;
     private y = 0;
     constructor (
@@ -35,7 +35,6 @@ export class Display {
 
     x_out(value: number){
         this.x = value;
-        console.log(value);
     }
     y_out(value: number){
         this.y = value;
@@ -54,8 +53,26 @@ export class Display {
             return;
         }
         this.ints[this.x + this.y * this.width] = this.short_to_full(color);
-        if (!this.buffer){
+        if (!this.buffer_enabled){
             this.ctx.putImageData(this.image, 0, 0);
+        }
+    }
+    buffer_in(){
+        return this.buffer_enabled;
+    }
+    buffer_out(value: number){
+        switch (value){
+            case 0: {
+                this.ctx.putImageData(this.image, 0, 0);
+                this.ints.fill(0xff_00_00_00);
+                this.buffer_enabled = 0;
+            }; break;
+            case 1: {
+                this.buffer_enabled = 1;
+            } break;
+            case 2: {
+                this.ctx.putImageData(this.image, 0, 0);
+            } break;
         }
     }
 
