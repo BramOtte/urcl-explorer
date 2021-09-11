@@ -66,9 +66,9 @@ export class Display {
         }
         return this.full_to_short(this.ints[this.x + this.y * this.width]);
     }
-    // bbbgggrr
+    // bbgggrrr
     // bbbbbggggggrrrrr
-    // bbbbbbbbggggggggrrrrrrrr????????
+    // bbbbbbbbggggggggrrrrrrrr
     color_out(color) {
         if (!this.in_bounce(this.x, this.y)) {
             return;
@@ -113,11 +113,11 @@ export class Display {
     short_to_full(short) {
         switch (this._color_mode) {
             case Color_Mode.GRB: {
-                const red_bits = 0 | this.used_bits / 3;
-                const red_mask = (1 << red_bits) - 1;
-                const blue_bits = 0 | (this.used_bits - red_bits) / 2;
+                const blue_bits = 0 | this.used_bits / 3;
                 const blue_mask = (1 << blue_bits) - 1;
-                const green_bits = this.used_bits - red_bits - blue_bits;
+                const red_bits = 0 | (this.used_bits - blue_bits) / 2;
+                const red_mask = (1 << red_bits) - 1;
+                const green_bits = this.used_bits - blue_bits - red_bits;
                 const green_mask = (1 << green_bits) - 1;
                 const green_offset = red_bits;
                 const blue_offset = green_offset + green_bits;
@@ -138,11 +138,11 @@ export class Display {
     full_to_short(full) {
         switch (this._color_mode) {
             case Color_Mode.GRB: {
-                const red_bits = 0 | this.used_bits / 3;
-                const red_mask = (1 << red_bits) - 1;
-                const blue_bits = 0 | (this.used_bits - red_bits) / 2;
+                const blue_bits = 0 | this.used_bits / 3;
                 const blue_mask = (1 << blue_bits) - 1;
-                const green_bits = this.used_bits - red_bits - blue_bits;
+                const red_bits = 0 | (this.used_bits - blue_bits) / 2;
+                const red_mask = (1 << red_bits) - 1;
+                const green_bits = this.used_bits - blue_bits - red_bits;
                 const green_mask = (1 << green_bits) - 1;
                 const green_offset = red_bits;
                 const blue_offset = green_offset + green_bits;

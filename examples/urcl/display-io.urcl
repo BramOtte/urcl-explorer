@@ -7,7 +7,7 @@ OUT %BUFFER 1
     IMM r1 0
     .x_loop
         OUT %X r1
-        OUT %COLOR 0b011_011_01
+        OUT %COLOR 0b11_111_000
         INC r1 r1
         BRL .x_loop r1 r2
     INC r3 r3
