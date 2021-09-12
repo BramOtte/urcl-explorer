@@ -18,7 +18,9 @@ textarea {
 
 #stdout {
   height: 200px;
+  max-height: 200px;
   width: 200px;
+  max-width: 200px;
   overflow: scroll;
   background: #000;
   color: #FFF;
