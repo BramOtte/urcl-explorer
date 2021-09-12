@@ -1,4 +1,4 @@
-import { Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
+import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
 import { enum_count, enum_from_str, enum_strings, is_digit, warn } from "./util.js";
 function my_parse_int(x) {
     x = x.replace(/\_/g, "");
@@ -226,6 +226,15 @@ function parse_operant(operant, line_nr, inst_i, labels, errors) {
                 return undefined;
             }
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];
+        }
+        case '@':
+        case '&': {
+            const constant = enum_from_str(Constants, operant.slice(1).toUpperCase());
+            if (constant === undefined) {
+                errors.push(warn(line_nr, `Unkown Compiler Constant ${operant}`));
+                return undefined;
+            }
+            return [Operant_Type.Constant, constant];
         }
         default: {
             const value = my_parse_int(operant);

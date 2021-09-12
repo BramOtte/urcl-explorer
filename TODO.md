@@ -1,19 +1,11 @@
 # TODO
 ## URCL standart
-* &values (aka imm macros) 
-    * &BITS = bit count
-    * &UHALF = upper half of bits (in 8 bits it would be 0b11110000)
-    * &LHALF = lower half of bits (in 8 bits it would be 0b00001111)
-    * &MSB = most significant bit (8 bits it would be 0b10000000)
-    * &SMAX = max signed value (so 127 in 8 bits)
-    * &SMSB = the second to highest bit (so 0b01000000 in 8 bits)
 * multiline commments
 * marcos
 * DW
 
 
 ## Misc
-* Fix freezing when there is a lot of IO
 * add fixed clock speed
 * check if all array access is bounds checked
 * exclude general purpose registers from MINREG
@@ -44,3 +36,11 @@
 * put stack into memory
 * Headers and multiple word lengths 8-32
 * Display with Buffer
+* Fix freezing when there is a lot of IO
+* compiler constants with @ or & 
+    * @BITS = bit count
+    * @UHALF = upper half of bits (in 8 bits it would be 0b11110000)
+    * @LHALF = lower half of bits (in 8 bits it would be 0b00001111)
+    * @MSB = most significant bit (8 bits it would be 0b10000000)
+    * @SMAX = max signed value (so 127 in 8 bits)
+    * @SMSB = the second to highest bit (so 0b01000000 in 8 bits)

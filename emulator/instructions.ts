@@ -35,7 +35,7 @@ export enum Operant_Prim {
 
 export enum Operant_Type {
     Reg = Operant_Prim.Reg, Imm = Operant_Prim.Imm,
-    Memory, Label,
+    Memory, Label, Constant
 }
 
 export enum Operant_Operation {
@@ -44,6 +44,11 @@ export enum Operant_Operation {
 
 export enum URCL_Header {
     BITS, MINREG, MINHEAP, RUN, MINSTACK
+}
+
+export enum Constants {
+    BITS, MSB, SMSB, MAX, SMAX, UHALF, LHALF,
+    MINREG, MINHEAP, MINSTACK
 }
 
 

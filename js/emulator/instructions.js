@@ -87,6 +87,7 @@ export var Operant_Type;
     Operant_Type[Operant_Type["Imm"] = 1] = "Imm";
     Operant_Type[Operant_Type["Memory"] = 2] = "Memory";
     Operant_Type[Operant_Type["Label"] = 3] = "Label";
+    Operant_Type[Operant_Type["Constant"] = 4] = "Constant";
 })(Operant_Type || (Operant_Type = {}));
 export var Operant_Operation;
 (function (Operant_Operation) {
@@ -104,6 +105,19 @@ export var URCL_Header;
     URCL_Header[URCL_Header["RUN"] = 3] = "RUN";
     URCL_Header[URCL_Header["MINSTACK"] = 4] = "MINSTACK";
 })(URCL_Header || (URCL_Header = {}));
+export var Constants;
+(function (Constants) {
+    Constants[Constants["BITS"] = 0] = "BITS";
+    Constants[Constants["MSB"] = 1] = "MSB";
+    Constants[Constants["SMSB"] = 2] = "SMSB";
+    Constants[Constants["MAX"] = 3] = "MAX";
+    Constants[Constants["SMAX"] = 4] = "SMAX";
+    Constants[Constants["UHALF"] = 5] = "UHALF";
+    Constants[Constants["LHALF"] = 6] = "LHALF";
+    Constants[Constants["MINREG"] = 7] = "MINREG";
+    Constants[Constants["MINHEAP"] = 8] = "MINHEAP";
+    Constants[Constants["MINSTACK"] = 9] = "MINSTACK";
+})(Constants || (Constants = {}));
 export var Header_Operant;
 (function (Header_Operant) {
     Header_Operant[Header_Operant["=="] = 0] = "==";
