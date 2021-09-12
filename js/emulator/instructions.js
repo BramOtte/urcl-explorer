@@ -76,7 +76,6 @@ export var Register;
     Register[Register["SP"] = 2] = "SP";
 })(Register || (Register = {}));
 export const register_count = enum_count(Register);
-console.log(register_count);
 export var Operant_Prim;
 (function (Operant_Prim) {
     Operant_Prim[Operant_Prim["Reg"] = 0] = "Reg";
@@ -272,7 +271,8 @@ export const Opcodes_operants = {
     // Pushes the address of the next instruction onto the stack then branches to Op1
     [Opcode.CAL]: [[GET], (ops, s) => { s.push(s.pc); s.pc = ops[0]; }],
     // Pops from the stack, then branches to that value
-    [Opcode.RET]: [[], (_, s) => { s.pc = s.pop(); }],
+    //TODO add instruction size to pc instead of 1 when running in ram
+    [Opcode.RET]: [[], (_, s) => { s.pc = s.pop() + 1; }],
     // Stop Execution emediately after opcode is read
     [Opcode.HLT]: [[], () => { }],
     // Copies the value located at the RAM location pointed to by Op2 into the RAM position pointed to by Op1.
@@ -327,7 +327,7 @@ export const Opcodes_operants = {
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
     [Opcode.LLOD]: [[RAO, SAM, GET], (ops) => { ops[1] = ops[2]; }],
     //----- IO Instructions
-    [Opcode.IN]: [[SET, GET], async (ops, s) => { ops[0] = await s.in(ops[1]); }],
+    [Opcode.IN]: [[SET, GET], (ops, s) => { return s.in(ops[1], ops); }],
     [Opcode.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
 };
 export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {

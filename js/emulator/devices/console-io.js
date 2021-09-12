@@ -1,9 +1,17 @@
 export class Console_IO {
     input;
     write;
-    constructor(input, write) {
+    _reset;
+    constructor(input, write, _reset) {
         this.input = input;
         this.write = write;
+        this._reset = _reset;
+    }
+    fully_read = true;
+    reset() {
+        this.input.text = "";
+        this.fully_read = true;
+        this._reset();
     }
     async read() {
         return new Promise((res) => {
@@ -13,14 +21,18 @@ export class Console_IO {
             });
         });
     }
-    fully_read = true;
-    async text_in() {
+    text_in(callback) {
         if (!this.input.text && !this.fully_read) {
             this.fully_read = true;
             return 0;
         }
         if (!this.input.text) {
-            await this.read();
+            this.read().then(() => {
+                const char_code = this.input.text.charCodeAt(0);
+                this.input.text = this.input.text.slice(1);
+                callback(char_code);
+            });
+            return undefined;
         }
         const char_code = this.input.text.charCodeAt(0);
         this.input.text = this.input.text.slice(1);
@@ -29,7 +41,17 @@ export class Console_IO {
     text_out(value) {
         this.write(String.fromCharCode(value));
     }
-    async numb_in() {
+    numb_in(callback) {
+        if (this.input.text) {
+            const num = parseInt(this.input.text);
+            if (Number.isInteger(num)) {
+                return num;
+            }
+        }
+        this._numb_in().then((value) => callback(value));
+        return undefined;
+    }
+    async _numb_in() {
         let num = NaN;
         while (Number.isNaN(num)) {
             await this.read();

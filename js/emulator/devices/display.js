@@ -15,6 +15,12 @@ export class Display {
     buffer_enabled = 0;
     x = 0;
     y = 0;
+    reset() {
+        this.x = 0;
+        this.y = 0;
+        this.clear();
+        this.buffer_enabled = 0;
+    }
     constructor(canvas, width, height, bits, _color_mode = Color_Mode.Bin) {
         this.bits = bits;
         this._color_mode = _color_mode;
@@ -66,7 +72,7 @@ export class Display {
         this.y = value;
     }
     color_in() {
-        if (!this.in_bounce(this.x, this.y)) {
+        if (!this.in_bounds(this.x, this.y)) {
             return 0;
         }
         const i = (this.x + this.y * this.width) * 4;
@@ -76,8 +82,7 @@ export class Display {
     // rrrrrggggggbbbbb
     // rrrrrrrrggggggggbbbbbbbb
     color_out(color) {
-        console.log(color);
-        if (!this.in_bounce(this.x, this.y)) {
+        if (!this.in_bounds(this.x, this.y)) {
             return;
         }
         const i = (this.x + this.y * this.width) * 4;
@@ -111,7 +116,7 @@ export class Display {
                 break;
         }
     }
-    in_bounce(x, y) {
+    in_bounds(x, y) {
         return x >= 0 && x < this.width
             && y >= 0 && y < this.height;
     }

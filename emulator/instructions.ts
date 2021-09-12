@@ -28,7 +28,6 @@ export enum Register {
     R0 = 0, PC, SP
 }
 export const register_count = enum_count(Register);
-console.log(register_count);
 
 export enum Operant_Prim {
     Reg, Imm,
@@ -94,11 +93,11 @@ export interface Instruction_Ctx {
     pc: Word;
     push(a: Word): void;
     pop(): Word;
-    in(port: Word): Word | Promise<Word>;
+    in(port: Word, target: Arr<Word>): boolean;
     out(port: Word, value: Word): void;
 }
 
-type Instruction_Callback = (ops: Arr<Word>, ctx: Instruction_Ctx) => void | Promise<void>;
+type Instruction_Callback = (ops: Arr<Word>, ctx: Instruction_Ctx) => void | boolean;
 
 const {SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO} = Operant_Operation;
 export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Instruction_Callback]>> = {
@@ -176,7 +175,8 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     // Pushes the address of the next instruction onto the stack then branches to Op1
     [Opcode.CAL ]: [[GET          ], (ops, s) => {s.push(s.pc); s.pc = ops[0]}],
     // Pops from the stack, then branches to that value
-    [Opcode.RET ]: [[             ], (_, s) => {s.pc = s.pop()}],
+    //TODO add instruction size to pc instead of 1 when running in ram
+    [Opcode.RET ]: [[             ], (_, s) => {s.pc = s.pop()+1}],
     // Stop Execution emediately after opcode is read
     [Opcode.HLT ]: [[             ],()=>{}],
     // Copies the value located at the RAM location pointed to by Op2 into the RAM position pointed to by Op1.
@@ -223,7 +223,7 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.LLOD ]: [[RAO, SAM, GET], (ops) => {ops[1] = ops[2]}],
 
     //----- IO Instructions
-    [Opcode.IN  ]: [[SET, GET], async (ops, s) => {ops[0] = await s.in(ops[1])}],
+    [Opcode.IN  ]: [[SET, GET], (ops, s) => {return s.in(ops[1], ops);}],
     [Opcode.OUT ]: [[GET, GET], (ops, s) => {s.out(ops[0], ops[1])}],
 };
 export const Opcodes_operant_lengths: Record<Opcode, i53> 

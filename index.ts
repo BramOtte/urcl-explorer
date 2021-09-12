@@ -1,15 +1,15 @@
 import { compile } from "./emulator/compiler.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
-import { Emulator } from "./emulator/emulator.js";
+import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { IO_Port } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
 import { enum_from_str, expand_warning } from "./emulator/util.js";
 
+let animation_frame: number | undefined;
+
 const source_input = document.getElementById("urcl-source") as HTMLTextAreaElement;
-if (!source_input){throw new Error("unable to get source input");}
 const output_element = document.getElementById("output") as HTMLElement;
-if (!output_element){throw new Error("unable to get output element");}
 
 
 const console_input = document.getElementById("stdin") as HTMLInputElement;
@@ -36,7 +36,8 @@ const console_io = new Console_IO({
     }, 
     (text) => {
         console_output.innerText += text
-    }
+    },
+    () => input_callback = undefined
 );
 const canvas = document.getElementsByTagName("canvas")[0];
 const display = new Display(canvas, 32, 32, 32);
@@ -59,48 +60,71 @@ function resize_display(){
     display.resize(width, height);
 }
 
-const emulator = new Emulator();
-emulator.input_devices[IO_Port.NUMB] = console_io.numb_in.bind(console_io);
-emulator.output_devices[IO_Port.NUMB] = console_io.numb_out.bind(console_io);
-emulator.input_devices[IO_Port.TEXT] = console_io.text_in.bind(console_io);
-emulator.output_devices[IO_Port.TEXT] = console_io.text_out.bind(console_io);
+const emulator = new Emulator(frame);
+emulator.add_io_device(IO_Port.TEXT,
+    console_io.text_in.bind(console_io),
+    console_io.text_out.bind(console_io),
+    console_io.reset.bind(console_io)
+);
+emulator.add_io_device(IO_Port.NUMB,
+    console_io.numb_in.bind(console_io),
+    console_io.numb_out.bind(console_io),
+    console_io.reset.bind(console_io)
+);
+emulator.add_io_device(IO_Port.COLOR,
+    display.color_in.bind(display),
+    display.color_out.bind(display),
+    display.reset.bind(display)
+);
+emulator.add_io_device(IO_Port.X,
+    display.x_in.bind(display),
+    display.x_out.bind(display),
+    display.reset.bind(display)
+);
+emulator.add_io_device(IO_Port.Y,
+    display.y_in.bind(display),
+    display.y_out.bind(display),
+    display.reset.bind(display)
+);
+emulator.add_io_device(IO_Port.BUFFER,
+    display.buffer_in.bind(display),
+    display.buffer_out.bind(display),
+    display.reset.bind(display)
+);
 
-emulator.input_devices[IO_Port.COLOR] = display.color_in.bind(display);
-emulator.output_devices[IO_Port.COLOR] = display.color_out.bind(display);
-emulator.input_devices[IO_Port.X] = display.x_in.bind(display);
-emulator.output_devices[IO_Port.X] = display.x_out.bind(display);
-emulator.input_devices[IO_Port.Y] = display.y_in.bind(display);
-emulator.output_devices[IO_Port.Y] = display.y_out.bind(display);
-emulator.input_devices[IO_Port.BUFFER] = display.buffer_in.bind(display);
-emulator.output_devices[IO_Port.BUFFER] = display.buffer_out.bind(display);
-
-const run_button = document.getElementById("run-button") as HTMLButtonElement;
-run_button.addEventListener("click", run);
-run();
-source_input.addEventListener("input", run);
-fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
+source_input.addEventListener("input", compile_and_run);
+fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }
     source_input.value = text;
-    run();
+    compile_and_run();
 });
 
 
-async function run(){
-    run_button.disabled = true;
-    run_button.innerText = "Running...";
-try {
-    display.buffer_out(0);
+const compile_and_run_button = document.getElementById("compile-and-run-button") as HTMLButtonElement;
+compile_and_run_button.addEventListener("click", compile_and_run);
+const pause_button = document.getElementById("pause-button") as HTMLButtonElement;
+const compile_and_reset_button = document.getElementById("compile-and-reset-button") as HTMLButtonElement;
+const step_button = document.getElementById("step-button") as HTMLButtonElement;
+function compile_and_run(){
+    compile_and_reset();
+    pause_button.textContent = "Pause";
+    pause_button.disabled = false;
+    if (animation_frame === undefined){
+        animation_frame = requestAnimationFrame(frame);
+    }
+    
+}
+function compile_and_reset(){
     output_element.innerText = "";
-    console_output.innerText = "";
+try {
     const source = source_input.value;
     const parsed = parse(source);
 
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => "ERROR: " + expand_warning(v, parsed.lines)+"\n").join("");
         output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines)+"\n").join("");
-        run_button.innerText = "Compile Error";
         return;
     }
     output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines)+"\n").join("");
@@ -109,18 +133,36 @@ try {
     display.bits = emulator.bits;
 
     output_element.innerText += `
+compilation done
 bits: ${emulator.bits}
 register-count: ${emulator.registers.length}
 memory-size: ${emulator.memory.length}
-registers: [${emulator.registers}]
 `;
-    const pause = emulator.run();
-    run_button.disabled = false;
-    await pause;
-} catch (e) {
-    run_button.innerText = "Error";
-    output_element.innerText += e;
+    console_output.innerText = "";
+} catch (e: any){
+    output_element.innerText += "ERROR: " + e;
     throw e;
 }
-    run_button.innerText = "Run";
+}
+
+function frame(){
+    compile_and_run_button.disabled = false;
+    pause_button.disabled = false;
+    compile_and_reset_button.disabled = false;
+    step_button.disabled = false;
+    animation_frame = undefined;
+    switch (emulator.run(16)){
+        case Step_Result.Continue: {
+            animation_frame = requestAnimationFrame(frame); 
+        } break;
+        case Step_Result.Input: {
+
+        } break;
+        case Step_Result.Halt: {
+            output_element.innerText += "Program halted";
+        } break;
+        default: {
+            console.warn("unkown step result");
+        }
+    }
 }

@@ -2,10 +2,18 @@ import { i53, Word, Arr } from "./util.js";
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, register_count, Opcodes_operant_lengths, Header_Run} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 
+export enum Step_Result {
+    Continue, Halt, Input
+}
+
+type Device_Input = ((callback: (value: Word) => void) => undefined | number) | (() => number);
+type Device_Output = (value: Word) => void;
+type Device_Reset = ()=>void;
+
 export class Emulator implements Instruction_Ctx {
     public program!: Program;
     public debug_info!: Debug_Info;
-    constructor(){
+    constructor(public on_continue: ()=>void){
     }
     load_program(program: Program, debug_info: Debug_Info){
         this.program = program, this.debug_info = debug_info;
@@ -39,14 +47,27 @@ export class Emulator implements Instruction_Ctx {
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, heap + stack).fill(0);
 
+        this.reset();
+    }
+    private reset(){
         this.stack_ptr = this.memory.length-1;
         this.pc = 0;
+        for (let port in this.device_resets){
+            const reset = this.device_resets[port as any as IO_Port];
+            if (reset){
+                reset();
+            }
+        }
     }
-
-    pc: i53 = 0;
     buffer = new ArrayBuffer(1024*1024*512);
     registers: Arr = new Uint8Array(32);
     memory: Arr = new Uint8Array(256);
+    get pc(){
+        return this.registers[Register.PC];
+    }
+    set pc(value: Word){
+        this.registers[Register.PC] = value;
+    }
     get stack_ptr(){
         return this.registers[Register.SP];
     }
@@ -54,8 +75,14 @@ export class Emulator implements Instruction_Ctx {
         this.registers[Register.SP] = value;
     }
     bits = 8;
-    input_devices: {[K in IO_Port]?: () => Word | Promise<Word>} = {};
-    output_devices: {[K in IO_Port]?: (value: Word) => void | Promise<void>} = {};
+    private device_inputs: {[K in IO_Port]?: Device_Input} = {};
+    private device_outputs: {[K in IO_Port]?: Device_Output} = {};
+    private device_resets: {[K in IO_Port]?: Device_Reset} = {};
+    public add_io_device(port: IO_Port, input: Device_Input, output: Device_Output, reset: Device_Reset){
+        this.device_inputs[port] = input;
+        this.device_outputs[port] = output;
+        this.device_resets[port] = reset;
+    }
     
 
     get max_value(){
@@ -73,57 +100,84 @@ export class Emulator implements Instruction_Ctx {
     pop(): Word {
         return this.memory[this.stack_ptr++];
     }
-    async in(port: Word): Promise<number>{
-        const device = this.input_devices[port as IO_Port];
+    in(port: Word, target: Arr<Word>): boolean {
+        const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
             console.warn(`unsupported input device port ${port} (${IO_Port[port]}) ${this.line()}`);
-            return 0;
+            return false;
         }
-        return device();
+        const res = device(this.finish_step_in.bind(this));
+        if (res === undefined){
+            return true;
+        } else {
+            target[0] = res as number;
+            return false;
+        }
     }
     out(port: Word, value: Word): void{
-        const device = this.output_devices[port as IO_Port];
+        const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
             console.warn(`unsupported output device port ${port} (${IO_Port[port]}) ${this.line()}`);
             return;
         }
         device(value);
     }
-    async run(){
-        const max_cycles = 1_000_000;
-        let cycles = 0;
-        for (;cycles < max_cycles; cycles++){
-            const pc = this.pc++;
-            if (pc >= this.program.opcodes.length){break;}
-            const opcode = this.program.opcodes[pc];
-            if (opcode === Opcode.HLT){
-                break;
-            }
-            const instruction = Opcodes_operants[opcode];
-            if (instruction === undefined){throw new Error(`unkown opcode ${opcode} ${this.line()}`);}
-            const [op_operations, func] = instruction;
-            const op_types = this.program.operant_prims[pc];
-            const op_values = this.program.operant_values[pc];
-            const ops = op_operations.map(() => 0);
-            let ram_offset = 0;
-            for (let i = 0; i < op_operations.length; i++){
-                switch (op_operations[i]){
-                    case Operant_Operation.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
-                    case Operant_Operation.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
-                    case Operant_Operation.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
+    run(max_duration: number): Step_Result {
+        const burst_length = 128;
+        const end = Date.now() + max_duration;
+        do {
+            for (let i = 0; i < burst_length; i++){
+                const res = this.step();
+                if (res !== Step_Result.Continue){
+                    return res;
                 }
             }
-            await func(ops, this);
-            for (let i = 0; i < op_operations.length; i++){
-                switch (op_operations[i]){
-                    case Operant_Operation.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                    case Operant_Operation.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
-                }
+        } while (Date.now() < end);
+        return Step_Result.Continue;
+    }
+    step(): Step_Result {
+        const pc = this.pc;
+        if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
+        const opcode = this.program.opcodes[pc];
+        if (opcode === Opcode.HLT){
+            return Step_Result.Halt;
+        }
+        const instruction = Opcodes_operants[opcode];
+        if (instruction === undefined){throw new Error(`unkown opcode ${opcode} ${this.line()}`);}
+        const [op_operations, func] = instruction;
+        const op_types = this.program.operant_prims[pc];
+        const op_values = this.program.operant_values[pc];
+        const ops = op_operations.map(() => 0);
+        let ram_offset = 0;
+        for (let i = 0; i < op_operations.length; i++){
+            switch (op_operations[i]){
+                case Operant_Operation.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
+                case Operant_Operation.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
+                case Operant_Operation.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
             }
         }
-        if (cycles >= max_cycles){
-            console.warn("reached max cycles");
+        if (func(ops, this)) {
+            return Step_Result.Input;
         }
+        for (let i = 0; i < op_operations.length; i++){
+            switch (op_operations[i]){
+                case Operant_Operation.SET: this.write(op_types[i], op_values[i], ops[i]); break;
+                case Operant_Operation.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
+            }
+        }
+        if (this.pc == pc){
+            this.pc++;
+        }
+        return Step_Result.Continue;
+    }
+    // this method only needs to be called for the IN instruction
+    finish_step_in(result: Word){
+        const pc = this.pc;
+        const type = this.program.operant_prims[pc][0];
+        const value = this.program.operant_values[pc][0];
+        this.write(type, value, result);
+        this.pc++;
+        this.on_continue();
     }
     write(target: Operant_Prim, index: Word, value: Word){
         switch (target){

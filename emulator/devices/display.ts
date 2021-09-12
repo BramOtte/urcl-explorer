@@ -11,6 +11,12 @@ export class Display {
     private buffer_enabled: 1 | 0 = 0;
     private x = 0;
     private y = 0;
+    reset(){
+        this.x = 0;
+        this.y = 0;
+        this.clear();
+        this.buffer_enabled = 0;
+    }
     
     constructor (
         canvas: HTMLCanvasElement,
@@ -64,7 +70,7 @@ export class Display {
         this.y = value;
     }
     color_in(){
-        if (!this.in_bounce(this.x, this.y)){
+        if (!this.in_bounds(this.x, this.y)){
             return 0;
         }
         const i = (this.x + this.y * this.width) * 4;
@@ -74,8 +80,7 @@ export class Display {
     // rrrrrggggggbbbbb
     // rrrrrrrrggggggggbbbbbbbb
     color_out(color: number){
-        console.log(color);
-        if (!this.in_bounce(this.x, this.y)){
+        if (!this.in_bounds(this.x, this.y)){
             return;
         }
         const i = (this.x + this.y * this.width) * 4;
@@ -84,7 +89,7 @@ export class Display {
             this.ctx.putImageData(this.image, 0, 0);
         }
     }
-    buffer_in(){
+    buffer_in(): number {
         return this.buffer_enabled;
     }
     buffer_out(value: number){
@@ -104,7 +109,7 @@ export class Display {
     }
 
 
-    private in_bounce(x: number, y: number){
+    private in_bounds(x: number, y: number){
         return x >= 0 && x < this.width
             && y >= 0 && y < this.height;
     }
