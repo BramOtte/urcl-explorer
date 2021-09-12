@@ -175,8 +175,7 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     // Pushes the address of the next instruction onto the stack then branches to Op1
     [Opcode.CAL ]: [[GET          ], (ops, s) => {s.push(s.pc); s.pc = ops[0]}],
     // Pops from the stack, then branches to that value
-    //TODO add instruction size to pc instead of 1 when running in ram
-    [Opcode.RET ]: [[             ], (_, s) => {s.pc = s.pop()+1}],
+    [Opcode.RET ]: [[             ], (_, s) => {s.pc = s.pop()}],
     // Stop Execution emediately after opcode is read
     [Opcode.HLT ]: [[             ],()=>{}],
     // Copies the value located at the RAM location pointed to by Op2 into the RAM position pointed to by Op1.

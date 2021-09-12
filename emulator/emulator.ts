@@ -1,5 +1,5 @@
-import { i53, Word, Arr } from "./util.js";
-import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, register_count, Opcodes_operant_lengths, Header_Run} from "./instructions.js";
+import { Word, Arr } from "./util.js";
+import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 
 export enum Step_Result {
@@ -136,7 +136,7 @@ export class Emulator implements Instruction_Ctx {
         return Step_Result.Continue;
     }
     step(): Step_Result {
-        const pc = this.pc;
+        const pc = this.pc++;
         if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
         const opcode = this.program.opcodes[pc];
         if (opcode === Opcode.HLT){
@@ -165,18 +165,14 @@ export class Emulator implements Instruction_Ctx {
                 case Operant_Operation.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
             }
         }
-        if (this.pc == pc){
-            this.pc++;
-        }
         return Step_Result.Continue;
     }
     // this method only needs to be called for the IN instruction
     finish_step_in(result: Word){
-        const pc = this.pc;
+        const pc = this.pc-1;
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
         this.write(type, value, result);
-        this.pc++;
         this.on_continue();
     }
     write(target: Operant_Prim, index: Word, value: Word){

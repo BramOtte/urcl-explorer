@@ -6,6 +6,7 @@ import { IO_Port } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
 import { enum_from_str, expand_warning } from "./emulator/util.js";
 let animation_frame;
+let running = false;
 const source_input = document.getElementById("urcl-source");
 const output_element = document.getElementById("output");
 const console_input = document.getElementById("stdin");
@@ -28,7 +29,10 @@ const console_io = new Console_IO({
     }
 }, (text) => {
     console_output.innerText += text;
-}, () => input_callback = undefined);
+}, () => {
+    console_output.textContent = "";
+    input_callback = undefined;
+});
 const canvas = document.getElementsByTagName("canvas")[0];
 const display = new Display(canvas, 32, 32, 32);
 const color_mode_input = document.getElementById("color-mode");
@@ -57,7 +61,7 @@ emulator.add_io_device(IO_Port.X, display.x_in.bind(display), display.x_out.bind
 emulator.add_io_device(IO_Port.Y, display.y_in.bind(display), display.y_out.bind(display), display.reset.bind(display));
 emulator.add_io_device(IO_Port.BUFFER, display.buffer_in.bind(display), display.buffer_out.bind(display), display.reset.bind(display));
 source_input.addEventListener("input", compile_and_run);
-fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
@@ -65,16 +69,41 @@ fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     compile_and_run();
 });
 const compile_and_run_button = document.getElementById("compile-and-run-button");
-compile_and_run_button.addEventListener("click", compile_and_run);
 const pause_button = document.getElementById("pause-button");
 const compile_and_reset_button = document.getElementById("compile-and-reset-button");
 const step_button = document.getElementById("step-button");
+compile_and_run_button.addEventListener("click", compile_and_run);
+compile_and_reset_button.addEventListener("click", compile_and_reset);
+pause_button.addEventListener("click", pause);
+step_button.addEventListener("click", step);
+function step() {
+    process_step_result(emulator.step());
+}
+function pause() {
+    if (running) {
+        if (animation_frame) {
+            cancelAnimationFrame(animation_frame);
+            animation_frame = undefined;
+            pause_button.textContent = "Start";
+            running = false;
+            step_button.disabled = running;
+        }
+    }
+    else {
+        animation_frame = requestAnimationFrame(frame);
+        pause_button.textContent = "Pause";
+        running = true;
+        step_button.disabled = running;
+    }
+}
 function compile_and_run() {
     compile_and_reset();
     pause_button.textContent = "Pause";
     pause_button.disabled = false;
-    if (animation_frame === undefined) {
-        animation_frame = requestAnimationFrame(frame);
+    if (!running) {
+        running = true;
+        step_button.disabled = running;
+        frame();
     }
 }
 function compile_and_reset() {
@@ -97,7 +126,14 @@ bits: ${emulator.bits}
 register-count: ${emulator.registers.length}
 memory-size: ${emulator.memory.length}
 `;
-        console_output.innerText = "";
+        if (animation_frame) {
+            cancelAnimationFrame(animation_frame);
+        }
+        animation_frame = undefined;
+        pause_button.textContent = "Start";
+        pause_button.disabled = false;
+        step_button.disabled = false;
+        running = false;
     }
     catch (e) {
         output_element.innerText += "ERROR: " + e;
@@ -105,24 +141,40 @@ memory-size: ${emulator.memory.length}
     }
 }
 function frame() {
-    compile_and_run_button.disabled = false;
-    pause_button.disabled = false;
-    compile_and_reset_button.disabled = false;
-    step_button.disabled = false;
+    if (running) {
+        process_step_result(emulator.run(16));
+    }
+    else {
+        step_button.disabled = false;
+        pause_button.disabled = false;
+    }
+}
+function process_step_result(result) {
     animation_frame = undefined;
-    switch (emulator.run(16)) {
+    switch (result) {
         case Step_Result.Continue:
             {
-                animation_frame = requestAnimationFrame(frame);
+                if (running) {
+                    animation_frame = requestAnimationFrame(frame);
+                    running = true;
+                    step_button.disabled = running;
+                    pause_button.disabled = false;
+                }
             }
             break;
         case Step_Result.Input:
             {
+                step_button.disabled = true;
+                pause_button.disabled = true;
             }
             break;
         case Step_Result.Halt:
             {
                 output_element.innerText += "Program halted";
+                step_button.disabled = true;
+                pause_button.disabled = true;
+                pause_button.textContent = "Start";
+                running = false;
             }
             break;
         default: {

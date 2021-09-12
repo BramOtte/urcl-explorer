@@ -134,7 +134,7 @@ export class Emulator {
         return Step_Result.Continue;
     }
     step() {
-        const pc = this.pc;
+        const pc = this.pc++;
         if (pc >= this.program.opcodes.length) {
             return Step_Result.Halt;
         }
@@ -177,18 +177,14 @@ export class Emulator {
                     break;
             }
         }
-        if (this.pc == pc) {
-            this.pc++;
-        }
         return Step_Result.Continue;
     }
     // this method only needs to be called for the IN instruction
     finish_step_in(result) {
-        const pc = this.pc;
+        const pc = this.pc - 1;
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
         this.write(type, value, result);
-        this.pc++;
         this.on_continue();
     }
     write(target, index, value) {
