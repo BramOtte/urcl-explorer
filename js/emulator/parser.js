@@ -47,7 +47,7 @@ export function parse(source) {
         out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
     }
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++) {
-        parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors);
+        parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
     }
     return out;
 }
@@ -139,11 +139,11 @@ function split_instruction(line, line_nr, inst_i, out, errors) {
     out.instr_line_nrs[inst_i] = line_nr;
     return true;
 }
-function parse_instructions(line_nr, inst_i, out, errors) {
+function parse_instructions(line_nr, inst_i, out, errors, warnings) {
     const types = out.operant_types[inst_i] = [];
     const values = out.operant_values[inst_i] = [];
     for (const operant of out.operant_strings[inst_i]) {
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.label_inst_i, errors) ?? [];
+        const [type, value] = parse_operant(operant, line_nr, inst_i, out.label_inst_i, errors, warnings) ?? [];
         if (type !== undefined) {
             types.push(type);
             values.push(value);
@@ -151,7 +151,7 @@ function parse_instructions(line_nr, inst_i, out, errors) {
     }
     return 0;
 }
-function parse_operant(operant, line_nr, inst_i, labels, errors) {
+function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
     switch (operant) {
         case "R0":
         case "r0":
@@ -227,8 +227,8 @@ function parse_operant(operant, line_nr, inst_i, labels, errors) {
             }
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];
         }
-        case '@':
-        case '&': {
+        case '&': warnings.push(warn(line_nr, `Compiler constants with & are deprecated`));
+        case '@': {
             const constant = enum_from_str(Constants, operant.slice(1).toUpperCase());
             if (constant === undefined) {
                 errors.push(warn(line_nr, `Unkown Compiler Constant ${operant}`));

@@ -68,7 +68,7 @@ export function parse(source: string): Parser_output
         out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
     }
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++){
-        parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors);
+        parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
     }
     return out;
 }
@@ -176,11 +176,11 @@ function split_instruction
     
     return true;
 }
-function parse_instructions(line_nr: number, inst_i: number, out: Instruction_Out, errors: Warning[]): number {
+function parse_instructions(line_nr: number, inst_i: number, out: Instruction_Out, errors: Warning[], warnings: Warning[]): number {
     const types: number[] = out.operant_types[inst_i] = [];
     const values: number[] = out.operant_values[inst_i] = [];
     for (const operant of out.operant_strings[inst_i]){
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.label_inst_i, errors) ?? [];
+        const [type, value] = parse_operant(operant, line_nr, inst_i, out.label_inst_i, errors, warnings) ?? [];
         if (type !== undefined){
             types.push(type);
             values.push(value as number);
@@ -190,7 +190,8 @@ function parse_instructions(line_nr: number, inst_i: number, out: Instruction_Ou
 }
 
 function parse_operant(
-    operant: string, line_nr: number, inst_i: number, labels: {[K in string]?: number}, errors: Warning[]
+    operant: string, line_nr: number, inst_i: number, labels: {[K in string]?: number},
+    errors: Warning[], warnings: Warning[]
 ):
     undefined | [type: Operant_Type, value: Word]
 {
@@ -253,7 +254,8 @@ function parse_operant(
             }
             return [Operant_Type.Imm, char_lit.charCodeAt(0)];
         }
-        case '@': case '&': {
+        case '&': warnings.push(warn(line_nr, `Compiler constants with & are deprecated`));
+        case '@': {
             const constant = enum_from_str(Constants, operant.slice(1).toUpperCase());
             if (constant === undefined){
                 errors.push(warn(line_nr, `Unkown Compiler Constant ${operant}`));
