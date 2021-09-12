@@ -1,0 +1,85 @@
+@font-face {
+  font-family: "unscii";
+  src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");
+}
+
+html {
+  font-family: "unscii";
+  background: #111;
+  color: #EEE;
+}
+
+textarea {
+  background-color: #444;
+  color: #FFF;
+  border: 0px;
+  font-family: "unscii";
+}
+
+#stdout {
+  height: 20%;
+  overflow: scroll;
+  background: #000;
+  color: #FFF;
+  font-family: "unscii";
+}
+
+#stdin {
+  background: #444;
+  color: #fff;
+  font-family: unscii;
+  border: 0px;
+}
+
+button {
+  background: #444;
+  color: #EEE;
+  font-family: unscii;
+  width: 20%;
+  border: 0px;
+}
+
+input {
+  font-family: unscii;
+  background: #444;
+  color: #FFF;
+  border: 0;
+}
+
+/* Chrome, Safari, Edge, Opera */
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+/* Firefox */
+input[type=number] {
+  -moz-appearance: textfield;
+}
+
+select {
+  background-color: #444;
+  color: #EEE;
+  font-family: unscii;
+  border: 0px;
+}
+
+#compile-and-run-button {
+  background: #0F0;
+  color: #111;
+}
+
+#compile-and-reset-button {
+  background: #F00;
+  color: #111;
+}
+
+#pause-button {
+  background: #66B6FF;
+  color: #111;
+}
+
+:disabled {
+  color: #AAA;
+}
