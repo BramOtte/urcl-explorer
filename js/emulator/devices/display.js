@@ -19,6 +19,7 @@ export class Display {
         this.x = 0;
         this.y = 0;
         this.clear();
+        this.ctx.putImageData(this.image, 0, 0);
         this.buffer_enabled = 0;
     }
     constructor(canvas, width, height, bits, _color_mode = Color_Mode.Bin) {
