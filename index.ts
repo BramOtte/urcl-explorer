@@ -48,11 +48,11 @@ const canvas = document.getElementsByTagName("canvas")[0];
 const display = new Display(canvas, 32, 32, 32);
 const color_mode_input = document.getElementById("color-mode") as HTMLOptionElement;
 color_mode_input.addEventListener("change", change_color_mode);
-change_color_mode();
 function change_color_mode(){
     const color_mode = enum_from_str(Color_Mode, color_mode_input.value);
     console.log(color_mode_input.value, color_mode);
     display.color_mode = color_mode ?? display.color_mode;
+    compile_and_run();
 }
 const width_input = document.getElementById("display-width") as HTMLInputElement;
 const height_input = document.getElementById("display-height") as HTMLInputElement;
@@ -254,3 +254,5 @@ function memoryToString(view: Arr, from = 0x0, length=0x1000, bits=8){
     }
     return lines.join("\n");
 }
+
+change_color_mode();
