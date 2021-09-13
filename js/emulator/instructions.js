@@ -73,9 +73,8 @@ export var Opcode;
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
-    Register[Register["R0"] = 0] = "R0";
-    Register[Register["PC"] = 1] = "PC";
-    Register[Register["SP"] = 2] = "SP";
+    Register[Register["PC"] = 0] = "PC";
+    Register[Register["SP"] = 1] = "SP";
 })(Register || (Register = {}));
 export const register_count = enum_count(Register);
 export var Operant_Prim;

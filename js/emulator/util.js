@@ -5,6 +5,26 @@ export function expand_warning(warning, lines) {
     const { message, line_nr } = warning;
     return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
 }
+export function pad_left(str, size, char = " ") {
+    const pad = Math.max(0, size - str.length);
+    return char.repeat(pad) + str;
+}
+export function pad_right(str, size, char = " ") {
+    const pad = Math.max(0, size - str.length);
+    return str + char.repeat(pad);
+}
+export function pad_center(str, size, left_char = " ", right_char = left_char) {
+    const pad = Math.max(0, size - str.length);
+    const left = 0 | pad / 2;
+    const right = pad - left;
+    return left_char.repeat(left) + str + right_char.repeat(right);
+}
+export function hex(num, size, pad = "_") {
+    return pad_left(num.toString(16), size, pad).toUpperCase();
+}
+export function hex_size(bits) {
+    return Math.ceil(bits / 4);
+}
 export function object_map(obj, callback) {
     const res = {};
     for (const key in obj) {

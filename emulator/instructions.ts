@@ -27,7 +27,7 @@ export enum Opcode {
 }
 
 export enum Register {
-    R0 = 0, PC, SP
+    PC, SP
 }
 export const register_count = enum_count(Register);
 

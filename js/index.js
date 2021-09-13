@@ -2,9 +2,9 @@ import { compile } from "./emulator/compiler.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
-import { IO_Port } from "./emulator/instructions.js";
+import { IO_Port, Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
-import { enum_from_str, expand_warning } from "./emulator/util.js";
+import { enum_from_str, expand_warning, hex, hex_size, pad_center } from "./emulator/util.js";
 let animation_frame;
 let running = false;
 const source_input = document.getElementById("urcl-source");
@@ -136,8 +136,7 @@ memory-size: ${emulator.memory.length}
         pause_button.disabled = false;
         step_button.disabled = false;
         running = false;
-        memory_view.innerText = memoryToString(new DataView(emulator.buffer, emulator.memory.byteOffset, emulator.memory.byteLength));
-        register_view.innerText = emulator.registers.join(" ");
+        update_views();
     }
     catch (e) {
         output_element.innerText += "ERROR: " + e;
@@ -185,32 +184,37 @@ function process_step_result(result) {
             console.warn("unkown step result");
         }
     }
-    memory_view.innerText = memoryToString(new DataView(emulator.buffer, emulator.memory.byteOffset, emulator.memory.byteLength));
-    register_view.innerText = emulator.registers.join(" ");
+    update_views();
+}
+function update_views() {
+    const bits = emulator.bits;
+    const hexes = hex_size(bits);
+    memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
+    Uint8Array;
+    register_view.innerText =
+        Array.from({ length: register_count }, (v, i) => pad_center(Register[i], hexes) + " ").join("") +
+            Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, hexes) + " ").join("") + "\n" +
+            Array.from(emulator.registers, (v) => hex(v, hexes) + " ").join("");
 }
 function memoryToString(view, from = 0x0, length = 0x1000, bits = 8) {
     const width = 0x10;
-    const end = Math.min(from + length, view.byteLength);
-    const hexes = Math.ceil(bits / 4);
+    const end = Math.min(from + length, view.length);
+    const hexes = hex_size(bits);
     let lines = [
         " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
-            const str = i.toString(16);
-            return " ".repeat(2 - str.length) + str;
+            return pad_center(hex(i, 1), hexes);
         }).join(" ")
     ];
     for (let i = from; i < end;) {
         const sub_end = Math.min(i + width, end);
         let subs = [];
-        const addr = (0 | i / width).toString(16);
+        const addr = hex(0 | i / width, hexes - 1, " ");
         for (; i < sub_end; i++) {
-            let sub = view.getUint8(i).toString(16);
-            sub = "0".repeat(2 - sub.length) + sub;
-            subs.push(sub);
+            subs.push(hex(view[i], hexes));
         }
         const line = subs.join(" ");
         lines.push(addr + " ".repeat(hexes - addr.length) + line);
     }
-    console.log(lines);
     return lines.join("\n");
 }
 //# sourceMappingURL=index.js.map

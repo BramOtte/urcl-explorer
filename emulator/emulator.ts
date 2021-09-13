@@ -60,7 +60,7 @@ export class Emulator implements Instruction_Ctx {
         }
     }
     buffer = new ArrayBuffer(1024*1024*512);
-    registers: Arr & {byteLength: number, byteOffset: number} = new Uint8Array(32);
+    registers: Arr & {byteLength: number, byteOffset: number, [Symbol.iterator](): IterableIterator<number> } = new Uint8Array(32);
     memory: Arr & {byteLength: number, byteOffset: number} = new Uint8Array(256);
     get pc(){
         return this.registers[Register.PC];
@@ -185,7 +185,7 @@ export class Emulator implements Instruction_Ctx {
     read(source: Operant_Prim, value: Word){
         switch (source){
             case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return value === Register.R0 ? 0 : this.registers[value];
+            case Operant_Prim.Reg: return this.registers[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

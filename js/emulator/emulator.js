@@ -199,7 +199,7 @@ export class Emulator {
     read(source, value) {
         switch (source) {
             case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return value === Register.R0 ? 0 : this.registers[value];
+            case Operant_Prim.Reg: return this.registers[value];
             default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
         }
     }

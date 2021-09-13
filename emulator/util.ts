@@ -15,6 +15,26 @@ export function expand_warning(warning: Warning, lines: string[]){
     return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
 }
 
+export function pad_left(str: string, size: number, char = " "){
+    const pad = Math.max(0, size - str.length);
+    return char.repeat(pad) + str;
+}
+export function pad_right(str: string, size: number, char = " "){
+    const pad = Math.max(0, size - str.length);
+    return str + char.repeat(pad);
+}
+export function pad_center(str: string, size: number, left_char = " ", right_char = left_char){
+    const pad = Math.max(0, size - str.length);
+    const left = 0| pad /2;
+    const right = pad - left;
+    return left_char.repeat(left) + str + right_char.repeat(right);
+}
+export function hex(num: number, size: number, pad="_"){
+    return pad_left(num.toString(16), size, pad).toUpperCase();
+}
+export function hex_size(bits: number){
+    return Math.ceil(bits / 4);
+}
 
 export interface Arr<T = number, L extends number = number> {
     [K: number]: T; 
