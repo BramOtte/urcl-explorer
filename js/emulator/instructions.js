@@ -66,8 +66,10 @@ export var Opcode;
     Opcode[Opcode["IN"] = 57] = "IN";
     Opcode[Opcode["OUT"] = 58] = "OUT";
     //----- Debug Instructions
-    // assert equals
-    Opcode[Opcode["ASE"] = 59] = "ASE";
+    Opcode[Opcode["__ASSERT"] = 59] = "__ASSERT";
+    Opcode[Opcode["__ASSERT0"] = 60] = "__ASSERT0";
+    Opcode[Opcode["__ASSERT_EQ"] = 61] = "__ASSERT_EQ";
+    Opcode[Opcode["__ASSERT_NEQ"] = 62] = "__ASSERT_NEQ";
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
@@ -342,6 +344,15 @@ export const Opcodes_operants = {
     //----- IO Instructions
     [Opcode.IN]: [[SET, GET], (ops, s) => { return s.in(ops[1], ops); }],
     [Opcode.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
+    //----- Assert Instructions
+    [Opcode.__ASSERT]: [[GET], (ops, s) => { if (!ops[0])
+            fail_assert(s); }],
+    [Opcode.__ASSERT0]: [[GET], (ops, s) => { if (ops[0])
+            fail_assert(s); }],
+    [Opcode.__ASSERT_EQ]: [[GET, GET], (ops, s) => { if (ops[0] !== ops[1])
+            fail_assert(s); }],
+    [Opcode.__ASSERT_NEQ]: [[GET, GET], (ops, s) => { if (ops[0] === ops[1])
+            fail_assert(s); }],
 };
 export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
@@ -349,4 +360,10 @@ export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value)
     }
     return [key, value[0].length];
 });
+function fail_assert(ctx) {
+    const message = `Assertion failed at pc=${ctx.pc}\n`;
+    for (let i = 0; i < message.length; i++) {
+        ctx.out(IO_Port.TEXT, message.charCodeAt(i));
+    }
+}
 //# sourceMappingURL=instructions.js.map

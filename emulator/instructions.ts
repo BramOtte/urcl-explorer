@@ -20,8 +20,10 @@ export enum Opcode {
     IN, OUT,
 
     //----- Debug Instructions
-    // assert equals
-    ASE
+    __ASSERT,
+    __ASSERT0,
+    __ASSERT_EQ,
+    __ASSERT_NEQ
 }
 
 export enum Register {
@@ -229,9 +231,23 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     //----- IO Instructions
     [Opcode.IN  ]: [[SET, GET], (ops, s) => {return s.in(ops[1], ops);}],
     [Opcode.OUT ]: [[GET, GET], (ops, s) => {s.out(ops[0], ops[1])}],
+
+    //----- Assert Instructions
+    [Opcode.__ASSERT]: [[GET], (ops, s) => {if (!ops[0]) fail_assert(s) }],
+    [Opcode.__ASSERT0]: [[GET], (ops, s) => {if (ops[0]) fail_assert(s) }],
+    [Opcode.__ASSERT_EQ]: [[GET, GET], (ops, s) => {if (ops[0] !== ops[1]) fail_assert(s)}],
+    [Opcode.__ASSERT_NEQ]: [[GET, GET], (ops, s) => {if (ops[0] === ops[1]) fail_assert(s)}],
 };
 export const Opcodes_operant_lengths: Record<Opcode, i53> 
     = object_map(Opcodes_operants, (key, value) => {
         if (value === undefined){throw new Error("instruction definition undefined");}
         return [key, value[0].length];
     });
+
+
+function fail_assert(ctx: {out(port: Word, value: Word):void, pc: Word}){
+    const message = `Assertion failed at pc=${ctx.pc}\n`;
+    for (let i = 0; i < message.length; i++){
+        ctx.out(IO_Port.TEXT, message.charCodeAt(i));
+    }
+}

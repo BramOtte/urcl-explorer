@@ -44,7 +44,12 @@ export function parse(source) {
             inst_i++;
             continue;
         }
-        out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
+        if (line.startsWith("@")) {
+            out.warnings.push(warn(line_nr, `Unknown marco ${line.split(" ")[0]}`));
+        }
+        else {
+            out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
+        }
     }
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++) {
         parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
@@ -126,7 +131,7 @@ function parse_label(line, line_nr, inst_i, out, warnings) {
 function split_instruction(line, line_nr, inst_i, out, errors) {
     const [opcode_str, ...ops] = line
         .replace(/' /g, "'\xA0").replace(/,/g, "").split(" ");
-    const opcode = enum_from_str(Opcode, opcode_str.toUpperCase());
+    const opcode = enum_from_str(Opcode, opcode_str.toUpperCase().replace("@", "__"));
     if (opcode === undefined) {
         return false;
     }

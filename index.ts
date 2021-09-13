@@ -226,10 +226,12 @@ function process_step_result(result: Step_Result){
 }
 
 
-function memoryToString(view: DataView, from = 0x0, length=0x1000, width=0x10){
+function memoryToString(view: DataView, from = 0x0, length=0x1000, bits=8){
+    const width = 0x10;
     const end = Math.min(from+length, view.byteLength);
+    const hexes = Math.ceil(bits / 4);
     let lines: string[] = [
-        "     " + Array.from({length: width}, (_,i)=>{
+        " ".repeat(hexes) + Array.from({length: width}, (_,i)=>{
         const str = i.toString(16);
         return " ".repeat(2-str.length) + str;    
     }).join(" ") ];
@@ -244,7 +246,7 @@ function memoryToString(view: DataView, from = 0x0, length=0x1000, width=0x10){
             subs.push(sub);
         }
         const line =  subs.join(" ");
-        lines.push(addr + " ".repeat(5 - addr.length) + line);
+        lines.push(addr + " ".repeat(hexes - addr.length) + line);
     }
     console.log(lines);
     return lines.join("\n");
