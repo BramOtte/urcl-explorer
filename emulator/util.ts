@@ -17,9 +17,11 @@ export function expand_warning(warning: Warning, lines: string[]){
 
 
 export interface Arr<T = number, L extends number = number> {
-    [K: number]: T, 
-    length: L,
+    [K: number]: T; 
+    length: L;
     fill(a: number): this
+    map(callback: (v: T, i: keyof this, arr:this)=>T): this
+    join(sepperator?: string): string;
 }
 export function object_map<T, Res extends {}>
 (obj: T, callback: (key: keyof T, value: T[keyof T])=>[keyof Res, Res[keyof Res]])

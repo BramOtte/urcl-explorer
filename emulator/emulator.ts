@@ -60,8 +60,8 @@ export class Emulator implements Instruction_Ctx {
         }
     }
     buffer = new ArrayBuffer(1024*1024*512);
-    registers: Arr = new Uint8Array(32);
-    memory: Arr = new Uint8Array(256);
+    registers: Arr & {byteLength: number, byteOffset: number} = new Uint8Array(32);
+    memory: Arr & {byteLength: number, byteOffset: number} = new Uint8Array(256);
     get pc(){
         return this.registers[Register.PC];
     }

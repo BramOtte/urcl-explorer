@@ -9,6 +9,8 @@ let animation_frame;
 let running = false;
 const source_input = document.getElementById("urcl-source");
 const output_element = document.getElementById("output");
+const memory_view = document.getElementById("memory-view");
+const register_view = document.getElementById("register-view");
 const console_input = document.getElementById("stdin");
 const console_output = document.getElementById("stdout");
 let input_callback;
@@ -134,6 +136,8 @@ memory-size: ${emulator.memory.length}
         pause_button.disabled = false;
         step_button.disabled = false;
         running = false;
+        memory_view.innerText = memoryToString(new DataView(emulator.buffer, emulator.memory.byteOffset, emulator.memory.byteLength));
+        register_view.innerText = emulator.registers.join(" ");
     }
     catch (e) {
         output_element.innerText += "ERROR: " + e;
@@ -181,5 +185,30 @@ function process_step_result(result) {
             console.warn("unkown step result");
         }
     }
+    memory_view.innerText = memoryToString(new DataView(emulator.buffer, emulator.memory.byteOffset, emulator.memory.byteLength));
+    register_view.innerText = emulator.registers.join(" ");
+}
+function memoryToString(view, from = 0x0, length = 0x1000, width = 0x10) {
+    const end = Math.min(from + length, view.byteLength);
+    let lines = [
+        "     " + Array.from({ length: width }, (_, i) => {
+            const str = i.toString(16);
+            return " ".repeat(2 - str.length) + str;
+        }).join(" ")
+    ];
+    for (let i = from; i < end;) {
+        const sub_end = Math.min(i + width, end);
+        let subs = [];
+        const addr = (0 | i / width).toString(16);
+        for (; i < sub_end; i++) {
+            let sub = view.getUint8(i).toString(16);
+            sub = "0".repeat(2 - sub.length) + sub;
+            subs.push(sub);
+        }
+        const line = subs.join(" ");
+        lines.push(addr + " ".repeat(5 - addr.length) + line);
+    }
+    console.log(lines);
+    return lines.join("\n");
 }
 //# sourceMappingURL=index.js.map
