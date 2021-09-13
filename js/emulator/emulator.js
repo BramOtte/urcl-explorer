@@ -1,4 +1,4 @@
-import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run } from "./instructions.js";
+import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run, register_count } from "./instructions.js";
 export var Step_Result;
 (function (Step_Result) {
     Step_Result[Step_Result["Continue"] = 0] = "Continue";
@@ -17,7 +17,7 @@ export class Emulator {
         const bits = program.headers[URCL_Header.BITS].value;
         const heap = program.headers[URCL_Header.MINHEAP].value;
         const stack = program.headers[URCL_Header.MINSTACK].value;
-        const registers = program.headers[URCL_Header.MINREG].value;
+        const registers = program.headers[URCL_Header.MINREG].value + register_count;
         const run = program.headers[URCL_Header.RUN].value;
         if (run === Header_Run.RAM) {
             throw new Error("emulator currently doesn't support running in ram");
