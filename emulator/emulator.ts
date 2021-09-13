@@ -95,10 +95,10 @@ export class Emulator implements Instruction_Ctx {
         return (1 << (this.bits-1));
     }
     push(value: Word): void {
-        this.memory[--this.stack_ptr] = value;
+        this.memory[this.stack_ptr--] = value;
     }
-    pop(): Word {
-        return this.memory[this.stack_ptr++];
+    pop(): Word { 
+        return this.memory[++this.stack_ptr];
     }
     in(port: Word, target: Arr<Word>): boolean {
         const device = this.device_inputs[port as IO_Port];

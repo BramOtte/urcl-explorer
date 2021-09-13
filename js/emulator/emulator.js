@@ -92,10 +92,10 @@ export class Emulator {
         return (1 << (this.bits - 1));
     }
     push(value) {
-        this.memory[--this.stack_ptr] = value;
+        this.memory[this.stack_ptr--] = value;
     }
     pop() {
-        return this.memory[this.stack_ptr++];
+        return this.memory[++this.stack_ptr];
     }
     in(port, target) {
         const device = this.device_inputs[port];

@@ -10,7 +10,6 @@
 * check if all array access is bounds checked
 * exclude general purpose registers from MINREG
 * v-sync
-* fix view of memory and registers in html
 * add line numbers to source code
 * visualize PC in source code
 * sound device
@@ -18,6 +17,7 @@
 * document emulator
 * add something for automated testing either a port or an instruction
 * Option to list examples
+* fix the mess that is index.ts
 
 ## Low Priority
 * syntax highlighting
@@ -44,3 +44,4 @@
     * @MSB = most significant bit (8 bits it would be 0b10000000)
     * @SMAX = max signed value (so 127 in 8 bits)
     * @SMSB = the second to highest bit (so 0b01000000 in 8 bits)
+* fix view of memory and registers in html
