@@ -173,9 +173,8 @@ function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
             }
             return [Operant_Type.Imm, value];
         }
-        case '+':
-        case '-': {
-            const value = my_parse_int(operant);
+        case '~': {
+            const value = my_parse_int(operant.slice(1));
             if (!Number.isInteger(value)) {
                 errors.push(warn(line_nr, `Invalid relative address ${operant}`));
                 return undefined;
@@ -220,8 +219,7 @@ function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
             }
             return [Operant_Type.Imm, port];
         }
-        case '\'':
-        case '"': {
+        case '\'': {
             let char_lit;
             try {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"'));
