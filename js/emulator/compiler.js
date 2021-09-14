@@ -1,5 +1,5 @@
 import { Constants, Header_Run, Operant_Prim, Operant_Type, URCL_Header } from "./instructions.js";
-export function compile(parsed, inst_sizeof = (opcode) => parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM ? 4 : 1) {
+export function compile(parsed) {
     const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines } = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
     const header_bits = parsed.headers[URCL_Header.BITS].value;
@@ -18,13 +18,17 @@ export function compile(parsed, inst_sizeof = (opcode) => parsed.headers[URCL_He
     const minreg = headers[URCL_Header.MINREG].value;
     const minheap = headers[URCL_Header.MINHEAP].value;
     const minstack = headers[URCL_Header.MINSTACK].value;
-    const new_operant_values = operant_values.slice();
+    const new_operant_values = operant_values.map(vals => vals.slice());
     const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
         switch (t) {
             case Operant_Type.Reg: return Operant_Prim.Reg;
             case Operant_Type.Imm: return Operant_Prim.Imm;
             case Operant_Type.Label: return Operant_Prim.Imm;
-            case Operant_Type.Memory: return Operant_Prim.Imm;
+            case Operant_Type.Memory: {
+                new_operant_values[i][j] += parsed.data.length;
+                return Operant_Prim.Imm;
+            }
+            case Operant_Type.Data_Label: return Operant_Prim.Imm;
             case Operant_Type.Constant: {
                 const vals = new_operant_values[i];
                 const constant = vals[j];
@@ -66,12 +70,14 @@ export function compile(parsed, inst_sizeof = (opcode) => parsed.headers[URCL_He
             default: throw new Error(`Unkown opperant type ${t} ${Operant_Type[t]}`);
         }
     }));
-    if (!in_ram) {
-        return [
-            { headers, opcodes, operant_prims: new_operant_types, operant_values },
-            { pc_line_nrs: instr_line_nrs, lines }
-        ];
-    }
+    return [
+        { headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data },
+        { pc_line_nrs: instr_line_nrs, lines }
+    ];
+}
+function program_to_bytecode(parsed, inst_sizeof = (opcode) => 5) {
+    const operant_types = parsed.operant_types;
+    const [{ headers, opcodes, operant_prims, operant_values, data }, { lines }] = compile(parsed);
     const pc_line_nrs = [];
     const instr_pc = [];
     let pc = 0;
@@ -84,7 +90,7 @@ export function compile(parsed, inst_sizeof = (opcode) => parsed.headers[URCL_He
     const heap_start = pc;
     for (let inst_i = 0; inst_i < parsed.opcodes.length; inst_i++) {
         const types = operant_types[inst_i];
-        const value = new_operant_values[inst_i];
+        const value = operant_values[inst_i];
         for (let i = 0; i < types.length; i++) {
             switch (types[i]) {
                 case Operant_Type.Label:
@@ -99,8 +105,9 @@ export function compile(parsed, inst_sizeof = (opcode) => parsed.headers[URCL_He
     return [
         {
             headers, opcodes,
-            operant_prims: new_operant_types,
-            operant_values: new_operant_values,
+            operant_prims,
+            operant_values,
+            data
         },
         { pc_line_nrs, lines }
     ];

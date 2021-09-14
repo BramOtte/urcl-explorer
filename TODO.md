@@ -25,7 +25,7 @@
 * save and load code from file
 * save and load code from localstorage
 * 3d device
-* integrate existing tools into urcl explorer with python runtime
+* integrate existing tools into urcl explorer with python and C# runtime
 * compile URCL code to js for greater speed
 * compile URCL code to wasm for maximum speed
 * add new cool things to this TODO list

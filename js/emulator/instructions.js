@@ -88,7 +88,8 @@ export var Operant_Type;
     Operant_Type[Operant_Type["Imm"] = 1] = "Imm";
     Operant_Type[Operant_Type["Memory"] = 2] = "Memory";
     Operant_Type[Operant_Type["Label"] = 3] = "Label";
-    Operant_Type[Operant_Type["Constant"] = 4] = "Constant";
+    Operant_Type[Operant_Type["Data_Label"] = 4] = "Data_Label";
+    Operant_Type[Operant_Type["Constant"] = 5] = "Constant";
 })(Operant_Type || (Operant_Type = {}));
 export var Operant_Operation;
 (function (Operant_Operation) {

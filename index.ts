@@ -1,4 +1,5 @@
 import { compile } from "./emulator/compiler.js";
+import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
@@ -65,6 +66,8 @@ function resize_display(){
     display.resize(width, height);
 }
 
+const clock = new Clock();
+
 const emulator = new Emulator(frame);
 emulator.add_io_device(IO_Port.TEXT,
     console_io.text_in.bind(console_io),
@@ -97,8 +100,14 @@ emulator.add_io_device(IO_Port.BUFFER,
     display.reset.bind(display)
 );
 
+emulator.add_io_device(IO_Port.WAIT,
+    clock.wait_in.bind(clock),
+    clock.wait_out.bind(clock),
+    clock.reset.bind(clock)
+);
+
 source_input.addEventListener("input", compile_and_run);
-fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/sprites.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

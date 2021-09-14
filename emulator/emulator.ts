@@ -6,7 +6,7 @@ export enum Step_Result {
     Continue, Halt, Input
 }
 
-type Device_Input = ((callback: (value: Word) => void) => undefined | number) | (() => number);
+type Device_Input = ((callback: (value: Word) => void) => void | number) | (() => number);
 type Device_Output = (value: Word) => void;
 type Device_Reset = ()=>void;
 
@@ -18,6 +18,7 @@ export class Emulator implements Instruction_Ctx {
     load_program(program: Program, debug_info: Debug_Info){
         this.program = program, this.debug_info = debug_info;
         const bits = program.headers[URCL_Header.BITS].value;
+        const static_data = program.data;
         const heap = program.headers[URCL_Header.MINHEAP].value;
         const stack = program.headers[URCL_Header.MINSTACK].value;
         const registers = program.headers[URCL_Header.MINREG].value + register_count;
@@ -41,11 +42,16 @@ export class Emulator implements Instruction_Ctx {
         if (registers >= this.max_value){
             throw new Error(`Too many registers ${registers}, must be <= ${this.max_value}`)
         }
-        if (heap + stack > this.max_value){
+        const memory_size = heap + stack + static_data.length
+        if (memory_size > this.max_value){
             throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap+stack}, must be <= ${this.max_value+1}`);
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-        this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, heap + stack).fill(0);
+        this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
+
+        for (let i = 0; i < static_data.length; i++){
+            this.memory[i] = static_data[i];
+        }
 
         this.reset();
     }

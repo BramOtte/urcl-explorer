@@ -7,13 +7,18 @@ function my_parse_int(x) {
     }
     return parseInt(x);
 }
+var Label_Type;
+(function (Label_Type) {
+    Label_Type[Label_Type["Inst"] = 0] = "Inst";
+    Label_Type[Label_Type["DW"] = 1] = "DW";
+})(Label_Type || (Label_Type = {}));
 export class Parser_output {
     errors = [];
     warnings = [];
+    data = [];
     lines = [];
     headers = {};
-    label_line_nrs = {};
-    label_inst_i = {};
+    labels = {};
     instr_line_nrs = [];
     opcodes = [];
     operant_strings = [];
@@ -22,22 +27,25 @@ export class Parser_output {
 }
 export function parse(source) {
     const out = new Parser_output();
-    out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/  /g, " ").replace(/\/\/.*/g, "").trim());
+    out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim());
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++) {
         out.headers[i] = { value: urcl_headers[i].def };
         out.headers[i].operant = urcl_headers[i].def_operant;
     }
+    let label;
+    let last_label;
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++) {
         const line = out.lines[line_nr];
         if (line === "") {
             continue;
         }
         ;
-        if (parse_header(line, line_nr, out.headers, out.warnings)) {
+        last_label = label;
+        if (label = parse_label(line, line_nr, inst_i, out, out.warnings)) {
             continue;
         }
-        if (parse_label(line, line_nr, inst_i, out, out.warnings)) {
+        if (parse_header(line, line_nr, out.headers, out.warnings)) {
             continue;
         }
         if (split_instruction(line, line_nr, inst_i, out, out.errors)) {
@@ -46,10 +54,24 @@ export function parse(source) {
         }
         if (line.startsWith("@")) {
             out.warnings.push(warn(line_nr, `Unknown marco ${line.split(" ")[0]}`));
+            continue;
         }
-        else {
-            out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
+        if (line.startsWith("DW")) {
+            const [_, ...value_strs] = line.split(" ");
+            if (last_label) {
+                last_label.type = Label_Type.DW;
+                last_label.index = out.data.length;
+            }
+            for (const str of value_strs) {
+                const value = my_parse_int(str);
+                if (!Number.isInteger(value)) {
+                    out.warnings.push(warn(line_nr, `Value ${str} for DW is not an integer.`));
+                }
+                out.data.push(value);
+            }
+            continue;
         }
+        out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
     }
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++) {
         parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
@@ -113,19 +135,19 @@ function parse_header(line, line_nr, headers, errors) {
 // returns whether the line contains a label
 function parse_label(line, line_nr, inst_i, out, warnings) {
     if (!line.startsWith(".")) {
-        return false;
+        return undefined;
     }
     ;
-    const label = str_until(str_until(line, " ").slice(0), "//");
-    if (label === ".") {
+    const name = str_until(str_until(line, " ").slice(0), "//");
+    if (name === ".") {
         warnings.push(warn(line_nr, `Empty label`));
     }
-    if (out.label_line_nrs[label] !== undefined) {
-        warnings.push(warn(line_nr, `Duplicate label ${label}`));
+    if (out.labels[name] !== undefined) {
+        warnings.push(warn(line_nr, `Duplicate label ${name}`));
     }
-    out.label_line_nrs[label] = line_nr;
-    out.label_inst_i[label] = inst_i;
-    return true;
+    const label = { type: Label_Type.Inst, index: inst_i };
+    out.labels[name] = label;
+    return label;
 }
 // returns the length of the instruction or 0 if there is an error
 function split_instruction(line, line_nr, inst_i, out, errors) {
@@ -148,7 +170,7 @@ function parse_instructions(line_nr, inst_i, out, errors, warnings) {
     const types = out.operant_types[inst_i] = [];
     const values = out.operant_values[inst_i] = [];
     for (const operant of out.operant_strings[inst_i]) {
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.label_inst_i, errors, warnings) ?? [];
+        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, errors, warnings) ?? [];
         if (type !== undefined) {
             types.push(type);
             values.push(value);
@@ -166,12 +188,18 @@ function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
     }
     switch (operant[0]) {
         case '.': {
-            const value = labels[operant];
-            if (value === undefined) {
+            const label = labels[operant];
+            if (label === undefined) {
                 errors.push(warn(line_nr, `Undefined label ${operant}`));
                 return undefined;
             }
-            return [Operant_Type.Imm, value];
+            const { type, index } = label;
+            if (type === Label_Type.Inst) {
+                return [Operant_Type.Label, index];
+            }
+            if (type === Label_Type.DW) {
+                return [Operant_Type.Data_Label, index];
+            }
         }
         case '~': {
             const value = my_parse_int(operant.slice(1));

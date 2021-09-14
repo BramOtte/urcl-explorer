@@ -7,16 +7,14 @@ export interface Program {
     opcodes: Opcode[];
     operant_prims: Operant_Prim[][];
     operant_values: Word[][];
+    data: Word[];
 }
 export interface Debug_Info {
     pc_line_nrs: Arr<number>;
     lines: string[];
 }
 
-export function compile(
-    parsed: Parser_output,
-    inst_sizeof = (opcode: Opcode) => parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM ? 4 : 1
-): [Program, Debug_Info]
+export function compile(parsed: Parser_output): [Program, Debug_Info]
 {
     const {headers, opcodes, operant_types, operant_values, instr_line_nrs, lines} = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
@@ -37,13 +35,17 @@ export function compile(
     const minheap   = headers[URCL_Header.MINHEAP].value;
     const minstack  = headers[URCL_Header.MINSTACK].value;
 
-    const new_operant_values = operant_values.slice();
+    const new_operant_values = operant_values.map(vals=>vals.slice());
     const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
         switch (t){
             case Operant_Type.Reg: return Operant_Prim.Reg;
             case Operant_Type.Imm: return Operant_Prim.Imm;
             case Operant_Type.Label: return Operant_Prim.Imm;
-            case Operant_Type.Memory: return Operant_Prim.Imm;
+            case Operant_Type.Memory: {
+                new_operant_values[i][j] += parsed.data.length;
+                return Operant_Prim.Imm;
+            }
+            case Operant_Type.Data_Label: return Operant_Prim.Imm;
             case Operant_Type.Constant: {
                 const vals = new_operant_values[i];
                 const constant = vals[j];
@@ -65,12 +67,16 @@ export function compile(
             default: throw new Error(`Unkown opperant type ${t} ${Operant_Type[t]}`);
         }
     }));
-    if (!in_ram){
-        return [
-            {headers, opcodes, operant_prims: new_operant_types, operant_values},
-            {pc_line_nrs: instr_line_nrs, lines}
-        ];
-    }
+    return [
+        {headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data},
+        {pc_line_nrs: instr_line_nrs, lines}
+    ];
+}
+
+
+function program_to_bytecode(parsed: Parser_output,  inst_sizeof = (opcode: Opcode) => 5){
+    const operant_types = parsed.operant_types;
+    const [{headers, opcodes, operant_prims, operant_values, data}, {lines}] = compile(parsed);
     const pc_line_nrs: number[] = [];
     const instr_pc: number[] = [];
     let pc = 0;
@@ -83,7 +89,7 @@ export function compile(
     const heap_start = pc;
     for (let inst_i = 0; inst_i < parsed.opcodes.length; inst_i++){
         const types = operant_types[inst_i];
-        const value = new_operant_values[inst_i];
+        const value = operant_values[inst_i];
         for (let i = 0; i < types.length; i++){
             switch (types[i]){
                 case Operant_Type.Label: value[i] = instr_pc[value[i]]; break;
@@ -94,8 +100,9 @@ export function compile(
     return [
         {
             headers, opcodes,
-            operant_prims: new_operant_types,
-            operant_values: new_operant_values,
+            operant_prims,
+            operant_values,
+            data
         },
         {pc_line_nrs, lines}
     ];
