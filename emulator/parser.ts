@@ -8,6 +8,22 @@ function my_parse_int(x: string){
     }
     return parseInt(x);
 }
+function my_parse_float(x: string){
+    x = x.replace(/\_/g, "");
+    const float = parseFloat(x);
+    if (isNaN(float)){
+        return undefined;
+    }
+    const exponent = 0| Math.log2(Math.abs(float));
+    const scaled = Math.abs(float) / 2**exponent;
+    const fraction = scaled - 1;
+    const sign_bit = float < 0 ? 1 : 0;
+    const exponent_bits = (exponent + 127) & 0xFF
+    const fraction_bits = (fraction * 2**23) & 0x7FFFFF
+    console.log(float, exponent, scaled, fraction, sign_bit, exponent_bits, fraction_bits);
+    return (sign_bit << 31) | (exponent_bits << 23) | fraction_bits;
+}
+
 enum Label_Type {
     Inst, DW
 }
@@ -296,11 +312,19 @@ function parse_operant(
             return [Operant_Type.Constant, constant];
         }
         default: {
-            const value = my_parse_int(operant);
-            if (!Number.isInteger(value)){
-                errors.push(warn(line_nr, `Invalid immediate ${operant}`)); return undefined;
+            if (operant.endsWith("f32")){
+                const value = my_parse_float(operant);
+                if (value === undefined){
+                    errors.push(warn(line_nr, `Invalid immediate float ${operant}`)); return undefined;
+                }
+                return [Operant_Type.Imm, value];
+            } else {
+                const value = my_parse_int(operant);
+                if (!Number.isInteger(value)){
+                    errors.push(warn(line_nr, `Invalid immediate int ${operant}`)); return undefined;
+                }
+                return [Operant_Type.Imm, value];
             }
-            return [Operant_Type.Imm, value];
         }
     }
 }

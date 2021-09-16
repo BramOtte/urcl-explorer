@@ -184,7 +184,7 @@ export class Emulator implements Instruction_Ctx {
     write(target: Operant_Prim, index: Word, value: Word){
         switch (target){
             case Operant_Prim.Reg: this.registers[index] = value;return;
-            case Operant_Prim.Imm: throw new Error("Can't write to immediate");
+            case Operant_Prim.Imm: throw new Error(`Can't write to immediate ${this.line()}`);
             default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
         }
     }
@@ -198,6 +198,6 @@ export class Emulator implements Instruction_Ctx {
     line(){
         const {pc_line_nrs, lines} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        return `on line ${line_nr}, pc=${this.pc-1}\n${lines[line_nr]}`;
+        return `on line ${line_nr}, pc=${this.pc-1}\n  ${lines[line_nr]}`;
     }
 }

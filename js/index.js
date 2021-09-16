@@ -66,7 +66,7 @@ emulator.add_io_device(IO_Port.Y, display.y_in.bind(display), display.y_out.bind
 emulator.add_io_device(IO_Port.BUFFER, display.buffer_in.bind(display), display.buffer_out.bind(display), display.reset.bind(display));
 emulator.add_io_device(IO_Port.WAIT, clock.wait_in.bind(clock), clock.wait_out.bind(clock), clock.reset.bind(clock));
 source_input.addEventListener("input", compile_and_run);
-fetch("examples/urcl/sprites.urcl").then(res => res.text()).then((text) => {
+fetch("libs/urclpp/f32/f32_to_int.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
@@ -148,7 +148,13 @@ memory-size: ${emulator.memory.length}
 }
 function frame() {
     if (running) {
-        process_step_result(emulator.run(16));
+        try {
+            process_step_result(emulator.run(16));
+        }
+        catch (e) {
+            output_element.innerText += e + "\nProgram Halted";
+            throw e;
+        }
     }
     else {
         step_button.disabled = false;
