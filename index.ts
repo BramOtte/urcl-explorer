@@ -107,7 +107,7 @@ emulator.add_io_device(IO_Port.WAIT,
 );
 
 source_input.addEventListener("input", compile_and_run);
-fetch("examples/urcl/sprites.urcl").then(res => res.text()).then((text) => {
+fetch("libs/urclpp/f32/f32_to_int.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }
@@ -197,7 +197,12 @@ memory-size: ${emulator.memory.length}
 
 function frame(){
     if (running){
+        try {
         process_step_result(emulator.run(16));
+        } catch (e){
+            output_element.innerText += e + "\nProgram Halted";
+            throw e;
+        }
     } else {
         step_button.disabled = false;
         pause_button.disabled = false;
