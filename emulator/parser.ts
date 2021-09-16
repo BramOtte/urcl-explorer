@@ -8,6 +8,17 @@ function my_parse_int(x: string){
     }
     return parseInt(x);
 }
+const conversion_buffer = new DataView(new ArrayBuffer(8)); 
+function my_parse_f32(x: string){
+    x = x.replace(/\_/g, "");
+    const float = parseFloat(x);
+    if (isNaN(float)){
+        return undefined;
+    }
+    conversion_buffer.setFloat32(0, float, true);
+    return conversion_buffer.getInt32(0, true);
+}
+
 enum Label_Type {
     Inst, DW
 }
@@ -30,6 +41,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
 
     lines                      : string[] = [];
     readonly headers           : Header_Obj = {} as Header_Obj;
+    readonly constants         : Record<string, string> = {};
     readonly labels            : Record<string, Label> = {};
     readonly instr_line_nrs    : i53[] = [];
     readonly opcodes           : Opcode[] = [];
@@ -73,7 +85,17 @@ export function parse(source: string): Parser_output
             inst_i++; continue;
         }
         if (line.startsWith("@")){
-            out.warnings.push(warn(line_nr, `Unknown marco ${line.split(" ")[0]}`));
+            const [macro, ...parts] = line.split(" ");
+            if (macro.toLowerCase() === "@define"){
+                if (parts.length < 2){
+                    out.warnings.push(warn(line_nr, `Expected 2 arguments for @define macro, got [${parts}]`));
+                    continue;
+                }
+                const [name, value] = parts;
+                out.constants[name] = value;
+                continue
+            }
+            out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
             continue
         }
         if (line.startsWith("DW")){
@@ -202,11 +224,11 @@ function split_instruction
     
     return true;
 }
-function parse_instructions(line_nr: number, inst_i: number, out: Instruction_Out, errors: Warning[], warnings: Warning[]): number {
+function parse_instructions(line_nr: number, inst_i: number, out: Parser_output, errors: Warning[], warnings: Warning[]): number {
     const types: number[] = out.operant_types[inst_i] = [];
     const values: number[] = out.operant_values[inst_i] = [];
     for (const operant of out.operant_strings[inst_i]){
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, errors, warnings) ?? [];
+        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, out.constants, errors, warnings) ?? [];
         if (type !== undefined){
             types.push(type);
             values.push(value as number);
@@ -217,10 +239,24 @@ function parse_instructions(line_nr: number, inst_i: number, out: Instruction_Ou
 
 function parse_operant(
     operant: string, line_nr: number, inst_i: number, labels: {[K in string]?: Label},
+    macro_constants: Record<string, string>,
     errors: Warning[], warnings: Warning[]
 ):
     undefined | [type: Operant_Type, value: Word]
 {
+    for (let i = 0; i < 10; i++){
+        const macro = macro_constants[operant];
+        if (macro !== undefined){
+            operant = macro;
+        } else {
+            break;
+        }
+        if (i >= 9){
+            errors.push(warn(line_nr, `Recursive macro (${operant} -> ${macro})`));
+            return undefined;
+        }
+    }
+
     switch (operant){
         case "R0": case "r0": case "$0": return [Operant_Type.Imm, 0];
         case "PC": return [Operant_Type.Reg, Register.PC];
@@ -296,11 +332,19 @@ function parse_operant(
             return [Operant_Type.Constant, constant];
         }
         default: {
-            const value = my_parse_int(operant);
-            if (!Number.isInteger(value)){
-                errors.push(warn(line_nr, `Invalid immediate ${operant}`)); return undefined;
+            if (operant.endsWith("f32")){
+                const value = my_parse_f32(operant);
+                if (value === undefined){
+                    errors.push(warn(line_nr, `Invalid immediate float ${operant}`)); return undefined;
+                }
+                return [Operant_Type.Imm, value];
+            } else {
+                const value = my_parse_int(operant);
+                if (!Number.isInteger(value)){
+                    errors.push(warn(line_nr, `Invalid immediate int ${operant}`)); return undefined;
+                }
+                return [Operant_Type.Imm, value];
             }
-            return [Operant_Type.Imm, value];
         }
     }
 }

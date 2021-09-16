@@ -7,6 +7,16 @@ function my_parse_int(x) {
     }
     return parseInt(x);
 }
+const conversion_buffer = new DataView(new ArrayBuffer(8));
+function my_parse_f32(x) {
+    x = x.replace(/\_/g, "");
+    const float = parseFloat(x);
+    if (isNaN(float)) {
+        return undefined;
+    }
+    conversion_buffer.setFloat32(0, float, true);
+    return conversion_buffer.getInt32(0, true);
+}
 var Label_Type;
 (function (Label_Type) {
     Label_Type[Label_Type["Inst"] = 0] = "Inst";
@@ -18,6 +28,7 @@ export class Parser_output {
     data = [];
     lines = [];
     headers = {};
+    constants = {};
     labels = {};
     instr_line_nrs = [];
     opcodes = [];
@@ -53,7 +64,17 @@ export function parse(source) {
             continue;
         }
         if (line.startsWith("@")) {
-            out.warnings.push(warn(line_nr, `Unknown marco ${line.split(" ")[0]}`));
+            const [macro, ...parts] = line.split(" ");
+            if (macro.toLowerCase() === "@define") {
+                if (parts.length < 2) {
+                    out.warnings.push(warn(line_nr, `Expected 2 arguments for @define macro, got [${parts}]`));
+                    continue;
+                }
+                const [name, value] = parts;
+                out.constants[name] = value;
+                continue;
+            }
+            out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
             continue;
         }
         if (line.startsWith("DW")) {
@@ -170,7 +191,7 @@ function parse_instructions(line_nr, inst_i, out, errors, warnings) {
     const types = out.operant_types[inst_i] = [];
     const values = out.operant_values[inst_i] = [];
     for (const operant of out.operant_strings[inst_i]) {
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, errors, warnings) ?? [];
+        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, out.constants, errors, warnings) ?? [];
         if (type !== undefined) {
             types.push(type);
             values.push(value);
@@ -178,7 +199,20 @@ function parse_instructions(line_nr, inst_i, out, errors, warnings) {
     }
     return 0;
 }
-function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
+function parse_operant(operant, line_nr, inst_i, labels, macro_constants, errors, warnings) {
+    for (let i = 0; i < 10; i++) {
+        const macro = macro_constants[operant];
+        if (macro !== undefined) {
+            operant = macro;
+        }
+        else {
+            break;
+        }
+        if (i >= 9) {
+            errors.push(warn(line_nr, `Recursive macro (${operant} -> ${macro})`));
+            return undefined;
+        }
+    }
     switch (operant) {
         case "R0":
         case "r0":
@@ -268,12 +302,22 @@ function parse_operant(operant, line_nr, inst_i, labels, errors, warnings) {
             return [Operant_Type.Constant, constant];
         }
         default: {
-            const value = my_parse_int(operant);
-            if (!Number.isInteger(value)) {
-                errors.push(warn(line_nr, `Invalid immediate ${operant}`));
-                return undefined;
+            if (operant.endsWith("f32")) {
+                const value = my_parse_f32(operant);
+                if (value === undefined) {
+                    errors.push(warn(line_nr, `Invalid immediate float ${operant}`));
+                    return undefined;
+                }
+                return [Operant_Type.Imm, value];
             }
-            return [Operant_Type.Imm, value];
+            else {
+                const value = my_parse_int(operant);
+                if (!Number.isInteger(value)) {
+                    errors.push(warn(line_nr, `Invalid immediate int ${operant}`));
+                    return undefined;
+                }
+                return [Operant_Type.Imm, value];
+            }
         }
     }
 }

@@ -107,7 +107,7 @@ emulator.add_io_device(IO_Port.WAIT,
 );
 
 source_input.addEventListener("input", compile_and_run);
-fetch("libs/urclpp/f32/f32_to_int.urcl").then(res => res.text()).then((text) => {
+fetch("libs/urclpp/f32/to_int.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

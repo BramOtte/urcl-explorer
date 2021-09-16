@@ -1,9 +1,11 @@
 # TODO
-## URCL standart
+## URCL Standart
+* Check operant types at compile time
 * multiline commments
 * marcos
-* DW
+* take into account bit opperants
 
+## URCL++ Standart
 
 ## Misc
 * add fixed clock speed
@@ -20,6 +22,7 @@
 * fix the mess that is index.ts
 
 ## Low Priority
+* make diverent compile steps visible to user (URCL++ -> URCL -> URCL bin)
 * syntax highlighting
 * hot code reloading
 * save and load code from file
@@ -45,3 +48,6 @@
     * @SMAX = max signed value (so 127 in 8 bits)
     * @SMSB = the second to highest bit (so 0b01000000 in 8 bits)
 * fix view of memory and registers in html
+* DW
+* @define
+* f32 litterals
