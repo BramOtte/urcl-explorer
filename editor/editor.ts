@@ -36,8 +36,10 @@ export class Editor_Window extends HTMLElement {
             let end = this.input.selectionEnd;
             if (!event.shiftKey && start === end){
                 const value = this.input.value;
-                this.input.value = str_splice(value, start, 0, " ".repeat(this.tab_width));
-                this.input.selectionStart = this.input.selectionEnd = start + this.tab_width;
+                const line_offset = start - line_start(value, start);
+                const add_count = this.tab_width - (line_offset % this.tab_width) || this.tab_width
+                this.input.value = str_splice(value, start, 0, " ".repeat(add_count));
+                this.input.selectionStart = this.input.selectionEnd = start + add_count;
             } else {
                 let src = this.input.value;
                 if (event.shiftKey){
@@ -159,4 +161,12 @@ function foreach_line_selected(string: string, start: number, end: number, callb
         i = string.indexOf("\n", i) + 1 || string.length;
     }
     return string;
+}
+
+function line_start(string: string, index: number): number {
+    let i = 0, line_start = 0;
+    for (;i <= index; i = string.indexOf("\n", i) + 1 || string.length){
+        line_start = i;
+    }
+    return line_start;
 }
