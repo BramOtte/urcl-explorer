@@ -1,3 +1,4 @@
+import { Editor_Window } from "./editor/editor.js";
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
@@ -10,7 +11,7 @@ import { Arr, enum_from_str, expand_warning, hex, hex_size, pad_center } from ".
 let animation_frame: number | undefined;
 let running = false;
 
-const source_input = document.getElementById("urcl-source") as HTMLTextAreaElement;
+const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
 const memory_view = document.getElementById("memory-view") as HTMLElement;
 const register_view = document.getElementById("register-view") as HTMLElement;
@@ -106,8 +107,8 @@ emulator.add_io_device(IO_Port.WAIT,
     clock.reset.bind(clock)
 );
 
-source_input.addEventListener("input", compile_and_run);
-fetch("libs/urclpp/f32/to_int.urcl").then(res => res.text()).then((text) => {
+source_input.oninput = compile_and_run;
+fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

@@ -3,6 +3,43 @@
   src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");
 }
 
+html, body {
+  margin: 0;
+  overflow: hidden;
+}
+body {
+  --padding: 3ch;
+  width: calc(100vw - var(--padding)*2);
+  height: calc(100vh - var(--padding)*2);
+  padding: var(--padding);
+}
+main {
+  display: flex;
+  gap: 2rem;
+  flex-grow: 1;
+  width: 100%;
+  height: 100%;
+}
+main > * {
+  display: flex;
+  flex-direction: column;
+  width: max-content;
+  height: 100%;
+  flex-basis: 100%;
+  overflow-x: hidden;
+  overflow-y: auto;
+}
+#stdout {
+  overflow-y: auto;
+}
+canvas {
+  background-color: black;
+  image-rendering: crisp-edges;
+  image-rendering: pixelated;
+  border: 0.1rem solid rgb(53, 53, 53);
+}
+
+
 html {
   font-family: "unscii";
   background: #111;

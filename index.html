@@ -7,51 +7,14 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URCL Explorer</title>
-    <style>
-        html, body {
-            margin: 0;
-        }
-        body {
-            --padding: 3ch;
-            width: calc(100vw - var(--padding)*2);
-            height: calc(100vh - var(--padding)*2);
-            padding: var(--padding);
-        }
-        main {
-            display: flex;
-            gap: 2rem;
-            flex-grow: 1;
-            width: 100%;
-            height: 100%;
-        }
-        main > * {
-            display: flex;
-            flex-direction: column;
-            width: max-content;
-            height: 100%;
-            resize: horizontal;
-            flex-basis: 100%;
-        }
-        #stdout {
-            overflow-y: auto;
-        }
-        textarea {
-            width: 500px;
-            height: 100%;
-        }
-        canvas {
-            background-color: black;
-            image-rendering: crisp-edges;
-            image-rendering: pixelated;
-            border: 0.1rem solid rgb(53, 53, 53);
-        }
-    </style>
+    <script type="module" src="js/editor/editor.js"></script>
+    <link rel="stylesheet" href="editor/editor.css">
 </head>
 <body>
     <main>
         <div>
             <h2>URCL Source</h2>
-            <textarea id="urcl-source"></textarea>            
+            <editor-window id="urcl-source"></editor-window>
         </div>
         <div>
             <div>

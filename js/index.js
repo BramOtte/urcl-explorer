@@ -65,8 +65,8 @@ emulator.add_io_device(IO_Port.X, display.x_in.bind(display), display.x_out.bind
 emulator.add_io_device(IO_Port.Y, display.y_in.bind(display), display.y_out.bind(display), display.reset.bind(display));
 emulator.add_io_device(IO_Port.BUFFER, display.buffer_in.bind(display), display.buffer_out.bind(display), display.reset.bind(display));
 emulator.add_io_device(IO_Port.WAIT, clock.wait_in.bind(clock), clock.wait_out.bind(clock), clock.reset.bind(clock));
-source_input.addEventListener("input", compile_and_run);
-fetch("libs/urclpp/f32/to_int.urcl").then(res => res.text()).then((text) => {
+source_input.oninput = compile_and_run;
+fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
