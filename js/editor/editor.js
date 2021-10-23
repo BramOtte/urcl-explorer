@@ -1,9 +1,10 @@
-import { tokenize } from "./tokenizer.js";
+import { regex_end, tokenize } from "./tokenizer.js";
 export class Editor_Window extends HTMLElement {
     line_nrs = document.createElement("div");
     code = document.createElement("div");
     input = document.createElement("textarea");
     colors = document.createElement("pre");
+    tab_width = 4;
     constructor() {
         super();
         this.append(this.line_nrs, this.code);
@@ -14,6 +15,7 @@ export class Editor_Window extends HTMLElement {
         this.line_nrs.className = "line-nrs";
         this.input.addEventListener("input", this.input_cb.bind(this));
         this.input.spellcheck = false;
+        this.input.addEventListener("keydown", this.keydown_cb.bind(this));
     }
     get value() {
         return this.input.value;
@@ -21,6 +23,80 @@ export class Editor_Window extends HTMLElement {
     set value(value) {
         this.input.value = value;
         this.input_cb();
+    }
+    keydown_cb(event) {
+        if (event.key === "Tab") {
+            event.preventDefault();
+            let start = this.input.selectionStart;
+            let end = this.input.selectionEnd;
+            if (!event.shiftKey && start === end) {
+                const value = this.input.value;
+                this.input.value = str_splice(value, start, 0, " ".repeat(this.tab_width));
+                this.input.selectionStart = this.input.selectionEnd = start + this.tab_width;
+            }
+            else {
+                let src = this.input.value;
+                if (event.shiftKey) {
+                    foreach_line_selected(src, start, end, (i) => {
+                        const white_width = (regex_end(src, i, /^\s*/) ?? i) - i;
+                        const delete_count = white_width === 0 ? 0 : white_width % this.tab_width || this.tab_width;
+                        if (i < start) {
+                            start -= delete_count;
+                        }
+                        end -= delete_count;
+                        src = str_splice(src, i, delete_count, "");
+                        return src;
+                    });
+                    this.input.value = src;
+                    this.input.selectionStart = start;
+                    this.input.selectionEnd = end;
+                }
+                else {
+                    foreach_line_selected(src, start, end, (i) => {
+                        const white_width = (regex_end(src, i, /^\s*/) ?? i) - i;
+                        const add_count = this.tab_width - (white_width % this.tab_width) || this.tab_width;
+                        if (i < start) {
+                            start += add_count;
+                        }
+                        end += add_count;
+                        src = str_splice(src, i, 0, " ".repeat(add_count));
+                        return src;
+                    });
+                    this.input.value = src;
+                    this.input.selectionStart = start;
+                    this.input.selectionEnd = end;
+                }
+            }
+            this.input_cb();
+        }
+        else if (event.key === "/" && event.ctrlKey) {
+            let start = this.input.selectionStart;
+            let end = this.input.selectionEnd;
+            let src = this.input.value;
+            foreach_line_selected(src, start, end, (i) => {
+                const white_end = regex_end(src, i, /^\s*/) ?? i;
+                if (regex_end(src, white_end, /^\/\//) === undefined) {
+                    src = str_splice(src, white_end, 0, "// ");
+                    if (i < start) {
+                        start += 3;
+                    }
+                    end += 3;
+                }
+                else {
+                    const delete_count = src[white_end + 2] === " " ? 3 : 2;
+                    src = str_splice(src, white_end, delete_count, "");
+                    if (i < start) {
+                        start -= delete_count;
+                    }
+                    end -= delete_count;
+                }
+                return src;
+            });
+            this.input.value = src;
+            this.input.selectionStart = start;
+            this.input.selectionEnd = end;
+            this.input_cb();
+        }
     }
     input_cb() {
         this.input.style.height = "1px";
@@ -32,7 +108,6 @@ export class Editor_Window extends HTMLElement {
         this.line_nrs.innerText = lines.map((_, i) => i).join("\n");
         const tokens = [];
         const end = tokenize(src, 0, tokens);
-        console.log(end, tokens);
         let span = this.colors.firstElementChild;
         for (const { type, start, end } of tokens) {
             if (!span) {
@@ -48,9 +123,13 @@ export class Editor_Window extends HTMLElement {
             this.colors.removeChild(span);
             span = next;
         }
+        for (const listener of this.input_listeners) {
+            listener.call(this, new Event("input"));
+        }
     }
+    input_listeners = [];
     set oninput(cb) {
-        this.input.oninput = cb;
+        this.input_listeners.push(cb);
     }
 }
 customElements.define("editor-window", Editor_Window);
@@ -62,5 +141,23 @@ function line_starts(src) {
         i = next >= i ? next : src.length;
     }
     return starts;
+}
+function str_splice(string, index, delete_count, insert) {
+    return string.slice(0, index) + insert + string.slice(index + delete_count);
+}
+function foreach_line_selected(string, start, end, callback) {
+    let i = 0, first_line = 0;
+    for (; i <= start; i = string.indexOf("\n", i) + 1 || string.length) {
+        first_line = i;
+    }
+    let line_count = 1;
+    for (; i < end; i = string.indexOf("\n", i) + 1 || string.length) {
+        line_count++;
+    }
+    for (let line = 0, i = first_line; line < line_count; line++) {
+        string = callback(i);
+        i = string.indexOf("\n", i) + 1 || string.length;
+    }
+    return string;
 }
 //# sourceMappingURL=editor.js.map

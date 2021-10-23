@@ -16,7 +16,7 @@ editor-window .line-nrs {
 editor-window .colors, editor-window .line-nrs, editor-window textarea {
     padding: 0.25ch;
     margin: 0.25ch;
-    font-family: "monospace";
+    font-family: "JetBrains Mono", Consolas, "Courier New", monospace;
     font-size: 1em;
     line-height: 1em;
 }

@@ -12,7 +12,6 @@
 * check if all array access is bounds checked
 * exclude general purpose registers from MINREG
 * v-sync
-* add line numbers to source code
 * visualize PC in source code
 * sound device
 * string litterals
@@ -23,7 +22,6 @@
 
 ## Low Priority
 * make diverent compile steps visible to user (URCL++ -> URCL -> URCL bin)
-* syntax highlighting
 * hot code reloading
 * save and load code from file
 * save and load code from localstorage
@@ -51,3 +49,5 @@
 * DW
 * @define
 * f32 litterals
+* syntax highlighting
+* add line numbers to source code
