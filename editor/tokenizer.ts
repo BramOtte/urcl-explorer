@@ -99,7 +99,6 @@ enum Token_Type {
     Comment_Multi = "comment-multi",
     White = "white",
     White_inline = "white-inline",
-    Instruction = "instruction",
     Opcode = "opcode",
     DW = "dw",
     Square_Open = "square-open",
@@ -116,6 +115,7 @@ enum Token_Type {
     Name = "name",
     Expansion = "expansion",
     Label = "label",
+    Relative = "relative",
     Comparator = "comparator"
 }
 
@@ -135,14 +135,15 @@ function tok_comment_multi(src: string, i: number, tokens: Token[]): number {
 }
 const tok_comment = bind(regex, Token_Type.Comment, /^\/\/[^\n]*/);
 const tok_white = bind(regex, Token_Type.White, /^\s+/);
-const tok_white_inline = bind(regex, Token_Type.White_inline, /^[^\S\n]+/);
-const tok_number =  bind(regex, Token_Type.Number, /^(0x[0-9a-fA-F]+|0b[01]+|[0-9]+)/);
+const tok_white_inline = bind(regex, Token_Type.White_inline, /^(,|[^\S\n])+/);
+const tok_number =  bind(regex, Token_Type.Number, /^-?(0x[0-9a-fA-F]+|0b[01]+|[0-9]+)/);
 const tok_register =  bind(regex, Token_Type.Register, /^[Rr$]([0-9]+|0x[0-9a-fA-F]+|0b[01]+)/);
 const tok_port =  bind(regex, Token_Type.Port, /^%\w+/);
 const tok_memory =  bind(regex, Token_Type.Port, /^[#mM]([0-9]+|0x[0-9a-fA-F]+|0b[01]+)/);
 const tok_escape = bind(regex, Token_Type.Escape, /^\\(x[0-9a-fA-F]+|.)/);
 const tok_char_quote = bind(regex, Token_Type.Quote_Char, /^'/);
 const tok_string_quote = bind(regex, Token_Type.Quote_String, /^"/);
+const tok_relative = bind(regex, Token_Type.Relative, /^~-?(0x[0-9a-fA-F]+|0b[01]+|[0-9]+)/);
 const tok_label = bind(and, [
     bind(regex, Token_Type.Label, /^\.\w+/),
     bind(list, bind(or, [
@@ -171,10 +172,10 @@ const tok_string = bind(and, [
 
 export const tokenize = bind(delimit,
     bind(or, [
-        bind(regex, Token_Type.White, /\s*\n\s*/),
+        bind(regex, Token_Type.White, /^\s*\n\s*/),
         bind(and, [
             bind(regex, Token_Type.Unknown, /^\S+/),
-            bind(regex, Token_Type.White, /\s*\n\s*/),
+            bind(regex, Token_Type.White, /^\s*\n\s*/),
         ])
     ]),
     bind(or, [
@@ -183,24 +184,24 @@ export const tokenize = bind(delimit,
         tok_comment_multi,
         tok_label,
         bind(and, [
-            bind(regex, Token_Type.Macro, /^MINREG|MINHEAP|MINSTACK/),
+            bind(regex, Token_Type.Macro, /^MINREG|MINHEAP|MINSTACK/i),
             tok_white_inline,
             tok_number
         ]),
         bind(and, [
-            bind(regex, Token_Type.Macro, /^RUN/),
+            bind(regex, Token_Type.Macro, /^RUN/i),
             tok_white_inline,
-            bind(regex, Token_Type.Text, /^RAM|ROM/),
+            bind(regex, Token_Type.Text, /^RAM|ROM/i),
         ]),
         bind(and, [
-            bind(regex, Token_Type.Macro, /^BITS/),
+            bind(regex, Token_Type.Macro, /^BITS/i),
             tok_white_inline,
             bind(regex, Token_Type.Comparator, /^==|<=|>=/),
             tok_white_inline,
             tok_number
         ]),
         bind(and, [
-            bind(regex, Token_Type.Macro, /^@(define|DEFINE)/),
+            bind(regex, Token_Type.Macro, /^@define/i),
             tok_white_inline,
             bind(regex, Token_Type.Name, /^\w+/),
             bind(opt, tok_white_inline),
@@ -208,7 +209,7 @@ export const tokenize = bind(delimit,
             tok_comment
         ]),
         bind(and, [
-            bind(regex, Token_Type.DW, /^dw|DW/),
+            bind(regex, Token_Type.DW, /^dw/i),
             tok_white_inline,
             bind(opt, bind(regex, Token_Type.Square_Open, /^\[/)),
             bind(list,
@@ -220,7 +221,8 @@ export const tokenize = bind(delimit,
                     tok_port,
                     tok_memory,
                     tok_label,
-                    tok_comment_multi
+                    tok_comment_multi,
+                    tok_relative
                 ]),
             ),
             bind(opt, bind(regex, Token_Type.Square_Close, /^\]/)),
@@ -237,7 +239,8 @@ export const tokenize = bind(delimit,
                     tok_port,
                     tok_memory,
                     tok_label,
-                    tok_comment_multi
+                    tok_comment_multi,
+                    tok_relative
                 ]),
             ),
             tok_comment
