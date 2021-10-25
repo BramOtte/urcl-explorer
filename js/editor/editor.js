@@ -164,8 +164,11 @@ function foreach_line_selected(string, start, end, callback) {
 }
 function line_start(string, index) {
     let i = 0, line_start = 0;
-    for (; i < index; i = string.indexOf("\n", i) + 1 || string.length) {
+    for (; i <= index; i = string.indexOf("\n", i) + 1 || string.length) {
         line_start = i;
+        if (i < string.length) {
+            break;
+        }
     }
     return line_start;
 }
