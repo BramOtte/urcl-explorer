@@ -148,10 +148,8 @@ function str_splice(string: string, index: number, delete_count: number, insert:
 
 
 function foreach_line_selected(string: string, start: number, end: number, callback: (i: number) => string) {
-    let i = 0, first_line = 0;
-    for (;i <= start; i = string.indexOf("\n", i) + 1 || string.length){
-        first_line = i;
-    }
+    const first_line = line_start(string, start);
+    let i = string.indexOf("\n", first_line) + 1 || string.length;
     let line_count = 1;
     for (;i < end; i = string.indexOf("\n", i) + 1 || string.length){
         line_count++;
@@ -167,7 +165,8 @@ function line_start(string: string, index: number): number {
     let i = 0, line_start = 0;
     for (;i <= index; i = string.indexOf("\n", i) + 1 || string.length){
         line_start = i;
-        if (i < string.length){
+        if (i >= string.length){
+            line_start+1;
             break;
         }
     }
