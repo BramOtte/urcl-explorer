@@ -170,7 +170,9 @@ const tok_string = bind(and, [
 ]);
 
 
-export const tokenize = bind(delimit,
+export const tokenize = bind(and, [
+bind(opt, tok_white),
+bind(delimit,
     bind(or, [
         bind(regex, Token_Type.White, /^\s*\n\s*/),
         bind(and, [
@@ -246,5 +248,6 @@ export const tokenize = bind(delimit,
             tok_comment
         ]),
         bind(regex, Token_Type.Unknown, /^\S+/)
-    ])
-);
+    ]),
+)
+]);

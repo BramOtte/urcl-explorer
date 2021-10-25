@@ -146,75 +146,78 @@ const tok_string = bind(and, [
     ])),
     tok_string_quote
 ]);
-export const tokenize = bind(delimit, bind(or, [
-    bind(regex, Token_Type.White, /^\s*\n\s*/),
-    bind(and, [
-        bind(regex, Token_Type.Unknown, /^\S+/),
+export const tokenize = bind(and, [
+    bind(opt, tok_white),
+    bind(delimit, bind(or, [
         bind(regex, Token_Type.White, /^\s*\n\s*/),
-    ])
-]), bind(or, [
-    tok_white,
-    tok_comment,
-    tok_comment_multi,
-    tok_label,
-    bind(and, [
-        bind(regex, Token_Type.Macro, /^MINREG|MINHEAP|MINSTACK/i),
-        tok_white_inline,
-        tok_number
-    ]),
-    bind(and, [
-        bind(regex, Token_Type.Macro, /^RUN/i),
-        tok_white_inline,
-        bind(regex, Token_Type.Text, /^RAM|ROM/i),
-    ]),
-    bind(and, [
-        bind(regex, Token_Type.Macro, /^BITS/i),
-        tok_white_inline,
-        bind(regex, Token_Type.Comparator, /^==|<=|>=/),
-        tok_white_inline,
-        tok_number
-    ]),
-    bind(and, [
-        bind(regex, Token_Type.Macro, /^@define/i),
-        tok_white_inline,
-        bind(regex, Token_Type.Name, /^\w+/),
-        bind(opt, tok_white_inline),
-        bind(regex, Token_Type.Expansion, /^[^\n/]*/),
-        tok_comment
-    ]),
-    bind(and, [
-        bind(regex, Token_Type.DW, /^dw/i),
-        tok_white_inline,
-        bind(opt, bind(regex, Token_Type.Square_Open, /^\[/)),
-        bind(list, bind(or, [
+        bind(and, [
+            bind(regex, Token_Type.Unknown, /^\S+/),
+            bind(regex, Token_Type.White, /^\s*\n\s*/),
+        ])
+    ]), bind(or, [
+        tok_white,
+        tok_comment,
+        tok_comment_multi,
+        tok_label,
+        bind(and, [
+            bind(regex, Token_Type.Macro, /^MINREG|MINHEAP|MINSTACK/i),
             tok_white_inline,
-            tok_number,
-            tok_char,
-            tok_string,
-            tok_port,
-            tok_memory,
-            tok_label,
-            tok_comment_multi,
-            tok_relative
-        ])),
-        bind(opt, bind(regex, Token_Type.Square_Close, /^\]/)),
-        tok_comment
-    ]),
-    bind(and, [
-        bind(regex, Token_Type.Opcode, /^[a-zA-Z_][a-zA-Z_0-9]*/),
-        bind(list, bind(or, [
+            tok_number
+        ]),
+        bind(and, [
+            bind(regex, Token_Type.Macro, /^RUN/i),
             tok_white_inline,
-            tok_number,
-            tok_char,
-            tok_register,
-            tok_port,
-            tok_memory,
-            tok_label,
-            tok_comment_multi,
-            tok_relative
-        ])),
-        tok_comment
-    ]),
-    bind(regex, Token_Type.Unknown, /^\S+/)
-]));
+            bind(regex, Token_Type.Text, /^RAM|ROM/i),
+        ]),
+        bind(and, [
+            bind(regex, Token_Type.Macro, /^BITS/i),
+            tok_white_inline,
+            bind(regex, Token_Type.Comparator, /^==|<=|>=/),
+            tok_white_inline,
+            tok_number
+        ]),
+        bind(and, [
+            bind(regex, Token_Type.Macro, /^@define/i),
+            tok_white_inline,
+            bind(regex, Token_Type.Name, /^\w+/),
+            bind(opt, tok_white_inline),
+            bind(regex, Token_Type.Expansion, /^[^\n/]*/),
+            tok_comment
+        ]),
+        bind(and, [
+            bind(regex, Token_Type.DW, /^dw/i),
+            tok_white_inline,
+            bind(opt, bind(regex, Token_Type.Square_Open, /^\[/)),
+            bind(list, bind(or, [
+                tok_white_inline,
+                tok_number,
+                tok_char,
+                tok_string,
+                tok_port,
+                tok_memory,
+                tok_label,
+                tok_comment_multi,
+                tok_relative
+            ])),
+            bind(opt, bind(regex, Token_Type.Square_Close, /^\]/)),
+            tok_comment
+        ]),
+        bind(and, [
+            bind(regex, Token_Type.Opcode, /^[a-zA-Z_][a-zA-Z_0-9]*/),
+            bind(list, bind(or, [
+                tok_white_inline,
+                tok_number,
+                tok_char,
+                tok_register,
+                tok_port,
+                tok_memory,
+                tok_label,
+                tok_comment_multi,
+                tok_relative
+            ])),
+            tok_comment
+        ]),
+        bind(regex, Token_Type.Unknown, /^\S+/)
+    ]))
+]);
 //# sourceMappingURL=tokenizer.js.map
