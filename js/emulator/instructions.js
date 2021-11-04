@@ -340,7 +340,7 @@ export const Opcodes_operants = {
     // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
     [Opcode.LLOD]: [[SET, RAO, GAM], (ops) => { ops[0] = ops[2]; }],
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
-    [Opcode.LLOD]: [[RAO, SAM, GET], (ops) => { ops[1] = ops[2]; }],
+    [Opcode.LSTR]: [[RAO, SAM, GET], (ops) => { ops[1] = ops[2]; }],
     //----- IO Instructions
     [Opcode.IN]: [[SET, GET], (ops, s) => { return s.in(ops[1], ops); }],
     [Opcode.OUT]: [[GET, GET], (ops, s) => { s.out(ops[0], ops[1]); }],
