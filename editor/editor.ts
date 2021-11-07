@@ -1,4 +1,3 @@
-import { EventEmitter } from "stream";
 import { regex_end, Token, tokenize } from "./tokenizer.js";
 
 export class Editor_Window extends HTMLElement {
