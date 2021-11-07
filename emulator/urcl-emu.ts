@@ -33,16 +33,7 @@ const console_io = new Console_IO({
     (text) => {stdout.write(text)},
     () => {/*nothing todo here program is only executed ones*/}
 );
-emulator.add_io_device(IO_Port.TEXT,
-    console_io.text_in.bind(console_io),
-    console_io.text_out.bind(console_io),
-    console_io.reset.bind(console_io)
-);
-emulator.add_io_device(IO_Port.NUMB,
-    console_io.numb_in.bind(console_io),
-    console_io.numb_out.bind(console_io),
-    console_io.reset.bind(console_io)
-);
+emulator.add_io_device(console_io)
 
 const code = parse(file);
 if (code.errors.length > 0){

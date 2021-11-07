@@ -1,3 +1,4 @@
+import { IO_Port } from "../instructions.js";
 export var Color_Mode;
 (function (Color_Mode) {
     Color_Mode[Color_Mode["RGB"] = 0] = "RGB";
@@ -18,6 +19,18 @@ export class Display {
     buffer_enabled = 0;
     x = 0;
     y = 0;
+    inputs = {
+        [IO_Port.COLOR]: this.color_in,
+        [IO_Port.X]: this.x_in,
+        [IO_Port.Y]: this.y_in,
+        [IO_Port.BUFFER]: this.buffer_in,
+    };
+    outputs = {
+        [IO_Port.COLOR]: this.color_out,
+        [IO_Port.X]: this.x_out,
+        [IO_Port.Y]: this.y_out,
+        [IO_Port.BUFFER]: this.buffer_out,
+    };
     reset() {
         this.x = 0;
         this.y = 0;

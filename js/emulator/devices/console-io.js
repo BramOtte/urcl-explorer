@@ -1,3 +1,4 @@
+import { IO_Port } from "../instructions.js";
 export class Console_IO {
     input;
     write;
@@ -7,6 +8,14 @@ export class Console_IO {
         this.write = write;
         this._reset = _reset;
     }
+    inputs = {
+        [IO_Port.TEXT]: this.text_in,
+        [IO_Port.NUMB]: this.numb_in,
+    };
+    outputs = {
+        [IO_Port.TEXT]: this.text_out,
+        [IO_Port.NUMB]: this.numb_out,
+    };
     fully_read = true;
     reset() {
         this.input.text = "";

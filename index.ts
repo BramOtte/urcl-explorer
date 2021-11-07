@@ -67,45 +67,10 @@ function resize_display(){
     display.resize(width, height);
 }
 
-const clock = new Clock();
-
 const emulator = new Emulator(frame);
-emulator.add_io_device(IO_Port.TEXT,
-    console_io.text_in.bind(console_io),
-    console_io.text_out.bind(console_io),
-    console_io.reset.bind(console_io)
-);
-emulator.add_io_device(IO_Port.NUMB,
-    console_io.numb_in.bind(console_io),
-    console_io.numb_out.bind(console_io),
-    console_io.reset.bind(console_io)
-);
-emulator.add_io_device(IO_Port.COLOR,
-    display.color_in.bind(display),
-    display.color_out.bind(display),
-    display.reset.bind(display)
-);
-emulator.add_io_device(IO_Port.X,
-    display.x_in.bind(display),
-    display.x_out.bind(display),
-    display.reset.bind(display)
-);
-emulator.add_io_device(IO_Port.Y,
-    display.y_in.bind(display),
-    display.y_out.bind(display),
-    display.reset.bind(display)
-);
-emulator.add_io_device(IO_Port.BUFFER,
-    display.buffer_in.bind(display),
-    display.buffer_out.bind(display),
-    display.reset.bind(display)
-);
-
-emulator.add_io_device(IO_Port.WAIT,
-    clock.wait_in.bind(clock),
-    clock.wait_out.bind(clock),
-    clock.reset.bind(clock)
-);
+emulator.add_io_device(console_io);
+emulator.add_io_device(display);
+emulator.add_io_device(new Clock())
 
 source_input.oninput = compile_and_run;
 fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {

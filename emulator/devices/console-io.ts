@@ -1,6 +1,8 @@
+import { IO_Port } from "../instructions.js";
 import { Word } from "../util.js";
+import { Device } from "./device.js";
 
-export class Console_IO {
+export class Console_IO implements Device {
     constructor(
         public input: {
             read: (callback: ()=>void) => void,
@@ -9,6 +11,14 @@ export class Console_IO {
         public write: (value: string) => void,
         private _reset: () => void
     ){
+    }
+    inputs = {
+        [IO_Port.TEXT]: this.text_in,
+        [IO_Port.NUMB]: this.numb_in,
+    }
+    outputs = {
+        [IO_Port.TEXT]: this.text_out,
+        [IO_Port.NUMB]: this.numb_out,
     }
     private fully_read = true;
     reset(){

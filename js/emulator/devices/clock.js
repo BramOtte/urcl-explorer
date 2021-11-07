@@ -1,6 +1,13 @@
+import { IO_Port } from "../instructions.js";
 export class Clock {
     wait_end = 0;
     time_out;
+    inputs = {
+        [IO_Port.WAIT]: this.wait_in,
+    };
+    outputs = {
+        [IO_Port.WAIT]: this.wait_out,
+    };
     wait_out(time) {
         this.wait_end = Date.now() + time;
     }

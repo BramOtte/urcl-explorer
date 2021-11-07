@@ -1,7 +1,6 @@
 // emulator cli
 import * as fs from "fs";
 import { argv, exit, stdin, stdout } from "process";
-import { IO_Port } from "./instructions.js";
 import { Console_IO } from "./devices/console-io.js";
 import { Emulator, Step_Result } from "./emulator.js";
 import { compile } from "./compiler.js";
@@ -27,8 +26,7 @@ const console_io = new Console_IO({
     },
     text: "",
 }, (text) => { stdout.write(text); }, () => { });
-emulator.add_io_device(IO_Port.TEXT, console_io.text_in.bind(console_io), console_io.text_out.bind(console_io), console_io.reset.bind(console_io));
-emulator.add_io_device(IO_Port.NUMB, console_io.numb_in.bind(console_io), console_io.numb_out.bind(console_io), console_io.reset.bind(console_io));
+emulator.add_io_device(console_io);
 const code = parse(file);
 if (code.errors.length > 0) {
     console.log(code.errors, code.warnings);

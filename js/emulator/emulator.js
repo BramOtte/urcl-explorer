@@ -56,11 +56,8 @@ export class Emulator {
     reset() {
         this.stack_ptr = this.memory.length - 1;
         this.pc = 0;
-        for (let port in this.device_resets) {
-            const reset = this.device_resets[port];
-            if (reset) {
-                reset();
-            }
+        for (const reset of this.device_resets) {
+            reset();
         }
     }
     buffer = new ArrayBuffer(1024 * 1024 * 512);
@@ -81,11 +78,23 @@ export class Emulator {
     bits = 8;
     device_inputs = {};
     device_outputs = {};
-    device_resets = {};
-    add_io_device(port, input, output, reset) {
-        this.device_inputs[port] = input;
-        this.device_outputs[port] = output;
-        this.device_resets[port] = reset;
+    device_resets = [];
+    add_io_device(device) {
+        if (device.inputs) {
+            for (const port in device.inputs) {
+                const input = device.inputs[port];
+                this.device_inputs[port] = input.bind(device);
+            }
+        }
+        if (device.outputs) {
+            for (const port in device.outputs) {
+                const output = device.outputs[port];
+                this.device_outputs[port] = output.bind(device);
+            }
+        }
+        if (device.reset) {
+            this.device_resets.push(device.reset.bind(device));
+        }
     }
     get max_value() {
         return 0xff_ff_ff_ff >>> (32 - this.bits);

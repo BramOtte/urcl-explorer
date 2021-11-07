@@ -1,16 +1,13 @@
 import { Word, Arr } from "./util.js";
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
+import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
 
 export enum Step_Result {
     Continue, Halt, Input
 }
 
-type Device_Input = ((callback: (value: Word) => void) => void | number) | (() => number);
-type Device_Output = (value: Word) => void;
-type Device_Reset = ()=>void;
-
-export class Emulator implements Instruction_Ctx {
+export class Emulator implements Instruction_Ctx, Device_Host {
     public program!: Program;
     public debug_info!: Debug_Info;
     constructor(public on_continue: ()=>void){
@@ -58,11 +55,8 @@ export class Emulator implements Instruction_Ctx {
     private reset(){
         this.stack_ptr = this.memory.length-1;
         this.pc = 0;
-        for (let port in this.device_resets){
-            const reset = this.device_resets[port as any as IO_Port];
-            if (reset){
-                reset();
-            }
+        for (const reset of this.device_resets){
+            reset();
         }
     }
     buffer = new ArrayBuffer(1024*1024*512);
@@ -83,11 +77,23 @@ export class Emulator implements Instruction_Ctx {
     bits = 8;
     private device_inputs: {[K in IO_Port]?: Device_Input} = {};
     private device_outputs: {[K in IO_Port]?: Device_Output} = {};
-    private device_resets: {[K in IO_Port]?: Device_Reset} = {};
-    public add_io_device(port: IO_Port, input: Device_Input, output: Device_Output, reset: Device_Reset){
-        this.device_inputs[port] = input;
-        this.device_outputs[port] = output;
-        this.device_resets[port] = reset;
+    private device_resets: Device_Reset[] = [];
+    public add_io_device(device: Device){
+        if (device.inputs){
+            for (const port in device.inputs){
+                const input = device.inputs[port as any as IO_Port] as Device_Input;
+                this.device_inputs[port as any as IO_Port] = input.bind(device);
+            }
+        }
+        if (device.outputs){
+            for (const port in device.outputs){
+                const output = device.outputs[port as any as IO_Port] as Device_Output;
+                this.device_outputs[port as any as IO_Port] = output.bind(device);
+            }
+        }
+        if (device.reset){
+            this.device_resets.push(device.reset.bind(device));
+        }
     }
     
 
