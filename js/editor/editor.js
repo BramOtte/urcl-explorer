@@ -125,6 +125,7 @@ export class Editor_Window extends HTMLElement {
             this.colors.removeChild(span);
             span = next;
         }
+        this.input.style.width = `${this.colors.scrollWidth}px`;
         for (const listener of this.input_listeners) {
             listener.call(this, new Event("input"));
         }
