@@ -4,7 +4,7 @@ import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
-import { IO_Port, Register, register_count } from "./emulator/instructions.js";
+import { Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
 import { Arr, enum_from_str, expand_warning, hex, hex_size, pad_center } from "./emulator/util.js";
 
@@ -73,7 +73,7 @@ emulator.add_io_device(display);
 emulator.add_io_device(new Clock())
 
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

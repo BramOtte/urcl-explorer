@@ -1,13 +1,4 @@
-@assert_eq @BITS 8
-@assert_eq @MSB 128
-@assert_eq @SMSB 64
-@assert_eq @MAX 255
-@assert_eq @SMAX 127
-@assert_eq @UHALF 240
-@assert_eq @LHALF 15
-@assert_eq @MINREG 8
-@assert_eq @MINHEAP 16
-@assert_eq @MINSTACK 8
+BITS == 32
 
 IN r2 %X
 IMM r3 0
@@ -18,7 +9,7 @@ OUT %BUFFER 1
     IMM r1 0
     .x_loop
         OUT %X r1
-        OUT %COLOR 0b000_111_11
+        OUT %COLOR r1
         INC r1 r1
         BRL .x_loop r1 r2
     INC r3 r3
@@ -28,7 +19,7 @@ IMM r3 0
 .loop1
     OUT %X r1
     OUT %Y r3
-    OUT %COLOR 0b111_000_00
+    OUT %COLOR 0
     INC r1 r1
     INC r3 r3
     BRL .loop1 r1 r2  
@@ -39,7 +30,7 @@ DEC r3 r3
 .loop2
     OUT %X r1
     OUT %Y r3
-    OUT %COLOR 0b00_100_00
+    OUT %COLOR 7
     INC r1 r1
     DEC r3 r3
     BRL .loop2 r1 r2

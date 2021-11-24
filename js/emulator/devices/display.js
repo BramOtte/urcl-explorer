@@ -7,7 +7,14 @@ export var Color_Mode;
     Color_Mode[Color_Mode["RGB8"] = 3] = "RGB8";
     Color_Mode[Color_Mode["RGB16"] = 4] = "RGB16";
     Color_Mode[Color_Mode["RGB24"] = 5] = "RGB24";
+    Color_Mode[Color_Mode["PICO8"] = 6] = "PICO8";
 })(Color_Mode || (Color_Mode = {}));
+const pico8 = [
+    0x000000, 0x1D2B53, 0x7E2553, 0x008751,
+    0xAB5236, 0x5F574F, 0xC2C3C7, 0xFFF1E8,
+    0xFF004D, 0xFFA300, 0xFFEC27, 0x00E436,
+    0x29ADFF, 0x83769C, 0xFF77A8, 0xFFCCAA,
+].map(v => [(v >>> 16) & 255, (v >>> 8) & 255, v & 255]);
 export class Display {
     bits;
     color_mode;
@@ -138,6 +145,9 @@ export class Display {
             case Color_Mode.Bin: {
                 const value = short > 0 ? 0xff : 0;
                 return [value, value, value];
+            }
+            case Color_Mode.PICO8: {
+                return pico8[short & 15];
             }
             default: return [0xff, 0x00, 0xff];
         }
