@@ -7,7 +7,7 @@ export enum Color_Mode {
     PICO8
 }
 
-const pico8: [number, number, number][] = [
+export const pico8: [number, number, number][] = [
     0x000000, 0x1D2B53, 0x7E2553, 0x008751,
     0xAB5236, 0x5F574F, 0xC2C3C7, 0xFFF1E8,
     0xFF004D, 0xFFA300, 0xFFEC27, 0x00E436,

@@ -1,7 +1,8 @@
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
-import { Color_Mode, Display } from "./emulator/devices/display.js";
+import { Color_Mode } from "./emulator/devices/display.js";
+import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
@@ -37,14 +38,14 @@ const console_io = new Console_IO({
     input_callback = undefined;
 });
 const canvas = document.getElementsByTagName("canvas")[0];
-const display = new Display(canvas, 32, 32, 32);
+const display = new Gl_Display(canvas, 32, 32, 32);
 const color_mode_input = document.getElementById("color-mode");
 color_mode_input.addEventListener("change", change_color_mode);
 function change_color_mode() {
     const color_mode = enum_from_str(Color_Mode, color_mode_input.value);
     console.log(color_mode_input.value, color_mode);
     display.color_mode = color_mode ?? display.color_mode;
-    compile_and_run();
+    display.update_display();
 }
 const width_input = document.getElementById("display-width");
 const height_input = document.getElementById("display-height");
@@ -61,7 +62,7 @@ emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/display-io.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/pallet-test.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
@@ -194,7 +195,6 @@ function update_views() {
     const bits = emulator.bits;
     const hexes = hex_size(bits);
     memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
-    Uint8Array;
     register_view.innerText =
         Array.from({ length: register_count }, (v, i) => pad_center(Register[i], hexes) + " ").join("") +
             Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, hexes) + " ").join("") + "\n" +

@@ -9,7 +9,7 @@ export var Color_Mode;
     Color_Mode[Color_Mode["RGB24"] = 5] = "RGB24";
     Color_Mode[Color_Mode["PICO8"] = 6] = "PICO8";
 })(Color_Mode || (Color_Mode = {}));
-const pico8 = [
+export const pico8 = [
     0x000000, 0x1D2B53, 0x7E2553, 0x008751,
     0xAB5236, 0x5F574F, 0xC2C3C7, 0xFFF1E8,
     0xFF004D, 0xFFA300, 0xFFEC27, 0x00E436,

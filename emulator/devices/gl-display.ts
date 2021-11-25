@@ -1,40 +1,86 @@
 import { createProgram } from "../../webgl/shader.js";
 import { IO_Port } from "../instructions.js";
 import { Device } from "./device.js";
-import { Color_Mode } from "./display.js";
+import { Color_Mode, pico8 } from "./display.js";
 
 export class Gl_Display implements Device {
     private gl: WebGL2RenderingContext;
     private gl_vertices: WebGLBuffer;
     private gl_indices: WebGLBuffer;
     private gl_texture: WebGLTexture;
+    private uni_mode: WebGLUniformLocation;
     // private gl_program: WebGLProgram;
     private buffer: Uint32Array;
     private bytes: Uint8Array;
     private buffer_enabled: 1 | 0 = 0;
     private x = 0;
     private y = 0;
+    private pref_display: HTMLElement | null = document.getElementById("pref-display");
 
-    private vert_src = /*vert*/ `
-    precision highp float;
-    attribute vec2 a_uv;
-    attribute vec2 a_pos;
+    private vert_src = /*vert*/ `#version 300 es
+    precision mediump float;
+    in vec2 a_uv;
+    in vec2 a_pos;
 
-    varying vec2 v_uv;
+    out vec2 v_uv;
 
     void main(){
-        gl_Position = vec4(a_pos, 0.0, 1.0);
+        gl_Position = vec4(a_pos, 0., 1.);
         v_uv = a_uv;
     }
     `;
-    private frag_src = /*frag*/`
+    private frag_src = /*frag*/`#version 300 es
     precision mediump float;
-    varying vec2 v_uv;
+    in vec2 v_uv;
+    out vec4 color;
+
     uniform sampler2D u_image;
-    void main(){
-        u_image;
-        gl_FragColor = texture2D(u_image, v_uv);
+    uniform uint u_color_mode;
+
+    vec4 rgb24(vec4 v){
+        return vec4(v.z, v.y, v.x, 1.);
     }
+
+    vec4 rgb16(vec4 v){
+        uint c = uint(v.x * 255.) + (uint(v.y * 255.) << 8u);
+        return vec4(float((c >> 11u) & 31u)/31., float((c >> 5u) & 63u)/63., float(c & 31u)/31., 1.);
+    }
+
+    vec4 rgb8(vec4 v){
+        uint c = uint(v.x * 255.);
+        return vec4(float((c >> 5u) & 7u)/7., float((c >> 2u) & 7u)/7., float(c & 3u)/3., 1.);
+    }
+    vec4 pallet_pico8[16] = vec4[16](
+        ${pico8.map(v => `vec4(${v.map(n=>(n/255))},1.)`).join(",")}
+    );
+
+    vec4 pico8(vec4 v){
+        return pallet_pico8[uint(v.x * 255.) & 15u];
+    }
+
+    vec4 mono(vec4 c){
+        return vec4(c.x, c.x, c.x, 1);
+    }
+
+    vec4 bin(vec4 c){
+        return c.x > 0. || c.y > 0. || c.z > 0. ? vec4(1,1,1,1) : vec4(0,0,0,1);
+    }
+
+
+    void main(){
+        vec4 c = texture(u_image, v_uv);
+        switch (u_color_mode){
+            case ${Color_Mode.Bin}u: color = bin(c); break;
+            case ${Color_Mode.Mono}u: color = mono(c); break;
+            case ${Color_Mode.PICO8}u: color = pico8(c); break;
+            case ${Color_Mode.RGB}u: color = rgb8(c); break;
+            case ${Color_Mode.RGB8}u: color = rgb8(c); break;
+            case ${Color_Mode.RGB16}u: color = rgb16(c); break;
+            case ${Color_Mode.RGB24}u: color = rgb24(c); break;
+            default: color = pico8(c); break;
+        }
+    }
+    
     `;
 
     inputs = {
@@ -71,6 +117,7 @@ export class Gl_Display implements Device {
         this.bytes = new Uint8Array(this.buffer.buffer, 0, this.buffer.byteLength);
 
         const gl_program = createProgram(gl, this.vert_src, this.frag_src);
+        gl.useProgram(gl_program);
         const attr_pos = gl.getAttribLocation(gl_program, 'a_pos');
         if (attr_pos < 0){
             throw new Error("program does not have attribute a_pos");
@@ -83,10 +130,16 @@ export class Gl_Display implements Device {
         if (uni_image === null){
             throw new Error("program does not have uniform u_image");
         }
+        const uni_mode = gl.getUniformLocation(gl_program, "u_color_mode");
+        if (uni_mode === null){
+            throw new Error("program does not have uniform u_color_mode");
+        }
+        this.uni_mode = uni_mode;
+
         gl.enableVertexAttribArray(attr_pos);
         gl.enableVertexAttribArray(attr_uv);
 
-        gl.useProgram(gl_program);
+        
         const gl_vertices = gl.createBuffer();
         if (gl_vertices === null){
             throw new Error("unable to create webgl buffer");
@@ -174,6 +227,7 @@ export class Gl_Display implements Device {
     buffer_in(): number {
         return this.buffer_enabled;
     }
+    start_t = 0;
     buffer_out(value: number){
         switch (value){
             case 0: {
@@ -182,10 +236,17 @@ export class Gl_Display implements Device {
                 this.buffer_enabled = 0;
             } break;
             case 1: {
+                this.start_t = performance.now();
                 this.buffer_enabled = 1;
             } break;
             case 2: {
                 this.update_display();
+                if (this.pref_display){
+                    const end_t = performance.now();
+                    const dt = end_t - this.start_t;
+                    this.pref_display.innerText = `frame time: ${dt.toFixed(1)}ms`;
+                }
+                this.start_t = performance.now();
             } break;
         }
     }
@@ -193,10 +254,10 @@ export class Gl_Display implements Device {
     private init_buffers(width: number, height: number){
         const {gl} = this;
         gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([
-            -1, -1,       0     , 0,
-             1, -1,       1 , 0,
-             1,  1,       1 , 1,
-            -1,  1,       0     , 1,
+            -1, -1,       0, 1,
+             1, -1,       1, 1,
+             1,  1,       1, 0,
+            -1,  1,       0, 0,
         ]), gl.STATIC_DRAW);
         gl.viewport(0, 0, width, height);
     }
@@ -205,8 +266,9 @@ export class Gl_Display implements Device {
         this.update_display();
     }
 
-    private update_display(){
-        const {gl, width, height, bytes} = this;
+    update_display(){
+        const {gl, width, height, bytes, uni_mode, color_mode} = this;
+        gl.uniform1ui(uni_mode, color_mode)
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
     }
