@@ -20,6 +20,10 @@ export class Console_IO implements Device {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
     }
+    set_text(text: string){
+        this.input.text = text;
+        this.fully_read = text.length === 0;
+    }
     private fully_read = true;
     reset(){
         this.input.text = "";
@@ -58,6 +62,8 @@ export class Console_IO implements Device {
         if (this.input.text){
             const num = parseInt(this.input.text);
             if (Number.isInteger(num)){
+                this.input.text = this.input.text.trimStart().slice(num.toString().length);
+                this.fully_read = false;
                 return num;
             }
         }
@@ -71,6 +77,7 @@ export class Console_IO implements Device {
             num = parseInt(this.input.text);
         }
         this.input.text = this.input.text.trimStart().slice(num.toString().length);
+        this.fully_read = false;
         return num;
     }
     numb_out(value: Word): void {

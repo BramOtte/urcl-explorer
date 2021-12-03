@@ -6,14 +6,12 @@ import { Emulator, Step_Result } from "./emulator.js";
 import { compile } from "./compiler.js";
 import { parse } from "./parser.js";
 const usage = `Usage: node urcl-emu.js <file name>`;
-console.log(argv);
 if (process.argv.length < 3) {
     throw new Error(`Not enougth arguments\n${usage}\n`);
 }
 const file_name = argv[2];
 // TODO: handle error
 const file = fs.readFileSync(file_name, { "encoding": "utf-8" }).toString();
-console.log(file);
 const emulator = new Emulator(frame);
 const console_io = new Console_IO({
     read(callback) {
@@ -32,9 +30,16 @@ if (code.errors.length > 0) {
     console.log(code.errors, code.warnings);
     exit(1);
 }
-console.log(code.warnings);
+if (code.warnings.length > 0) {
+    console.log(code.warnings);
+}
 const [program, debug_info] = compile(code);
 emulator.load_program(program, debug_info);
+let text = "";
+if (argv.length > 3) {
+    text = fs.readFileSync(argv[3], { "encoding": "utf-8" }).toString();
+}
+console_io.set_text(text);
 setTimeout(frame, 1);
 function frame() {
     switch (emulator.run(1000)) {
@@ -46,11 +51,11 @@ function frame() {
         case Step_Result.Input: break;
         case Step_Result.Halt:
             {
-                console.log("program halted");
+                console.log("\nprogram halted");
             }
             break;
         default: {
-            console.warn("unkown step result");
+            console.warn("\nunkown step result");
         }
     }
 }

@@ -1,1 +1,1 @@
-tsc-watch --OnSuccess "node js/emulator/urcl-emu.js examples/urcl/text-io.urcl"
+nodemon -e .js,.cmd,.urcl,.txt --exec run
