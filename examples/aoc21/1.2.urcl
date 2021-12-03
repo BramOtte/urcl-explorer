@@ -1,3 +1,4 @@
+// count the number of times a depth measurement increases with a sliding average of 3
 BITS == 16
 MINREG 8
 @define output r8
@@ -6,7 +7,6 @@ MINREG 8
 @define c r5
 @define last r4
 @define val r3
-// count the number of times a depth measurement increases with a sliding average of 3
 
 IMM output 0
 IN a %NUMB
