@@ -7,7 +7,8 @@ import { compile } from "../emulator/compiler.js";
 import { parse } from "../emulator/parser.js";
 const usage = `Usage: node urcl-emu.js <file name>`;
 if (process.argv.length < 3) {
-    throw new Error(`Not enougth arguments\n${usage}\n`);
+    console.error(`ERROR: Not enough arguments\n${usage}\n`);
+    exit(1);
 }
 const file_name = argv[2];
 // TODO: handle error
