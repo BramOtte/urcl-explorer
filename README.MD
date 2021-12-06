@@ -21,12 +21,17 @@ Then navigate to the folder you just cloned to which is by default urcl-explorer
 cd urcl-explorer
 ```
 
-Now run a static http server, an example of one is the one included with python but you can use any other http server.
+Install a static http server, an example of one is http-server which you can install using npm.
+But you can use any other http server as long as it gives proper mime-types to javascript files.
 ```cmd
-python -m http.server
+npm install -g http-server
+```
+And run it.
+```
+http-server -p 8000
 ```
 
-Finally, open your browser and visit http://localhost:8000. The python http server uses port 8000 by default but this might be different, so check which port your server uses and connect to the right one.
+Finally, open your browser and visit http://localhost:8000.
 
 ### Node.js
 ```
