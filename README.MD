@@ -35,5 +35,13 @@ Finally, open your browser and visit http://localhost:8000.
 
 ### Node.js
 ```
-node js/emulator/urcl-emu.js <filename>
+node js/node/urcx-emu.js <source file> [<input file>]
+```
+
+## Install 🔩
+### Node.js Windows 
+Add the bin folder to your Path environment variable
+and run the emulator with the urcx-emu command:
+```
+urcx-emu <source file> [<input file>]
 ```

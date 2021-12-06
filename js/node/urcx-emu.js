@@ -1,10 +1,10 @@
 // emulator cli
-import * as fs from "fs";
+import fs from "fs";
 import { argv, exit, stdin, stdout } from "process";
-import { Console_IO } from "./devices/console-io.js";
-import { Emulator, Step_Result } from "./emulator.js";
-import { compile } from "./compiler.js";
-import { parse } from "./parser.js";
+import { Console_IO } from "../emulator/devices/console-io.js";
+import { Emulator, Step_Result } from "../emulator/emulator.js";
+import { compile } from "../emulator/compiler.js";
+import { parse } from "../emulator/parser.js";
 const usage = `Usage: node urcl-emu.js <file name>`;
 if (process.argv.length < 3) {
     throw new Error(`Not enougth arguments\n${usage}\n`);
@@ -59,4 +59,4 @@ function frame() {
         }
     }
 }
-//# sourceMappingURL=urcl-emu.js.map
+//# sourceMappingURL=urcx-emu.js.map
