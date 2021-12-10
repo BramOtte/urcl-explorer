@@ -17,14 +17,15 @@ const output_element = document.getElementById("output") as HTMLElement;
 const memory_view = document.getElementById("memory-view") as HTMLElement;
 const register_view = document.getElementById("register-view") as HTMLElement;
 
-const console_input = document.getElementById("stdin") as HTMLInputElement;
+const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
 const console_output = document.getElementById("stdout") as HTMLElement;
 let input_callback: undefined | (() => void);
 
 
 console_input.addEventListener("keydown", e => {
-    if (e.key === "Enter" && input_callback){
+    if (!e.shiftKey && e.key === "Enter" && input_callback){
         input_callback();
+        e.preventDefault();
     }
 })
 

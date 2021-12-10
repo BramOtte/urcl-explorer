@@ -17,8 +17,9 @@ const console_input = document.getElementById("stdin");
 const console_output = document.getElementById("stdout");
 let input_callback;
 console_input.addEventListener("keydown", e => {
-    if (e.key === "Enter" && input_callback) {
+    if (!e.shiftKey && e.key === "Enter" && input_callback) {
         input_callback();
+        e.preventDefault();
     }
 });
 const console_io = new Console_IO({
