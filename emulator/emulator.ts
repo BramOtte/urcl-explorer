@@ -52,7 +52,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
 
         this.reset();
     }
-    private reset(){
+    reset(){
         this.stack_ptr = this.memory.length-1;
         this.pc = 0;
         for (const reset of this.device_resets){

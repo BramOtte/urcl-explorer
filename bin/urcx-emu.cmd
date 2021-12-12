@@ -1,1 +1,2 @@
-node %~dp0/../js/node/urcx-emu.js %1 %2 %3
+@echo off
+node %~dp0/../js/node/urcx-emu.js %*
