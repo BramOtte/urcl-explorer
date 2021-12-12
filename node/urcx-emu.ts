@@ -79,7 +79,7 @@ if (__storage){
 
 if (__text_file){
     const text = (await fs.readFile(__text_file, {"encoding": "utf-8"})).toString();
-    console_io.set_text("bram" + text);
+    console_io.set_text(text);
 }
 setTimeout(frame, 1);
 
