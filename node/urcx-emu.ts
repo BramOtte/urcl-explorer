@@ -1,6 +1,5 @@
-// emulator cli
 import fs from "fs/promises";
-import { argv, exit, stdin, stdout } from "process";
+import { exit, stdin, stdout } from "process";
 import { Console_IO } from "../emulator/devices/console-io.js";
 import { Emulator, Step_Result } from "../emulator/emulator.js";
 import { compile } from "../emulator/compiler.js";
@@ -14,7 +13,7 @@ function error(msg: string){
     exit(1);
 }
 
-const usage = `Usage: urcx-emu [<...options>] <file name>
+const usage = `Usage: urcx-emu [<...options>] <filename>
     --storage <file>
         the file the storage device should open
     
