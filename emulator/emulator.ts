@@ -12,6 +12,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     public debug_info!: Debug_Info;
     constructor(public on_continue: ()=>void){
     }
+    private heap_size = 0;
     load_program(program: Program, debug_info: Debug_Info){
         this.program = program, this.debug_info = debug_info;
         const bits = program.headers[URCL_Header.BITS].value;
@@ -20,6 +21,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const stack = program.headers[URCL_Header.MINSTACK].value;
         const registers = program.headers[URCL_Header.MINREG].value + register_count;
         const run = program.headers[URCL_Header.RUN].value;
+        this.heap_size = heap;
         if (run === Header_Run.RAM){
             throw new Error("emulator currently doesn't support running in ram");
         }
@@ -107,9 +109,15 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         return (1 << (this.bits-1));
     }
     push(value: Word): void {
+        if (this.stack_ptr < this.heap_size){
+            throw Error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}\n${this.line()}`);
+        }
         this.memory[this.stack_ptr--] = value;
     }
     pop(): Word { 
+        if (this.stack_ptr + 1 >= this.memory.length){
+            throw Error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}\n${this.line()}`);
+        }
         return this.memory[++this.stack_ptr];
     }
     in(port: Word, target: Arr<Word>): boolean {
@@ -164,7 +172,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         for (let i = 0; i < op_operations.length; i++){
             switch (op_operations[i]){
                 case Operant_Operation.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
-                case Operant_Operation.GET_RAM: ops[i] = this.memory[this.read(op_types[i], op_values[i]) + ram_offset]; break;
+                case Operant_Operation.GET_RAM: ops[i] = this.read_mem(this.read(op_types[i], op_values[i]) + ram_offset); break;
                 case Operant_Operation.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
             }
         }
@@ -174,10 +182,22 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         for (let i = 0; i < op_operations.length; i++){
             switch (op_operations[i]){
                 case Operant_Operation.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                case Operant_Operation.SET_RAM: this.memory[this.read(op_types[i], op_values[i]) + ram_offset] = ops[i]; break;
+                case Operant_Operation.SET_RAM: this.write_mem(this.read(op_types[i], op_values[i]) + ram_offset, ops[i]); break;
             }
         }
         return Step_Result.Continue;
+    }
+    write_mem(addr: number, value: number){
+        if (addr >= this.heap_size){
+            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        }
+        this.memory[addr] = value;
+    }
+    read_mem(addr: number){
+        if (addr >= this.heap_size){
+            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        }
+        return this.memory[addr];
     }
     // this method only needs to be called for the IN instruction
     finish_step_in(result: Word){

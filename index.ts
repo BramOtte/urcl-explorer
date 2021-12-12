@@ -75,7 +75,7 @@ emulator.add_io_device(display);
 emulator.add_io_device(new Clock())
 
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/pallet-test.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }

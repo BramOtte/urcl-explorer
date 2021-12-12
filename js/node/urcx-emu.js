@@ -72,22 +72,28 @@ if (__text_file) {
 }
 setTimeout(frame, 1);
 async function frame() {
-    switch (emulator.run(1000)) {
-        case Step_Result.Continue:
-            {
-                setTimeout(frame, 1);
+    try {
+        switch (emulator.run(1000)) {
+            case Step_Result.Continue:
+                {
+                    setTimeout(frame, 1);
+                }
+                break;
+            case Step_Result.Input: break;
+            case Step_Result.Halt:
+                {
+                    await on_halt();
+                    exit(0);
+                }
+                break;
+            default: {
+                console.error("\nunknown step result");
             }
-            break;
-        case Step_Result.Input: break;
-        case Step_Result.Halt:
-            {
-                await on_halt();
-                exit(0);
-            }
-            break;
-        default: {
-            console.error("\nunknown step result");
         }
+    }
+    catch (e) {
+        console.error("ERROR: " + e.message);
+        exit(1);
     }
 }
 async function on_halt() {
