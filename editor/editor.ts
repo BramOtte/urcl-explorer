@@ -100,7 +100,7 @@ export class Editor_Window extends HTMLElement {
 
         const src = this.input.value;
         const lines = line_starts(src);
-        this.line_nrs.innerText = lines.map((_,i) => i).join("\n");
+        this.line_nrs.innerText = lines.map((_,i) => i+1).join("\n");
 
         const tokens: Token[] = [];
         const end = tokenize(src, 0, tokens);

@@ -62,6 +62,7 @@ if (code.warnings.length > 0){
     console.warn(code.warnings);
 }
 const [program, debug_info] = compile(code);
+debug_info.file_name = args[0];
 
 emulator.load_program(program, debug_info);
 let bytes: undefined | Uint8Array;
@@ -99,7 +100,7 @@ async function frame(){
             }
         }
     } catch (e) {
-        console.error("ERROR: " + (e as Error).message);
+        console.error((e as Error).message);
         exit(1);
     }
 }

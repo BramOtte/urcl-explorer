@@ -53,6 +53,7 @@ if (code.warnings.length > 0) {
     console.warn(code.warnings);
 }
 const [program, debug_info] = compile(code);
+debug_info.file_name = args[0];
 emulator.load_program(program, debug_info);
 let bytes;
 if (__storage) {
@@ -91,7 +92,7 @@ async function frame() {
         }
     }
     catch (e) {
-        console.error("ERROR: " + e.message);
+        console.error(e.message);
         exit(1);
     }
 }

@@ -1,3 +1,6 @@
+import { Emulator } from "./emulator.js";
+import { Register, register_count } from "./instructions.js";
+
 export type i53 = number;
 export type Reg = number;
 export type Word = number;
@@ -10,9 +13,9 @@ export interface Warning {
 export function warn(line_nr: number, message: string): Warning {
     return {line_nr, message};
 }
-export function expand_warning(warning: Warning, lines: string[]){
+export function expand_warning(warning: Warning, lines: string[], file_name?: string){
     const {message, line_nr} = warning;
-    return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
+    return `${file_name ?? "urcl"}:${line_nr+1} - ${message}\n   ${lines[line_nr]}`;
 }
 
 export function pad_left(str: string, size: number, char = " "){
@@ -34,6 +37,17 @@ export function hex(num: number, size: number, pad="_"){
 }
 export function hex_size(bits: number){
     return Math.ceil(bits / 4);
+}
+export function registers_to_string(emulator: Emulator) {
+    const nibbles = hex_size(emulator.bits);
+    return Array.from({ length: register_count }, (_,i) => pad_center(Register[i], nibbles) + " ").join("") +
+        Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
+        Array.from(emulator.registers, (v)=> hex(v, nibbles) + " ").join("");
+}
+
+export function indent(string: string, spaces: number){
+    const left = " ".repeat(spaces);
+    return string.split("\n").map(line=>left + line).join("\n")
 }
 
 export interface Arr<T = number, L extends number = number> {

@@ -1,9 +1,10 @@
+import { Register, register_count } from "./instructions.js";
 export function warn(line_nr, message) {
     return { line_nr, message };
 }
-export function expand_warning(warning, lines) {
+export function expand_warning(warning, lines, file_name) {
     const { message, line_nr } = warning;
-    return message + `\n  on line ${line_nr}: ${lines[line_nr]}`;
+    return `${file_name ?? "urcl"}:${line_nr + 1} - ${message}\n   ${lines[line_nr]}`;
 }
 export function pad_left(str, size, char = " ") {
     const pad = Math.max(0, size - str.length);
@@ -24,6 +25,16 @@ export function hex(num, size, pad = "_") {
 }
 export function hex_size(bits) {
     return Math.ceil(bits / 4);
+}
+export function registers_to_string(emulator) {
+    const nibbles = hex_size(emulator.bits);
+    return Array.from({ length: register_count }, (_, i) => pad_center(Register[i], nibbles) + " ").join("") +
+        Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
+        Array.from(emulator.registers, (v) => hex(v, nibbles) + " ").join("");
+}
+export function indent(string, spaces) {
+    const left = " ".repeat(spaces);
+    return string.split("\n").map(line => left + line).join("\n");
 }
 export function object_map(obj, callback) {
     const res = {};

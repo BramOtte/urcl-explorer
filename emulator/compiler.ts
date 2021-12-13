@@ -12,6 +12,7 @@ export interface Program {
 export interface Debug_Info {
     pc_line_nrs: Arr<number>;
     lines: string[];
+    file_name?: string;
 }
 
 export function compile(parsed: Parser_output): [Program, Debug_Info]

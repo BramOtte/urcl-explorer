@@ -1,3 +1,4 @@
+import { registers_to_string, indent } from "./util.js";
 import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run, register_count } from "./instructions.js";
 export var Step_Result;
 (function (Step_Result) {
@@ -109,20 +110,20 @@ export class Emulator {
     }
     push(value) {
         if (this.stack_ptr < this.heap_size) {
-            throw Error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}\n${this.line()}`);
+            this.error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}}`);
         }
         this.memory[this.stack_ptr--] = value;
     }
     pop() {
         if (this.stack_ptr + 1 >= this.memory.length) {
-            throw Error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}\n${this.line()}`);
+            this.error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}`);
         }
         return this.memory[++this.stack_ptr];
     }
     in(port, target) {
         const device = this.device_inputs[port];
         if (device === undefined) {
-            console.warn(`unsupported input device port ${port} (${IO_Port[port]}) ${this.line()}`);
+            this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
             return false;
         }
         const res = device(this.finish_step_in.bind(this));
@@ -137,7 +138,7 @@ export class Emulator {
     out(port, value) {
         const device = this.device_outputs[port];
         if (device === undefined) {
-            console.warn(`unsupported output device port ${port} (${IO_Port[port]}) ${this.line()}`);
+            this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
             return;
         }
         device(value);
@@ -166,7 +167,7 @@ export class Emulator {
         }
         const instruction = Opcodes_operants[opcode];
         if (instruction === undefined) {
-            throw new Error(`unkown opcode ${opcode} ${this.line()}`);
+            this.error(`unkown opcode ${opcode}`);
         }
         const [op_operations, func] = instruction;
         const op_types = this.program.operant_prims[pc];
@@ -203,13 +204,13 @@ export class Emulator {
     }
     write_mem(addr, value) {
         if (addr >= this.memory.length) {
-            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
+            this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
         this.memory[addr] = value;
     }
     read_mem(addr) {
         if (addr >= this.memory.length) {
-            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
+            this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
         }
         return this.memory[addr];
     }
@@ -227,20 +228,25 @@ export class Emulator {
                 this.registers[index] = value;
                 return;
             case Operant_Prim.Imm: return; // do nothing
-            default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
+            default: this.error(`Unknown operant target ${target}`);
         }
     }
     read(source, value) {
         switch (source) {
             case Operant_Prim.Imm: return value;
             case Operant_Prim.Reg: return this.registers[value];
-            default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
+            default: this.error(`Unknown operant source ${source}`);
         }
     }
-    line() {
-        const { pc_line_nrs, lines } = this.debug_info;
+    error(msg) {
+        const { pc_line_nrs, lines, file_name } = this.debug_info;
         const line_nr = pc_line_nrs[this.pc - 1];
-        return `on line ${line_nr}, pc=${this.pc - 1}\n  ${lines[line_nr]}`;
+        throw Error(`${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`);
+    }
+    warn(msg) {
+        const { pc_line_nrs, lines, file_name } = this.debug_info;
+        const line_nr = pc_line_nrs[this.pc - 1];
+        console.warn(`${file_name ?? "eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`);
     }
 }
 //# sourceMappingURL=emulator.js.map

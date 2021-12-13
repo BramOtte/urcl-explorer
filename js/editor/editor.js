@@ -107,7 +107,7 @@ export class Editor_Window extends HTMLElement {
         this.colors.style.height = `${height}px`;
         const src = this.input.value;
         const lines = line_starts(src);
-        this.line_nrs.innerText = lines.map((_, i) => i).join("\n");
+        this.line_nrs.innerText = lines.map((_, i) => i + 1).join("\n");
         const tokens = [];
         const end = tokenize(src, 0, tokens);
         let span = this.colors.firstElementChild;

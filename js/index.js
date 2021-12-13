@@ -4,9 +4,8 @@ import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode } from "./emulator/devices/display.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
-import { Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
-import { enum_from_str, expand_warning, hex, hex_size, pad_center } from "./emulator/util.js";
+import { enum_from_str, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
 let animation_frame;
 let running = false;
 const source_input = document.getElementById("urcl-source");
@@ -114,11 +113,11 @@ function compile_and_reset() {
         const source = source_input.value;
         const parsed = parse(source);
         if (parsed.errors.length > 0) {
-            output_element.innerText = parsed.errors.map(v => "ERROR: " + expand_warning(v, parsed.lines) + "\n").join("");
-            output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines) + "\n").join("");
+            output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines) + "\n").join("");
+            output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");
             return;
         }
-        output_element.innerText += parsed.warnings.map(v => "Warning: " + expand_warning(v, parsed.lines) + "\n").join("");
+        output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");
         const [program, debug_info] = compile(parsed);
         emulator.load_program(program, debug_info);
         display.bits = emulator.bits;
@@ -139,7 +138,7 @@ memory-size: ${emulator.memory.length}
         update_views();
     }
     catch (e) {
-        output_element.innerText += "ERROR: " + e;
+        output_element.innerText += e.message;
         throw e;
     }
 }
@@ -149,7 +148,7 @@ function frame() {
             process_step_result(emulator.run(16));
         }
         catch (e) {
-            output_element.innerText += e + "\nProgram Halted";
+            output_element.innerText += e.message + "\nProgram Halted";
             throw e;
         }
     }
@@ -194,12 +193,9 @@ function process_step_result(result) {
 }
 function update_views() {
     const bits = emulator.bits;
-    const hexes = hex_size(bits);
     memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
     register_view.innerText =
-        Array.from({ length: register_count }, (v, i) => pad_center(Register[i], hexes) + " ").join("") +
-            Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, hexes) + " ").join("") + "\n" +
-            Array.from(emulator.registers, (v) => hex(v, hexes) + " ").join("");
+        registers_to_string(emulator);
 }
 function memoryToString(view, from = 0x0, length = 0x1000, bits = 8) {
     const width = 0x10;

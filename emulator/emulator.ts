@@ -1,4 +1,4 @@
-import { Word, Arr } from "./util.js";
+import { Word, Arr, registers_to_string, indent } from "./util.js";
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
@@ -110,20 +110,20 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
     push(value: Word): void {
         if (this.stack_ptr < this.heap_size){
-            throw Error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}\n${this.line()}`);
+            this.error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}}`);
         }
         this.memory[this.stack_ptr--] = value;
     }
     pop(): Word { 
         if (this.stack_ptr + 1 >= this.memory.length){
-            throw Error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}\n${this.line()}`);
+            this.error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}`);
         }
         return this.memory[++this.stack_ptr];
     }
     in(port: Word, target: Arr<Word>): boolean {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
-            console.warn(`unsupported input device port ${port} (${IO_Port[port]}) ${this.line()}`);
+            this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
             return false;
         }
         const res = device(this.finish_step_in.bind(this));
@@ -137,7 +137,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     out(port: Word, value: Word): void{
         const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
-            console.warn(`unsupported output device port ${port} (${IO_Port[port]}) ${this.line()}`);
+            this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
             return;
         }
         device(value);
@@ -163,7 +163,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             return Step_Result.Halt;
         }
         const instruction = Opcodes_operants[opcode];
-        if (instruction === undefined){throw new Error(`unkown opcode ${opcode} ${this.line()}`);}
+        if (instruction === undefined){this.error(`unkown opcode ${opcode}`);}
         const [op_operations, func] = instruction;
         const op_types = this.program.operant_prims[pc];
         const op_values = this.program.operant_values[pc];
@@ -189,13 +189,13 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
     write_mem(addr: number, value: number){
         if (addr >= this.memory.length){
-            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
+            this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
         this.memory[addr] = value;
     }
     read_mem(addr: number){
         if (addr >= this.memory.length){
-            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
+            this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
         }
         return this.memory[addr];
     }
@@ -211,19 +211,24 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         switch (target){
             case Operant_Prim.Reg: this.registers[index] = value;return;
             case Operant_Prim.Imm: return; // do nothing
-            default: throw new Error(`Unknown operant target ${target} ${this.line()}`);
+            default: this.error(`Unknown operant target ${target}`);
         }
     }
     read(source: Operant_Prim, value: Word){
         switch (source){
             case Operant_Prim.Imm: return value;
             case Operant_Prim.Reg: return this.registers[value];
-            default: throw new Error(`Unknown operant source ${source} ${this.line()}`);
+            default: this.error(`Unknown operant source ${source}`); 
         }
     }
-    line(){
-        const {pc_line_nrs, lines} = this.debug_info;
+    error(msg: string): never {
+        const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        return `on line ${line_nr}, pc=${this.pc-1}\n  ${lines[line_nr]}`;
+        throw Error(`${file_name??"eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`);
+    }
+    warn(msg: string): void {
+        const {pc_line_nrs, lines, file_name} = this.debug_info;
+        const line_nr = pc_line_nrs[this.pc-1];
+        console.warn(`${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`);
     }
 }
