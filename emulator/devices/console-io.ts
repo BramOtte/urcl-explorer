@@ -22,28 +22,20 @@ export class Console_IO implements Device {
     }
     set_text(text: string){
         this.input.text = text;
-        this.fully_read = text.length === 0;
     }
-    private fully_read = true;
     reset(){
         this.input.text = "";
-        this.fully_read = true;
         this._reset();
     }
     private async read(): Promise<void>{
         return new Promise((res) => {
             this.input.read(() => {
-                this.fully_read = false;
                 res();
             })
         });
     }
     text_in(callback: (value: Word) => void): undefined | number {
-        if (!this.input.text && !this.fully_read){
-            this.fully_read = true;
-            return 0;
-        }
-        if (!this.input.text){
+        if (this.input.text.length === 0){
             this.read().then(()=>{
                 const char_code = this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
@@ -63,7 +55,6 @@ export class Console_IO implements Device {
             const num = parseInt(this.input.text);
             if (Number.isInteger(num)){
                 this.input.text = this.input.text.trimStart().slice(num.toString().length);
-                this.fully_read = false;
                 return num;
             }
         }
@@ -77,7 +68,6 @@ export class Console_IO implements Device {
             num = parseInt(this.input.text);
         }
         this.input.text = this.input.text.trimStart().slice(num.toString().length);
-        this.fully_read = false;
         return num;
     }
     numb_out(value: Word): void {

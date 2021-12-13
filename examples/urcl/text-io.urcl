@@ -35,7 +35,7 @@ HLT
 
 .text_in // start: in $1 char*, ch: $2 var
     IN $2 %TEXT
-    BRE .text_in_end $2 0
+    BRE .text_in_end $2 '\n'
     STR $1 $2
     INC $1 $1
     JMP .text_in

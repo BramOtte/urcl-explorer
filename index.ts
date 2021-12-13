@@ -19,21 +19,28 @@ const register_view = document.getElementById("register-view") as HTMLElement;
 
 const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
 const console_output = document.getElementById("stdout") as HTMLElement;
+const null_terminate_input = document.getElementById("null-terminate") as HTMLInputElement;
 let input_callback: undefined | (() => void);
 
 
 console_input.addEventListener("keydown", e => {
     if (!e.shiftKey && e.key === "Enter" && input_callback){
-        input_callback();
         e.preventDefault();
+        if (null_terminate_input.checked){
+            console_input.value += "\0";   
+        } else {
+            console_input.value += "\n";
+        }
+        
+        input_callback();
     }
 })
 
 const console_io = new Console_IO({
-    read(callback){
-        input_callback = callback;
-    },
-    get text(){
+        read(callback){
+            input_callback = callback;
+        },
+        get text(){
             return console_input.value;
         },
         set text(value: string){

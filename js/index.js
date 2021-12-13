@@ -14,11 +14,18 @@ const memory_view = document.getElementById("memory-view");
 const register_view = document.getElementById("register-view");
 const console_input = document.getElementById("stdin");
 const console_output = document.getElementById("stdout");
+const null_terminate_input = document.getElementById("null-terminate");
 let input_callback;
 console_input.addEventListener("keydown", e => {
     if (!e.shiftKey && e.key === "Enter" && input_callback) {
-        input_callback();
         e.preventDefault();
+        if (null_terminate_input.checked) {
+            console_input.value += "\0";
+        }
+        else {
+            console_input.value += "\n";
+        }
+        input_callback();
     }
 });
 const console_io = new Console_IO({

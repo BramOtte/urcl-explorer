@@ -25,8 +25,9 @@ const { args, flags } = parse_argv({
     __storage: "",
     __storage_size: 0,
     __text_file: "",
+    __enter_is_null: false,
 });
-const { __storage, __storage_size, __text_file } = flags;
+const { __storage, __storage_size, __text_file, __enter_is_null } = flags;
 if (args.length < 1) {
     throw new Error("Not enough arguments");
 }
@@ -36,7 +37,7 @@ const console_io = new Console_IO({
     read(callback) {
         stdin.resume();
         stdin.once("data", (data) => {
-            this.text = data.toString();
+            this.text = data.toString().replace(/\r\n/g, "\n");
             callback();
             stdin.pause();
         });
@@ -67,7 +68,7 @@ if (__storage) {
     emulator.add_io_device(storage);
 }
 if (__text_file) {
-    const text = (await fs.readFile(__text_file, { "encoding": "utf-8" })).toString();
+    const text = (await fs.readFile(__text_file, { "encoding": "utf-8" })).toString() + "\0";
     console_io.set_text(text);
 }
 setTimeout(frame, 1);
