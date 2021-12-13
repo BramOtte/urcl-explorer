@@ -73,9 +73,10 @@ if (__text_file) {
 setTimeout(frame, 1);
 async function frame() {
     try {
-        switch (emulator.run(1000)) {
+        switch (emulator.run(2000)) {
             case Step_Result.Continue:
                 {
+                    emulator.warn("Long running program");
                     setTimeout(frame, 1);
                 }
                 break;
