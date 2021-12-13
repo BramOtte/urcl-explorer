@@ -25,9 +25,8 @@ const { args, flags } = parse_argv({
     __storage: "",
     __storage_size: 0,
     __text_file: "",
-    __enter_is_null: false,
 });
-const { __storage, __storage_size, __text_file, __enter_is_null } = flags;
+const { __storage, __storage_size, __text_file } = flags;
 if (args.length < 1) {
     throw new Error("Not enough arguments");
 }
