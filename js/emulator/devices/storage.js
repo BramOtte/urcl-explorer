@@ -55,13 +55,13 @@ export class Storage {
     }
     bus_out(v) {
         if (this.address > this.data.length) {
-            throw Error(`${this.address} storage address out of bounds 0->${this.data.length}`);
+            throw Error(`Storage address out of bounds ${this.address} > ${this.data.length}`);
         }
         this.data[this.address] = v;
     }
     bus_in() {
         if (this.address > this.data.length) {
-            throw Error(`${this.address} storage address out of bounds 0->${this.data.length}}`);
+            throw Error(`Storage address out of bounds ${this.address} > ${this.data.length}`);
         }
         return this.data[this.address];
     }

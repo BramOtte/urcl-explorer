@@ -202,14 +202,14 @@ export class Emulator {
         return Step_Result.Continue;
     }
     write_mem(addr, value) {
-        if (addr >= this.heap_size) {
-            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        if (addr >= this.memory.length) {
+            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
         }
         this.memory[addr] = value;
     }
     read_mem(addr) {
-        if (addr >= this.heap_size) {
-            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        if (addr >= this.memory.length) {
+            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
         }
         return this.memory[addr];
     }

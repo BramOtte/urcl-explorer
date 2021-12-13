@@ -188,14 +188,14 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         return Step_Result.Continue;
     }
     write_mem(addr: number, value: number){
-        if (addr >= this.heap_size){
-            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        if (addr >= this.memory.length){
+            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
         }
         this.memory[addr] = value;
     }
     read_mem(addr: number){
-        if (addr >= this.heap_size){
-            throw Error(`Heap overflow: ${addr} >= ${this.heap_size} ${this.line()}`);
+        if (addr >= this.memory.length){
+            throw Error(`Heap overflow: ${addr} >= ${this.memory.length} ${this.line()}`);
         }
         return this.memory[addr];
     }
