@@ -57,7 +57,7 @@ export class Emulator {
         this.reset();
     }
     reset() {
-        this.stack_ptr = this.memory.length - 1;
+        this.stack_ptr = this.memory.length;
         this.pc = 0;
         for (const reset of this.device_resets) {
             reset();
@@ -109,16 +109,16 @@ export class Emulator {
         return (1 << (this.bits - 1));
     }
     push(value) {
-        if (this.stack_ptr < this.heap_size) {
-            this.error(`Stack overflow: ${this.stack_ptr} < ${this.heap_size}}`);
+        if (this.stack_ptr <= this.heap_size) {
+            this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
         }
-        this.memory[this.stack_ptr--] = value;
+        this.memory[--this.stack_ptr] = value;
     }
     pop() {
-        if (this.stack_ptr + 1 >= this.memory.length) {
-            this.error(`Stack underflow: ${this.stack_ptr + 1} >= ${this.memory.length}`);
+        if (this.stack_ptr >= this.memory.length) {
+            this.error(`Stack underflow: ${this.stack_ptr} >= ${this.memory.length}`);
         }
-        return this.memory[++this.stack_ptr];
+        return this.memory[this.stack_ptr++];
     }
     in(port, target) {
         const device = this.device_inputs[port];
