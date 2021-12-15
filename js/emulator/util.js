@@ -36,8 +36,8 @@ export function indent(string, spaces) {
     const left = " ".repeat(spaces);
     return string.split("\n").map(line => left + line).join("\n");
 }
-export function object_map(obj, callback) {
-    const res = {};
+export function object_map(obj, callback, target = {}) {
+    const res = target;
     for (const key in obj) {
         const value = obj[key];
         const [new_key, new_value] = callback(key, value);

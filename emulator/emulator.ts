@@ -1,5 +1,5 @@
 import { Word, Arr, registers_to_string, indent } from "./util.js";
-import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count} from "./instructions.js";
+import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns, Opcodes_operant_lengths} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
 
@@ -8,6 +8,9 @@ export enum Step_Result {
 }
 
 export class Emulator implements Instruction_Ctx, Device_Host {
+    a = 0;
+    b = 0;
+    c = 0;
     public program!: Program;
     public debug_info!: Debug_Info;
     constructor(public on_continue: ()=>void){
@@ -120,7 +123,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
         return this.memory[this.stack_ptr++];
     }
-    in(port: Word, target: Arr<Word>): boolean {
+    in(port: Word): boolean {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
             this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
@@ -130,7 +133,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (res === undefined){
             return true;
         } else {
-            target[0] = res as number;
+            this.a = res as number;
             return false;
         }
     }
@@ -162,38 +165,29 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (opcode === Opcode.HLT){
             return Step_Result.Halt;
         }
-        const instruction = Opcodes_operants[opcode];
-        if (instruction === undefined){this.error(`unkown opcode ${opcode}`);}
-        const [op_operations, func] = instruction;
+        const func = inst_fns[opcode];
+        if (func === undefined){this.error(`unkown opcode ${opcode}`);}
+
         const op_types = this.program.operant_prims[pc];
         const op_values = this.program.operant_values[pc];
-        const ops = op_operations.map(() => 0);
-        let ram_offset = 0;
-        for (let i = 0; i < op_operations.length; i++){
-            switch (op_operations[i]){
-                case Operant_Operation.GET: ops[i] = this.read(op_types[i], op_values[i]); break;
-                case Operant_Operation.GET_RAM: ops[i] = this.read_mem(this.read(op_types[i], op_values[i]) + ram_offset); break;
-                case Operant_Operation.RAM_OFFSET: ram_offset = this.read(op_types[i], op_values[i]); break;
-            }
-        }
-        if (func(ops, this)) {
+        const length = op_values.length;
+        if (length >= 1)this.a = this.read(op_types[0], op_values[0]);
+        if (length >= 2)this.b = this.read(op_types[1], op_values[1]);
+        if (length >= 3)this.c = this.read(op_types[2], op_values[2]);
+        if (func(this)) {
             return Step_Result.Input;
         }
-        for (let i = 0; i < op_operations.length; i++){
-            switch (op_operations[i]){
-                case Operant_Operation.SET: this.write(op_types[i], op_values[i], ops[i]); break;
-                case Operant_Operation.SET_RAM: this.write_mem(this.read(op_types[i], op_values[i]) + ram_offset, ops[i]); break;
-            }
-        }
+        if (length >= 1)this.write(op_types[0], op_values[0], this.a);
         return Step_Result.Continue;
     }
-    write_mem(addr: number, value: number){
+
+    m_set(addr: number, value: number){
         if (addr >= this.memory.length){
             this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
         this.memory[addr] = value;
     }
-    read_mem(addr: number){
+    m_get(addr: number){
         if (addr >= this.memory.length){
             this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
         }

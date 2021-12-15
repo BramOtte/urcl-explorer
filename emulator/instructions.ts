@@ -1,4 +1,4 @@
-import { Arr, enum_count, i53, object_map, Word } from "./util.js";
+import {enum_count, object_map} from "./util.js";
 
 // export 
 export enum Opcode {
@@ -93,159 +93,171 @@ export enum IO_Port {
 }
 
 export interface Instruction_Ctx {
-    readonly bits: i53,
-    readonly max_value: Word,
-    readonly max_signed: Word,
-    readonly sign_bit: Word,
-    pc: Word;
-    push(a: Word): void;
-    pop(): Word;
-    in(port: Word, target: Arr<Word>): boolean;
-    out(port: Word, value: Word): void;
+    readonly bits: number,
+    readonly max_value: number,
+    readonly max_signed: number,
+    readonly sign_bit: number,
+    pc: number;
+    a: number,
+    b: number,
+    c: number,
+    m_set(a: number, v: number): void;
+    m_get(a: number): number;
+    push(a: number): void;
+    pop(): number;
+    in(port: number): boolean;
+    out(port: number, value: number): void;
 }
 
-type Instruction_Callback = (ops: Arr<Word>, ctx: Instruction_Ctx) => void | boolean;
+type Instruction_Callback = (ctx: Instruction_Ctx) => void | boolean;
 
 const {SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO} = Operant_Operation;
 export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Instruction_Callback]>> = {
     //----- Core Instructions
     // Add Op2 to Op3 then put result into Op1
-    [Opcode.ADD ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] + ops[2]}],
+    [Opcode.ADD ]: [[SET, GET, GET], (s) => {s.a = s.b + s.c}],
     // Unsigned right shift Op2 once then put result into Op1
-    [Opcode.RSH ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] >>> 1}],
+    [Opcode.RSH ]: [[SET, GET     ], (s) => {s.a = s.b >>> 1}],
     // Copy RAM value pointed to by Op2 into Op1
-    [Opcode.LOD ]: [[SET, GAM     ], (ops) => {ops[0] = ops[1]}],
+    [Opcode.LOD ]: [[SET, GAM     ], (s) => {s.a = s.m_get(s.b)}],
     // Copy Op2 into RAM value pointed to by Op1
-    [Opcode.STR ]: [[SAM, GET     ], (ops) => {ops[0] = ops[1]}],
+    [Opcode.STR ]: [[SAM, GET     ], (s) => s.m_set(s.a, s.b)],
     // Branch to address specified by Op1 if Op2 is more than or equal to Op3
-    [Opcode.BGE ]: [[GET, GET, GET], (ops, s) => {if (ops[1] >= ops[2]) s.pc = ops[0]}],
+    [Opcode.BGE ]: [[GET, GET, GET], (s) => {if (s.b >= s.c) s.pc = s.a}],
     // Bitwise NOR Op2 and Op3 then put result into Op1
-    [Opcode.NOR ]: [[SET, GET, GET], (ops) => {ops[0] = ~(ops[1] | ops[2])}],
+    [Opcode.NOR ]: [[SET, GET, GET], (s) => {s.a = ~(s.b | s.c)}],
     // Load immediate
-    [Opcode.IMM ]: [[SET, GET     ], (ops) => {ops[0] = ops[1]}],
+    [Opcode.IMM ]: [[SET, GET     ], (s) => {s.a = s.b}],
     
     //----- Basic Instructions
     // Subtract Op3 from Op2 then put result into Op1
-    [Opcode.SUB ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] - ops[2]}],
+    [Opcode.SUB ]: [[SET, GET, GET], (s) => {s.a = s.b - s.c}],
     // Branch to address specified by Op1
-    [Opcode.JMP ]: [[GET          ], (ops, s) => {s.pc = ops[0]}],
+    [Opcode.JMP ]: [[GET          ], (s) => {s.pc = s.a}],
     // Copy Op2 to Op1
-    [Opcode.MOV ]: [[SET, GET     ], (ops) => {ops[0] = ops[1]}],
+    [Opcode.MOV ]: [[SET, GET     ], (s) => {s.a = s.b}],
     // Copy Op2 to Op1
-    [Opcode.NOP ]: [[             ], ()=>{}],
+    [Opcode.NOP ]: [[             ], ()=> false],
     // Left shift Op2 once then put result into Op1
-    [Opcode.LSH ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] << 1}],
+    [Opcode.LSH ]: [[SET, GET     ], (s) => {s.a = s.b << 1}],
     // Add 1 to Op2 then put result into Op1
-    [Opcode.INC ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] + 1}],
+    [Opcode.INC ]: [[SET, GET     ], (s) => {s.a = s.b + 1}],
     // Subtract 1 from Op2 then put result into Op1
-    [Opcode.DEC ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] - 1}],
+    [Opcode.DEC ]: [[SET, GET     ], (s) => {s.a = s.b - 1}],
     // Calculates the 2s complement of Op2 then puts answer into Op1
-    [Opcode.NEG ]: [[SET, GET     ], (ops) => {ops[0] = -ops[1]}],
+    [Opcode.NEG ]: [[SET, GET     ], (s) => {s.a = -s.b}],
     // Bitwise AND Op2 and Op3 then put result into Op1
-    [Opcode.AND ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] & ops[2]}],
+    [Opcode.AND ]: [[SET, GET, GET], (s) => {s.a = s.b & s.c}],
     // Bitwise OR Op2 and Op3 then put result into Op1
-    [Opcode.OR  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] | ops[2]}],
+    [Opcode.OR  ]: [[SET, GET, GET], (s) => {s.a = s.b | s.c}],
     // Bitwise NOT of Op2 then put result into Op1
-    [Opcode.NOT ]: [[SET, GET     ], (ops) => {ops[0] = ~ops[1]}],
+    [Opcode.NOT ]: [[SET, GET     ], (s) => {s.a = ~s.b}],
     // Bitwise XNOR Op2 and Op3 then put result into Op1
-    [Opcode.XNOR]: [[SET, GET, GET], (ops) => {ops[0] = ~(ops[1] ^ ops[2])}],
+    [Opcode.XNOR]: [[SET, GET, GET], (s) => {s.a = ~(s.b ^ s.c)}],
     // Bitwise XOR Op2 and Op3 then put result into Op1
-    [Opcode.XOR ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] ^ ops[2]}],
+    [Opcode.XOR ]: [[SET, GET, GET], (s) => {s.a = s.b ^ s.c}],
     // Bitwise NAND Op2 and Op3 then put result into Op1
-    [Opcode.NAND]: [[SET, GET, GET], (ops) => {ops[0] = ~(ops[1] & ops[2])}],
+    [Opcode.NAND]: [[SET, GET, GET], (s) => {s.a = ~(s.b & s.c)}],
     // Branch to address specified by Op1 if Op2 is less than Op3
-    [Opcode.BRL ]: [[GET, GET, GET], (ops, s) => {if (ops[1] < ops[2]) s.pc = ops[0]}],
+    [Opcode.BRL ]: [[GET, GET, GET], (s) => {if (s.b < s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is more than Op3
-    [Opcode.BRG ]: [[GET, GET, GET], (ops, s) => {if (ops[1] > ops[2]) s.pc = ops[0]}],
+    [Opcode.BRG ]: [[GET, GET, GET], (s) => {if (s.b > s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is equal to Op3
-    [Opcode.BRE ]: [[GET, GET, GET], (ops, s) => {if (ops[1] === ops[2]) s.pc = ops[0]}],
+    [Opcode.BRE ]: [[GET, GET, GET], (s) => {if (s.b === s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is not equal to Op3
-    [Opcode.BNE ]: [[GET, GET, GET], (ops, s) => {if (ops[1] !== ops[2]) s.pc = ops[0]}],
+    [Opcode.BNE ]: [[GET, GET, GET], (s) => {if (s.b !== s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is Odd (AKA the lowest bit is active)
-    [Opcode.BOD ]: [[GET, GET     ], (ops, s) => {if (ops[1] & 1) s.pc = ops[0]}],
+    [Opcode.BOD ]: [[GET, GET     ], (s) => {if (s.b & 1) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is Even (AKA the lowest bit is not active)
-    [Opcode.BEV ]: [[GET, GET     ], (ops, s) => {if (!(ops[1] & 1)) s.pc = ops[0]}],
+    [Opcode.BEV ]: [[GET, GET     ], (s) => {if (!(s.b & 1)) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is less than or equal to Op3
-    [Opcode.BLE ]: [[GET, GET, GET], (ops, s) => {if (ops[1] <= ops[2]) s.pc = ops[0]}],
+    [Opcode.BLE ]: [[GET, GET, GET], (s) => {if (s.b <= s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 equal to 0
-    [Opcode.BRZ ]: [[GET, GET     ], (ops, s) => {if (ops[1] === 0) s.pc = ops[0]}],
+    [Opcode.BRZ ]: [[GET, GET     ], (s) => {if (s.b === 0) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is not equal to 0
-    [Opcode.BNZ ]: [[GET, GET     ], (ops, s) => {if (ops[1] !== 0) s.pc = ops[0]}],
+    [Opcode.BNZ ]: [[GET, GET     ], (s) => {if (s.b !== 0) s.pc = s.a}],
     // Branch to address specified by Op1 if the result of the previous instruction is negative (AKA the upper most bit is active)
-    [Opcode.BRN ]: [[GET, GET     ], (ops, s) => {if (ops[1] & s.sign_bit) s.pc = ops[0]}],
+    [Opcode.BRN ]: [[GET, GET     ], (s) => {if (s.b & s.sign_bit) s.pc = s.a}],
     // Branch to address specified by Op1 if the result of the previous instruction is positive (AKA the upper most bit is not active)
-    [Opcode.BRP ]: [[GET, GET     ], (ops, s) => {if (!(ops[1] & s.sign_bit)) s.pc = ops[0]}],
+    [Opcode.BRP ]: [[GET, GET     ], (s) => {if (!(s.b & s.sign_bit)) s.pc = s.a}],
     // Push Op1 onto the value stack
-    [Opcode.PSH ]: [[GET          ], (ops, s) => {s.push(ops[0])}],
+    [Opcode.PSH ]: [[GET          ], (s) => {s.push(s.a)}],
     // Pop from the value stack into Op1
-    [Opcode.POP ]: [[SET          ], (ops, s) => {ops[0] = s.pop()}],
+    [Opcode.POP ]: [[SET          ], (s) => {s.a = s.pop()}],
     // Pushes the address of the next instruction onto the stack then branches to Op1
-    [Opcode.CAL ]: [[GET          ], (ops, s) => {s.push(s.pc); s.pc = ops[0]}],
+    [Opcode.CAL ]: [[GET          ], (s) => {s.push(s.pc); s.pc = s.a}],
     // Pops from the stack, then branches to that value
-    [Opcode.RET ]: [[             ], (_, s) => {s.pc = s.pop()}],
+    [Opcode.RET ]: [[             ], (s) => {s.pc = s.pop()}],
     // Stop Execution emediately after opcode is read
-    [Opcode.HLT ]: [[             ],()=>{}],
+    [Opcode.HLT ]: [[             ],() => true],
     // Copies the value located at the RAM location pointed to by Op2 into the RAM position pointed to by Op1.
-    [Opcode.CPY ]: [[SAM, GAM     ], (ops) => {ops[0] = ops[1]}],
+    [Opcode.CPY ]: [[SAM, GAM     ], (s) => s.m_set(s.a, s.m_get(s.b))],
     // Branch to Op1 if Op2 + Op3 gives a carry out
-    [Opcode.BRC ]: [[GET, GET, GET], (ops, s) => {if (ops[1] + ops[2] > s.max_value) s.pc = ops[0]}],
+    [Opcode.BRC ]: [[GET, GET, GET], (s) => {if (s.b + s.c > s.max_value) s.pc = s.a}],
     // Branch to Op1 if Op2 + Op3 does not give a carry out
-    [Opcode.BNC ]: [[GET, GET, GET], (ops, s) => {if (ops[1] + ops[2] <= s.max_value) s.pc = ops[0]}],
+    [Opcode.BNC ]: [[GET, GET, GET], (s) => {if (s.b + s.c <= s.max_value) s.pc = s.a}],
 
     //----- Complex Instructions
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1
-    [Opcode.MLT  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] * ops[2]}],
+    [Opcode.MLT  ]: [[SET, GET, GET], (s) => {s.a = s.b * s.c}],
     // Unsigned division of Op2 by Op3 then put answer into Op1
-    [Opcode.DIV  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] / ops[2]}],
+    [Opcode.DIV  ]: [[SET, GET, GET], (s) => {s.a = s.b / s.c}],
     // Unsigned modulus of Op2 by Op3 then put answer into Op1
-    [Opcode.MOD  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] % ops[2]}],
+    [Opcode.MOD  ]: [[SET, GET, GET], (s) => {s.a = s.b % s.c}],
     // Right shift Op2, Op3 times then put result into Op1
-    [Opcode.BSR  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] >>> ops[2]}],
+    [Opcode.BSR  ]: [[SET, GET, GET], (s) => {s.a = s.b >>> s.c}],
     // Left shift Op2, Op3 times then put result into Op1
-    [Opcode.BSL  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] << ops[2]}],
+    [Opcode.BSL  ]: [[SET, GET, GET], (s) => {s.a = s.b << s.c}],
     // Signed right shift Op2 once then put result into Op1
-    [Opcode.SRS  ]: [[SET, GET     ], (ops) => {ops[0] = ops[1] >> 1}],
+    [Opcode.SRS  ]: [[SET, GET     ], (s) => {s.a = s.b >> 1}],
     // Signed right shift Op2, Op3 times then put result into Op1
-    [Opcode.BSS  ]: [[SET, GET, GET], (ops) => {ops[0] = ops[1] >> ops[2]}],
+    [Opcode.BSS  ]: [[SET, GET, GET], (s) => {s.a = s.b >> s.c}],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETE ]: [[SET, GET, GET], (ops, s) => {if (ops[1] === ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETE ]: [[SET, GET, GET], (s) => {if (s.b === s.c) s.a = s.max_value}],
     // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETNE]: [[SET, GET, GET], (ops, s) => {if (ops[1] !== ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETNE]: [[SET, GET, GET], (s) => {if (s.b !== s.c) s.a = s.max_value}],
     // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETG ]: [[SET, GET, GET], (ops, s) => {if (ops[1] > ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETG ]: [[SET, GET, GET], (s) => {if (s.b > s.c) s.a = s.max_value}],
     // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETL ]: [[SET, GET, GET], (ops, s) => {if (ops[1] < ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETL ]: [[SET, GET, GET], (s) => {if (s.b < s.c) s.a = s.max_value}],
     // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETGE]: [[SET, GET, GET], (ops, s) => {if (ops[1] >= ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETGE]: [[SET, GET, GET], (s) => {if (s.b >= s.c) s.a = s.max_value}],
     // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETLE]: [[SET, GET, GET], (ops, s) => {if (ops[1] <= ops[2]) ops[0] = s.max_value}],
+    [Opcode.SETLE]: [[SET, GET, GET], (s) => {if (s.b <= s.c) s.a = s.max_value}],
     // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcode.SETC ]: [[SET, GET, GET], (ops, s) => {if (ops[1] + ops[2] > s.max_value) ops[0] = s.max_value}],
+    [Opcode.SETC ]: [[SET, GET, GET], (s) => {if (s.b + s.c > s.max_value) s.a = s.max_value}],
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcode.SETNC]: [[SET, GET, GET], (ops, s) => {if (ops[1] + ops[2] <= s.max_value) ops[0] = s.max_value}],
+    [Opcode.SETNC]: [[SET, GET, GET], (s) => {if (s.b + s.c <= s.max_value) s.a = s.max_value}],
     // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
-    [Opcode.LLOD ]: [[SET, RAO, GAM], (ops) => {ops[0] = ops[2]}],
+    [Opcode.LLOD ]: [[SET, RAO, GAM], (s) => {s.a = s.m_get(s.b + s.c)}],
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
-    [Opcode.LSTR ]: [[RAO, SAM, GET], (ops) => {ops[1] = ops[2]}],
+    [Opcode.LSTR ]: [[RAO, SAM, GET], (s) => s.m_set(s.a + s.b, s.c)],
 
     //----- IO Instructions
-    [Opcode.IN  ]: [[SET, GET], (ops, s) => {return s.in(ops[1], ops);}],
-    [Opcode.OUT ]: [[GET, GET], (ops, s) => {s.out(ops[0], ops[1])}],
+    [Opcode.IN  ]: [[SET, GET], (s) => s.in(s.b)],
+    [Opcode.OUT ]: [[GET, GET], (s) => {s.out(s.a, s.b)}],
 
     //----- Assert Instructions
-    [Opcode.__ASSERT]: [[GET], (ops, s) => {if (!ops[0]) fail_assert(s) }],
-    [Opcode.__ASSERT0]: [[GET], (ops, s) => {if (ops[0]) fail_assert(s) }],
-    [Opcode.__ASSERT_EQ]: [[GET, GET], (ops, s) => {if (ops[0] !== ops[1]) fail_assert(s)}],
-    [Opcode.__ASSERT_NEQ]: [[GET, GET], (ops, s) => {if (ops[0] === ops[1]) fail_assert(s)}],
+    [Opcode.__ASSERT]: [[GET], (s) => {if (!s.a) fail_assert(s) }],
+    [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s) }],
+    [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s)}],
+    [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s)}],
 };
-export const Opcodes_operant_lengths: Record<Opcode, i53> 
+
+export const inst_fns: Record<Opcode, Instruction_Callback> 
+    = object_map(Opcodes_operants, (key, value)=>{
+        if (value === undefined){throw new Error("instruction definition undefined");}
+        return [key, value?.[1]];
+    }, []);
+
+export const Opcodes_operant_lengths: Record<Opcode, number> 
     = object_map(Opcodes_operants, (key, value) => {
         if (value === undefined){throw new Error("instruction definition undefined");}
         return [key, value[0].length];
-    });
+    }, []);
 
 
-function fail_assert(ctx: {out(port: Word, value: Word):void, pc: Word}){
+function fail_assert(ctx: {out(port: number, value: number):void, pc: number}){
     const message = `Assertion failed at pc=${ctx.pc}\n`;
     for (let i = 0; i < message.length; i++){
         ctx.out(IO_Port.TEXT, message.charCodeAt(i));

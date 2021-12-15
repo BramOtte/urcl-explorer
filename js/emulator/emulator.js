@@ -1,5 +1,5 @@
 import { registers_to_string, indent } from "./util.js";
-import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run, register_count } from "./instructions.js";
+import { Opcode, Operant_Prim, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns } from "./instructions.js";
 export var Step_Result;
 (function (Step_Result) {
     Step_Result[Step_Result["Continue"] = 0] = "Continue";
@@ -8,6 +8,9 @@ export var Step_Result;
 })(Step_Result || (Step_Result = {}));
 export class Emulator {
     on_continue;
+    a = 0;
+    b = 0;
+    c = 0;
     program;
     debug_info;
     constructor(on_continue) {
@@ -120,7 +123,7 @@ export class Emulator {
         }
         return this.memory[this.stack_ptr++];
     }
-    in(port, target) {
+    in(port) {
         const device = this.device_inputs[port];
         if (device === undefined) {
             this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
@@ -131,7 +134,7 @@ export class Emulator {
             return true;
         }
         else {
-            target[0] = res;
+            this.a = res;
             return false;
         }
     }
@@ -165,50 +168,33 @@ export class Emulator {
         if (opcode === Opcode.HLT) {
             return Step_Result.Halt;
         }
-        const instruction = Opcodes_operants[opcode];
-        if (instruction === undefined) {
+        const func = inst_fns[opcode];
+        if (func === undefined) {
             this.error(`unkown opcode ${opcode}`);
         }
-        const [op_operations, func] = instruction;
         const op_types = this.program.operant_prims[pc];
         const op_values = this.program.operant_values[pc];
-        const ops = op_operations.map(() => 0);
-        let ram_offset = 0;
-        for (let i = 0; i < op_operations.length; i++) {
-            switch (op_operations[i]) {
-                case Operant_Operation.GET:
-                    ops[i] = this.read(op_types[i], op_values[i]);
-                    break;
-                case Operant_Operation.GET_RAM:
-                    ops[i] = this.read_mem(this.read(op_types[i], op_values[i]) + ram_offset);
-                    break;
-                case Operant_Operation.RAM_OFFSET:
-                    ram_offset = this.read(op_types[i], op_values[i]);
-                    break;
-            }
-        }
-        if (func(ops, this)) {
+        const length = op_values.length;
+        if (length >= 1)
+            this.a = this.read(op_types[0], op_values[0]);
+        if (length >= 2)
+            this.b = this.read(op_types[1], op_values[1]);
+        if (length >= 3)
+            this.c = this.read(op_types[2], op_values[2]);
+        if (func(this)) {
             return Step_Result.Input;
         }
-        for (let i = 0; i < op_operations.length; i++) {
-            switch (op_operations[i]) {
-                case Operant_Operation.SET:
-                    this.write(op_types[i], op_values[i], ops[i]);
-                    break;
-                case Operant_Operation.SET_RAM:
-                    this.write_mem(this.read(op_types[i], op_values[i]) + ram_offset, ops[i]);
-                    break;
-            }
-        }
+        if (length >= 1)
+            this.write(op_types[0], op_values[0], this.a);
         return Step_Result.Continue;
     }
-    write_mem(addr, value) {
+    m_set(addr, value) {
         if (addr >= this.memory.length) {
             this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
         this.memory[addr] = value;
     }
-    read_mem(addr) {
+    m_get(addr) {
         if (addr >= this.memory.length) {
             this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
         }

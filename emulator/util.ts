@@ -58,9 +58,9 @@ export interface Arr<T = number, L extends number = number> {
     join(sepperator?: string): string;
 }
 export function object_map<T, Res extends {}>
-(obj: T, callback: (key: keyof T, value: T[keyof T])=>[keyof Res, Res[keyof Res]])
+(obj: T, callback: (key: keyof T, value: T[keyof T])=>[keyof Res, Res[keyof Res]], target = {})
 {
-    const res = {} as Res;
+    const res = target as Res
     for (const key in obj){
         const value = obj[key];
         const [new_key, new_value] = callback(key, value);
