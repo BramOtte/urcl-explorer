@@ -310,9 +310,9 @@ export const Opcodes_operants = {
     // Left shift Op2, Op3 times then put result into Op1
     [Opcode.BSL]: [[SET, GET, GET], (s) => { s.a = s.b << s.c; }],
     // Signed right shift Op2 once then put result into Op1
-    [Opcode.SRS]: [[SET, GET], (s) => { s.a = s.b >> 1; }],
+    [Opcode.SRS]: [[SET, GET], (s) => { s.a = signed(s, s.b) >> 1; }],
     // Signed right shift Op2, Op3 times then put result into Op1
-    [Opcode.BSS]: [[SET, GET, GET], (s) => { s.a = s.b >> s.c; }],
+    [Opcode.BSS]: [[SET, GET, GET], (s) => { s.a = signed(s, s.b) >> s.c; }],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETE]: [[SET, GET, GET], (s) => { if (s.b === s.c)
             s.a = s.max_value; }],
@@ -354,6 +354,9 @@ export const Opcodes_operants = {
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => { if (s.a === s.b)
             fail_assert(s); }],
 };
+function signed(s, v) {
+    return (v & s.sign_bit) === 0 ? v : v | (0xffff_ffff << s.bits);
+}
 export const inst_fns = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
         throw new Error("instruction definition undefined");

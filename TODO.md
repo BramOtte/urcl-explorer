@@ -1,3 +1,5 @@
+# https://discord.com/developers/applications
+
 # TODO
 ## URCL Standart
 * Check operant types at compile time
@@ -19,6 +21,16 @@
 * add something for automated testing either a port or an instruction
 * Option to list examples
 * fix the mess that is index.ts
+* fix size checks on buffers
+* add !ports
+* check for negative header values
+* escape ```
+* !stop
+* !registers
+* !memory
+* load attachments
+* output attachments
+
 
 ## Low Priority
 * make diverent compile steps visible to user (URCL++ -> URCL -> URCL bin)
@@ -31,7 +43,7 @@
 * compile URCL code to wasm for maximum speed
 * add new cool things to this TODO list
 * support URCL binary format
-# https://discord.com/developers/applications
+* warning for read before write
 
 # DONE
 * Refactor out parser code from emulator
@@ -52,3 +64,4 @@
 * f32 litterals
 * syntax highlighting
 * add line numbers to source code
+* fix BSS (sign 32 bit conversion goes wrong)
