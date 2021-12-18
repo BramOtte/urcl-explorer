@@ -16,6 +16,7 @@ export const pico8: [number, number, number][] = [
 
 export class Display implements Device {
     private ctx: CanvasRenderingContext2D
+    public buffers: Buffer[] = [];
     private image: ImageData;
     private get data(){
         return this.image.data;
@@ -45,15 +46,12 @@ export class Display implements Device {
     }
     
     constructor (
-        canvas: HTMLCanvasElement,
-        width: number,
-        height: number,
+        ctx: CanvasRenderingContext2D,
         public bits: number,
-        public color_mode = Color_Mode.Bin
+        public color_mode = Color_Mode.Bin,
+        public save_buffers = false,
     ){
-        const ctx = canvas.getContext("2d");
-        if (!ctx){throw new Error("unable to get 2d rendering context");}
-        canvas.width = width; canvas.height = height;
+        const {width, height} = ctx.canvas;
         this.ctx = ctx;
         this.image = ctx.createImageData(width, height);
     }
@@ -118,6 +116,9 @@ export class Display implements Device {
             } break;
             case 2: {
                 this.ctx.putImageData(this.image, 0, 0);
+                if (this.save_buffers){
+                    this.buffers.push((this.ctx.canvas as any).toBuffer());
+                }
             } break;
         }
     }

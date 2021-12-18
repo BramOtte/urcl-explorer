@@ -15,7 +15,7 @@ export class Gl_Display implements Device {
     private buffer_enabled: 1 | 0 = 0;
     private x = 0;
     private y = 0;
-    private pref_display: HTMLElement | null = document.getElementById("pref-display");
+    private pref_display?: HTMLElement | null = globalThis?.document?.getElementById?.("pref-display");
 
     private vert_src = /*vert*/ `#version 300 es
     precision mediump float;
@@ -103,16 +103,11 @@ export class Gl_Display implements Device {
     }
     
     constructor (
-        canvas: HTMLCanvasElement,
-        width: number,
-        height: number,
-        public bits: number,
-        public color_mode = Color_Mode.Bin
+        gl: WebGL2RenderingContext,
+        public color_mode = Color_Mode.PICO8
     ){
-        const gl = canvas.getContext("webgl2");
-        if (!gl){throw new Error("unable to get webgl rendering context");}
         this.gl = gl;
-        canvas.width = width; canvas.height = height;
+        const {drawingBufferWidth: width, drawingBufferHeight: height} = gl;
         this.buffer = new Uint32Array(width * height);
         this.bytes = new Uint8Array(this.buffer.buffer, 0, this.buffer.byteLength);
 

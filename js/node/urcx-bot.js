@@ -1,5 +1,5 @@
 import fs from "fs/promises";
-import ds from "discord.js";
+import ds, { MessageAttachment } from "discord.js";
 import { emu_reply, emu_start } from "./bots/bot-emu.js";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
@@ -63,22 +63,25 @@ client.on("messageCreate", (msg) => {
         reply(res);
     }
     function reply(res) {
-        then(res, ({ out, info }) => {
+        then(res, ({ out, info, screens }) => {
             let content = "";
             let files = [];
             if (info.length + 7 > max_info) {
                 const buf = Buffer.from(info);
-                files.push({ attachment: buf, name: "info.txt", file: buf });
+                files.push(new MessageAttachment(buf, "info.txt"));
             }
             else {
                 content += code_block(info, max_info);
             }
             if (out.length + 7 > max_total - content.length) {
                 const buf = Buffer.from(out);
-                files.push({ attachment: buf, name: "output.txt", file: buf });
+                files.push(new MessageAttachment(buf, "out.txt"));
             }
             else {
                 content += code_block(out, max_total - content.length);
+            }
+            for (const [i, screen] of screens.entries()) {
+                files.push(new MessageAttachment(screen, `screen${i}.png`));
             }
             msg.reply({ content, files });
         });

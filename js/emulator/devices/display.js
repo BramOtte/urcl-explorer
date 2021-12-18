@@ -18,7 +18,9 @@ export const pico8 = [
 export class Display {
     bits;
     color_mode;
+    save_buffers;
     ctx;
+    buffers = [];
     image;
     get data() {
         return this.image.data;
@@ -45,15 +47,11 @@ export class Display {
         this.ctx.putImageData(this.image, 0, 0);
         this.buffer_enabled = 0;
     }
-    constructor(canvas, width, height, bits, color_mode = Color_Mode.Bin) {
+    constructor(ctx, bits, color_mode = Color_Mode.Bin, save_buffers = false) {
         this.bits = bits;
         this.color_mode = color_mode;
-        const ctx = canvas.getContext("2d");
-        if (!ctx) {
-            throw new Error("unable to get 2d rendering context");
-        }
-        canvas.width = width;
-        canvas.height = height;
+        this.save_buffers = save_buffers;
+        const { width, height } = ctx.canvas;
         this.ctx = ctx;
         this.image = ctx.createImageData(width, height);
     }
@@ -124,6 +122,9 @@ export class Display {
             case 2:
                 {
                     this.ctx.putImageData(this.image, 0, 0);
+                    if (this.save_buffers) {
+                        this.buffers.push(this.ctx.canvas.toBuffer());
+                    }
                 }
                 break;
         }

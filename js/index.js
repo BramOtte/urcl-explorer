@@ -45,7 +45,13 @@ const console_io = new Console_IO({
     input_callback = undefined;
 });
 const canvas = document.getElementsByTagName("canvas")[0];
-const display = new Gl_Display(canvas, 32, 32, 32);
+const gl = canvas.getContext("webgl2");
+if (!gl) {
+    throw new Error("Unable to get webgl rendering context");
+}
+canvas.width = 32;
+canvas.height = 32;
+const display = new Gl_Display(gl);
 const color_mode_input = document.getElementById("color-mode");
 color_mode_input.addEventListener("change", change_color_mode);
 function change_color_mode() {
@@ -127,7 +133,6 @@ function compile_and_reset() {
         output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");
         const [program, debug_info] = compile(parsed);
         emulator.load_program(program, debug_info);
-        display.bits = emulator.bits;
         output_element.innerText += `
 compilation done
 bits: ${emulator.bits}

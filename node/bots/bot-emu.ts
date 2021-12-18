@@ -5,6 +5,9 @@ import { Emulator, Step_Result } from "../../emulator/emulator.js";
 import { parse } from "../../emulator/parser.js";
 import { expand_warnings, registers_to_string } from "../../emulator/util.js";
 import { parse_argv } from "../args.js";
+import Canvas from "canvas"
+import { Color_Mode, Display } from "../../emulator/devices/display.js";
+import { URCL_Header } from "../../emulator/instructions.js";
 
 const emus: Map<any, ReturnType<typeof discord_emu>> = new Map();
 
@@ -43,6 +46,8 @@ function discord_emu(){
     let text_cb: undefined | (()=>void);
     
     const emulator = new Emulator({on_continue});
+    let display: Display;
+    
     const console_io = new Console_IO({
         read(callback){
             text_cb = callback;
@@ -52,7 +57,9 @@ function discord_emu(){
         (text) => {stdout += text;},
         () => {/*nothing todo here program is only executed ones*/}
     );
-    emulator.add_io_device(console_io)
+    emulator.add_io_device(console_io);
+
+    
     const pub = {start, stop, reply};
 
     return pub;
@@ -85,9 +92,11 @@ function discord_emu(){
     function o(){
         const out = stdout;
         const info = std_info;
+        const screens = display.buffers.slice();
         stdout = "";
         std_info = "";
-        return {out, info};
+        display.buffers.length = 0;
+        return {out, info, screens};
     }
     function start(argv: string[], source?: string){
         if (busy){
@@ -102,9 +111,11 @@ function discord_emu(){
     async function _start(argv: string[], source?: string) {
     try {
         stdout = "";
-        const {args, flags} = parse_argv(["",...argv], {
+        const {args, flags: {__width, __height}} = parse_argv(["",...argv], {
             __storage: "",
             __storage_size: 0,
+            __width: 32,
+            __height: 32
         });
         const file_name = args[0]
         let s_name: undefined | string;
@@ -132,6 +143,12 @@ function discord_emu(){
         }
         const [program, debug_info] = compile(code);
         emulator.load_program(program, debug_info);
+        
+        const canvas = Canvas.createCanvas(__width, __height);
+        const ctx = canvas.getContext("2d", {alpha: false});
+        display = new Display(ctx, program.headers[URCL_Header.BITS].value, Color_Mode.PICO8, true);
+        emulator.add_io_device(display);
+
         running = true;
         on_continue();
         return o();

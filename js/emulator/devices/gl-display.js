@@ -2,7 +2,6 @@ import { createProgram } from "../../webgl/shader.js";
 import { IO_Port } from "../instructions.js";
 import { Color_Mode, pico8 } from "./display.js";
 export class Gl_Display {
-    bits;
     color_mode;
     gl;
     gl_vertices;
@@ -15,7 +14,7 @@ export class Gl_Display {
     buffer_enabled = 0;
     x = 0;
     y = 0;
-    pref_display = document.getElementById("pref-display");
+    pref_display = globalThis?.document?.getElementById?.("pref-display");
     vert_src = /*vert*/ `#version 300 es
     precision mediump float;
     in vec2 a_uv;
@@ -99,16 +98,10 @@ export class Gl_Display {
         this.clear();
         this.buffer_enabled = 0;
     }
-    constructor(canvas, width, height, bits, color_mode = Color_Mode.Bin) {
-        this.bits = bits;
+    constructor(gl, color_mode = Color_Mode.PICO8) {
         this.color_mode = color_mode;
-        const gl = canvas.getContext("webgl2");
-        if (!gl) {
-            throw new Error("unable to get webgl rendering context");
-        }
         this.gl = gl;
-        canvas.width = width;
-        canvas.height = height;
+        const { drawingBufferWidth: width, drawingBufferHeight: height } = gl;
         this.buffer = new Uint32Array(width * height);
         this.bytes = new Uint8Array(this.buffer.buffer, 0, this.buffer.byteLength);
         const gl_program = createProgram(gl, this.vert_src, this.frag_src);
