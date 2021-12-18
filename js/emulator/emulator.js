@@ -45,12 +45,12 @@ export class Emulator {
         else {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
         }
-        if (registers >= this.max_value) {
-            throw new Error(`Too many registers ${registers}, must be <= ${this.max_value}`);
+        if (registers > this.max_size) {
+            throw new Error(`Too many registers ${registers}, must be <= ${this.max_size}`);
         }
         const memory_size = heap + stack + static_data.length;
-        if (memory_size > this.max_value) {
-            throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap + stack}, must be <= ${this.max_value + 1}`);
+        if (memory_size > this.max_size) {
+            throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap + stack}, must be <= ${this.max_size}`);
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
@@ -104,6 +104,9 @@ export class Emulator {
     }
     get max_value() {
         return 0xff_ff_ff_ff >>> (32 - this.bits);
+    }
+    get max_size() {
+        return this.max_value + 1;
     }
     get max_signed() {
         return (1 << (this.bits - 1)) - 1;
