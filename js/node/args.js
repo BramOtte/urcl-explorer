@@ -1,4 +1,5 @@
 import * as path from "path";
+import { enum_from_str, enum_strings } from "../emulator/util.js";
 export function parse_argv(argv, defs) {
     if (argv.length < 2) {
         throw new Error(`Argv needs at least 2 elements but got [${argv}]`);
@@ -15,10 +16,9 @@ export function parse_argv(argv, defs) {
         const key = arg.replace(/-/g, "_");
         const value = defs[key];
         if (value === undefined) {
-            console.error(`Unknown flag ${key}`);
+            throw Error(`Unknown flag ${key}`);
         }
-        const type = typeof value;
-        switch (type) {
+        switch (typeof value) {
             case "string":
                 {
                     if (i + 1 >= argv.length) {
@@ -35,15 +35,27 @@ export function parse_argv(argv, defs) {
             case "number":
                 {
                     if (i + 1 >= argv.length) {
-                        console.error(`Missing argument value for ${arg} of type number`);
-                        break;
+                        throw Error(`Missing argument value for ${arg} of type number`);
                     }
                     const str = argv[++i];
                     const num = Number(str);
                     if (Number.isNaN(num)) {
-                        console.error(`${str} is not a number`);
+                        throw Error((`${arg}: ${str} is not a number`));
                     }
                     flags[key] = num || 0;
+                }
+                break;
+            case "object":
+                {
+                    if (i + 1 >= argv.length) {
+                        throw Error(`Missing argument value for ${arg} of type must be one of [${enum_strings(value.in)}]`);
+                    }
+                    const str = argv[++i];
+                    const num = enum_from_str(value.in, str);
+                    if (num === undefined) {
+                        throw Error(`${arg}: ${str} must be one of [${enum_strings(value.in)}]`);
+                    }
+                    value.val = num;
                 }
                 break;
         }

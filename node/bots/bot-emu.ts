@@ -46,7 +46,7 @@ function discord_emu(){
     let text_cb: undefined | (()=>void);
     
     const emulator = new Emulator({on_continue});
-    let display: Display;
+    let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d"), 8, Color_Mode.PICO8, true)
     
     const console_io = new Console_IO({
         read(callback){
@@ -59,7 +59,7 @@ function discord_emu(){
     );
     emulator.add_io_device(console_io);
 
-    
+
     const pub = {start, stop, reply};
 
     return pub;
@@ -111,11 +111,12 @@ function discord_emu(){
     async function _start(argv: string[], source?: string) {
     try {
         stdout = "";
-        const {args, flags: {__width, __height}} = parse_argv(["",...argv], {
+        const {args, flags: {__width, __height, __color}} = parse_argv(["",...argv], {
             __storage: "",
             __storage_size: 0,
             __width: 32,
-            __height: 32
+            __height: 32,
+            __color: {val: Color_Mode.PICO8, in: Color_Mode}
         });
         const file_name = args[0]
         let s_name: undefined | string;
@@ -146,7 +147,7 @@ function discord_emu(){
         
         const canvas = Canvas.createCanvas(__width, __height);
         const ctx = canvas.getContext("2d", {alpha: false});
-        display = new Display(ctx, program.headers[URCL_Header.BITS].value, Color_Mode.PICO8, true);
+        display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
         emulator.add_io_device(display);
 
         running = true;
