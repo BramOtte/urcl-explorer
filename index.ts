@@ -76,7 +76,7 @@ function resize_display(){
     display.resize(width, height);
 }
 
-const emulator = new Emulator(frame);
+const emulator = new Emulator({on_continue: frame});
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock())

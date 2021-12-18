@@ -7,13 +7,20 @@ export enum Step_Result {
     Continue, Halt, Input
 }
 
+interface Emu_Options {
+    error?: (a: string) => never;
+    warn?: (a: string) => void;
+    on_continue?: ()=>void;
+}
+
 export class Emulator implements Instruction_Ctx, Device_Host {
     a = 0;
     b = 0;
     c = 0;
     public program!: Program;
     public debug_info!: Debug_Info;
-    constructor(public on_continue: ()=>void){
+    constructor(public options: Emu_Options){
+
     }
     private heap_size = 0;
     load_program(program: Program, debug_info: Debug_Info){
@@ -199,7 +206,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
         this.write(type, value, result);
-        this.on_continue();
+        this.options.on_continue?.();
     }
     write(target: Operant_Prim, index: Word, value: Word){
         switch (target){
@@ -218,11 +225,20 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     error(msg: string): never {
         const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        throw Error(`${file_name??"eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`);
+        const content = `${file_name??"eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`;
+        if (this.options.error){
+            this.options.error(content)
+        }
+        throw Error(content);
     }
     warn(msg: string): void {
         const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        console.warn(`${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`);
+        const content = `${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`;
+        if (this.options.warn){
+            this.options.warn(content);
+        } else {
+            console.warn(content);
+        }
     }
 }

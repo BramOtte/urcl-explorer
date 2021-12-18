@@ -21,7 +21,7 @@ const usage = `Usage: urcx-emu [<...options>] <filename>
     --text-file <file>
         file to be read into %TEXT
 `;
-const { args, flags } = parse_argv({
+const { args, flags } = parse_argv(process.argv, {
     __storage: "",
     __storage_size: 0,
     __text_file: "",
@@ -31,7 +31,7 @@ if (args.length < 1) {
     throw new Error("Not enough arguments");
 }
 const urcl = (await fs.readFile(args[0])).toString();
-const emulator = new Emulator(frame);
+const emulator = new Emulator({ on_continue });
 const console_io = new Console_IO({
     read(callback) {
         stdin.resume();
@@ -70,14 +70,14 @@ if (__text_file) {
     const text = (await fs.readFile(__text_file, { "encoding": "utf-8" })).toString() + "\0";
     console_io.set_text(text);
 }
-setTimeout(frame, 1);
-async function frame() {
+setTimeout(on_continue, 1);
+async function on_continue() {
     try {
         switch (emulator.run(2000)) {
             case Step_Result.Continue:
                 {
                     emulator.warn("Long running program");
-                    setTimeout(frame, 1);
+                    setTimeout(on_continue, 1);
                 }
                 break;
             case Step_Result.Input: break;

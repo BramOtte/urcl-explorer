@@ -23,16 +23,9 @@ export class Console_IO {
         this.input.text = "";
         this._reset();
     }
-    async read() {
-        return new Promise((res) => {
-            this.input.read(() => {
-                res();
-            });
-        });
-    }
     text_in(callback) {
         if (this.input.text.length === 0) {
-            this.read().then(() => {
+            this.input.read(() => {
                 const char_code = this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
                 callback(char_code);
@@ -47,24 +40,20 @@ export class Console_IO {
         this.write(String.fromCharCode(value));
     }
     numb_in(callback) {
-        if (this.input.text) {
+        if (this.input.text.length !== 0) {
             const num = parseInt(this.input.text);
             if (Number.isInteger(num)) {
                 this.input.text = this.input.text.trimStart().slice(num.toString().length);
+                console.log(num);
                 return num;
             }
         }
-        this._numb_in().then((value) => callback(value));
-        return undefined;
-    }
-    async _numb_in() {
-        let num = NaN;
-        while (Number.isNaN(num)) {
-            await this.read();
-            num = parseInt(this.input.text);
-        }
-        this.input.text = this.input.text.trimStart().slice(num.toString().length);
-        return num;
+        this.input.read(() => {
+            const num = this.numb_in(callback);
+            if (num !== undefined) {
+                callback(num);
+            }
+        });
     }
     numb_out(value) {
         this.write("" + value);

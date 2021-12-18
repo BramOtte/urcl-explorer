@@ -4,7 +4,14 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
+  "engines": {
+    "node": "16.x"
+  },
   "devDependencies": {
     "@types/node": "^16.7.13"
+  },
+  "dependencies": {
+    "discord.js": "^13.3.1",
+    "node-fetch": "^3.1.0"
   }
 }

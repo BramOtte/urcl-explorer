@@ -2,6 +2,9 @@ import { Register, register_count } from "./instructions.js";
 export function warn(line_nr, message) {
     return { line_nr, message };
 }
+export function expand_warnings(warnings, lines, file_name) {
+    return warnings.map(w => expand_warning(w, lines, file_name)).join("\n\n");
+}
 export function expand_warning(warning, lines, file_name) {
     const { message, line_nr } = warning;
     return `${file_name ?? "urcl"}:${line_nr + 1} - ${message}\n   ${lines[line_nr]}`;

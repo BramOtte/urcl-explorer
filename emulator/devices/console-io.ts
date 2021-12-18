@@ -27,16 +27,9 @@ export class Console_IO implements Device {
         this.input.text = "";
         this._reset();
     }
-    private async read(): Promise<void>{
-        return new Promise((res) => {
-            this.input.read(() => {
-                res();
-            })
-        });
-    }
     text_in(callback: (value: Word) => void): undefined | number {
         if (this.input.text.length === 0){
-            this.read().then(()=>{
+            this.input.read(()=>{
                 const char_code = this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
                 callback(char_code);
@@ -51,24 +44,20 @@ export class Console_IO implements Device {
         this.write(String.fromCharCode(value));
     }
     numb_in(callback: (value: Word) => void): undefined | number {
-        if (this.input.text){
+        if (this.input.text.length !== 0){
             const num = parseInt(this.input.text);
             if (Number.isInteger(num)){
                 this.input.text = this.input.text.trimStart().slice(num.toString().length);
+                console.log(num)
                 return num;
             }
         }
-        this._numb_in().then((value)=>callback(value));
-        return undefined;
-    }
-    async _numb_in(): Promise<Word> {
-        let num = NaN;
-        while (Number.isNaN(num)){
-            await this.read();
-            num = parseInt(this.input.text);
-        }
-        this.input.text = this.input.text.trimStart().slice(num.toString().length);
-        return num;
+        this.input.read(()=>{
+            const num = this.numb_in(callback);
+            if (num !== undefined){
+                callback(num);
+            }
+        });
     }
     numb_out(value: Word): void {
         this.write(""+value);

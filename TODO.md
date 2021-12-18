@@ -31,6 +31,7 @@
 * compile URCL code to wasm for maximum speed
 * add new cool things to this TODO list
 * support URCL binary format
+# https://discord.com/developers/applications
 
 # DONE
 * Refactor out parser code from emulator

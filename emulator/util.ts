@@ -13,6 +13,9 @@ export interface Warning {
 export function warn(line_nr: number, message: string): Warning {
     return {line_nr, message};
 }
+export function expand_warnings(warnings: Warning[], lines: string[], file_name?: string): string {
+    return warnings.map(w => expand_warning(w, lines, file_name)).join("\n\n");
+}
 export function expand_warning(warning: Warning, lines: string[], file_name?: string){
     const {message, line_nr} = warning;
     return `${file_name ?? "urcl"}:${line_nr+1} - ${message}\n   ${lines[line_nr]}`;

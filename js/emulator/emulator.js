@@ -7,14 +7,14 @@ export var Step_Result;
     Step_Result[Step_Result["Input"] = 2] = "Input";
 })(Step_Result || (Step_Result = {}));
 export class Emulator {
-    on_continue;
+    options;
     a = 0;
     b = 0;
     c = 0;
     program;
     debug_info;
-    constructor(on_continue) {
-        this.on_continue = on_continue;
+    constructor(options) {
+        this.options = options;
     }
     heap_size = 0;
     load_program(program, debug_info) {
@@ -206,7 +206,7 @@ export class Emulator {
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
         this.write(type, value, result);
-        this.on_continue();
+        this.options.on_continue?.();
     }
     write(target, index, value) {
         switch (target) {
@@ -227,12 +227,22 @@ export class Emulator {
     error(msg) {
         const { pc_line_nrs, lines, file_name } = this.debug_info;
         const line_nr = pc_line_nrs[this.pc - 1];
-        throw Error(`${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`);
+        const content = `${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`;
+        if (this.options.error) {
+            this.options.error(content);
+        }
+        throw Error(content);
     }
     warn(msg) {
         const { pc_line_nrs, lines, file_name } = this.debug_info;
         const line_nr = pc_line_nrs[this.pc - 1];
-        console.warn(`${file_name ?? "eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`);
+        const content = `${file_name ?? "eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`;
+        if (this.options.warn) {
+            this.options.warn(content);
+        }
+        else {
+            console.warn(content);
+        }
     }
 }
 //# sourceMappingURL=emulator.js.map
