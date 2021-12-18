@@ -48,7 +48,13 @@ client.on("messageCreate", (msg) => {
     const { content } = msg;
     if (content.startsWith("!urcx-emu")) {
         const argv = content.split("\n")[0].split(" ");
-        const source = parse_code_block(content);
+        let source = parse_code_block(content);
+        if (!source) {
+            const source_attach = msg.attachments.find(v => !!v.name?.endsWith?.(".urcl"));
+            if (source_attach) {
+                argv.push(source_attach.url);
+            }
+        }
         const res = emu_start(msg.channelId, argv, source);
         reply(res);
     }
@@ -58,9 +64,23 @@ client.on("messageCreate", (msg) => {
     }
     function reply(res) {
         then(res, ({ out, info }) => {
-            info = code_block(info, max_info);
-            out = code_block(out, max_total - info.length);
-            msg.reply(info + out);
+            let content = "";
+            let files = [];
+            if (info.length + 7 > max_info) {
+                const buf = Buffer.from(info);
+                files.push({ attachment: buf, name: "info.txt", file: buf });
+            }
+            else {
+                content += code_block(info, max_info);
+            }
+            if (out.length + 7 > max_total - content.length) {
+                const buf = Buffer.from(out);
+                files.push({ attachment: buf, name: "output.txt", file: buf });
+            }
+            else {
+                content += code_block(out, max_total - content.length);
+            }
+            msg.reply({ content, files });
         });
     }
 });

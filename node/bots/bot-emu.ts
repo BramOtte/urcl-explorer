@@ -107,22 +107,24 @@ function discord_emu(){
             __storage_size: 0,
         });
         const file_name = args[0]
+        let s_name: undefined | string;
         if (!(source?.length)){
             if (file_name === undefined){
                 std_info += `ERROR: no source specified`
                 return o();
             }
             source = await (await fetch(file_name)).text();
+            s_name = file_name.split("/").at(-1);
         }
         const code = parse(source);
         if (code.errors.length > 0){
             std_info += "ERRORS:\n"
-                + expand_warnings(code.errors, code.lines)
+                + expand_warnings(code.errors, code.lines, s_name)
                 + "\n------------------------------\n";
         }
         if (code.warnings.length > 0){
             std_info += "warnings:\n"
-                + expand_warnings(code.warnings, code.lines);
+                + expand_warnings(code.warnings, code.lines, s_name);
                 + "\n------------------------------\n";
         }
         if (code.errors.length > 0){
