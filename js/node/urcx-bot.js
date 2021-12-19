@@ -67,7 +67,7 @@ client.on("messageCreate", (msg) => {
         reply(res);
     }
     function reply(res) {
-        then(res, ({ out, info, screens, all_screens, scale, state }) => {
+        then(res, ({ out, info, screens, all_screens, scale, state, quality }) => {
             let content = "";
             let files = [];
             let screen_at;
@@ -82,7 +82,7 @@ client.on("messageCreate", (msg) => {
                 ctx.fillStyle = "black";
                 if (to_draw.length > 1) {
                     const encoder = new GivEncoder(width, height);
-                    encoder.setQuality(1);
+                    encoder.setQuality(quality);
                     encoder.setDelay(1 / 6);
                     encoder.setRepeat(0);
                     encoder.start();

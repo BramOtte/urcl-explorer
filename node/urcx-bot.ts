@@ -67,7 +67,7 @@ client.on("messageCreate", (msg) => {
     }
 
     function reply(res: ReturnType<typeof emu_start>){
-        then(res, ({out, info, screens, all_screens, scale, state}) => {
+        then(res, ({out, info, screens, all_screens, scale, state, quality}) => {
             let content = "";
             let files: MessageAttachment[] = [];
             let screen_at: undefined | MessageAttachment;
@@ -83,7 +83,7 @@ client.on("messageCreate", (msg) => {
                 ctx.fillStyle = "black";
                 if (to_draw.length > 1){
                     const encoder = new GivEncoder(width, height);
-                    encoder.setQuality(1);
+                    encoder.setQuality(quality);
                     encoder.setDelay(1/6);
                     encoder.setRepeat(0);
                     encoder.start()

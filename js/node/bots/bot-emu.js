@@ -41,6 +41,7 @@ function discord_emu() {
     let text_cb;
     let scale = 1;
     let rendered_count = 0;
+    let quality = 10;
     const emulator = new Emulator({ on_continue, warn: (str) => std_info += str + "\n" });
     let display = new Display(Canvas.createCanvas(1, 1).getContext("2d"), 8, Color_Mode.PICO8, true);
     const console_io = new Console_IO({
@@ -93,7 +94,7 @@ function discord_emu() {
         stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
-        return { out, info, screens, all_screens, scale, state };
+        return { out, info, screens, all_screens, scale, state, quality };
     }
     function start(argv, source) {
         if (busy) {
@@ -108,15 +109,17 @@ function discord_emu() {
     async function _start(argv, source) {
         try {
             stdout = "";
-            const { args, flags: { __width, __height, __color, __scale } } = parse_argv(["", ...argv], {
+            const { args, flags: { __width, __height, __color, __scale, __quality } } = parse_argv(["", ...argv], {
                 __storage: "",
                 __storage_size: 0,
                 __width: 32,
                 __height: 32,
                 __color: { val: Color_Mode.PICO8, in: Color_Mode },
                 __scale: 1,
+                __quality: 10,
             });
             scale = __scale;
+            quality = __quality;
             const file_name = args[0];
             let s_name;
             if (!(source?.length)) {
