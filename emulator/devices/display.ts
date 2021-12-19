@@ -16,7 +16,7 @@ export const pico8: [number, number, number][] = [
 
 export class Display implements Device {
     private ctx: CanvasRenderingContext2D
-    public buffers: Buffer[] = [];
+    public buffers: ImageData[] = [];
     private image: ImageData;
     private get data(){
         return this.image.data;
@@ -117,7 +117,8 @@ export class Display implements Device {
             case 2: {
                 this.ctx.putImageData(this.image, 0, 0);
                 if (this.save_buffers){
-                    this.buffers.push((this.ctx.canvas as any).toBuffer());
+                    this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
+
                 }
             } break;
         }

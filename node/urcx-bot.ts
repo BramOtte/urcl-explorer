@@ -1,12 +1,15 @@
-import fs from "fs/promises";
+// https://github.com/benjaminadk/gif-encoder-2
+import fsp from "fs/promises";
 import ds, { MessageAttachment } from "discord.js";
 import {emu_reply, emu_start} from "./bots/bot-emu.js";
+import GivEncoder from "gifencoder";
+import Canvas from "canvas";
 
 
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token){
-    const env = (await fs.readFile(".env")).toString();
+    const env = (await fsp.readFile(".env")).toString();
     token = env.split("=")[1].replace(/\s/g, '');
 }
 
@@ -63,9 +66,45 @@ client.on("messageCreate", (msg) => {
     }
 
     function reply(res: ReturnType<typeof emu_start>){
-        then(res, ({out, info, screens}) => {
+        then(res, ({out, info, screens, scale}) => {
             let content = "";
             let files: MessageAttachment[] = [];
+            if (screens.length > 0){
+                const w = screens[0].width, h =  screens[0].height
+                const width = w * scale, height = h * scale;
+                const max_images = 0| 1_000_000 / (width * height);
+                
+                const canvas = Canvas.createCanvas(width, height);
+                const ctx = canvas.getContext("2d", {alpha: false});
+                ctx.fillStyle = "black";
+                if (screens.length > 1){
+                    const encoder = new GivEncoder(width, height);
+                    encoder.setDelay(1/6);
+                    encoder.setRepeat(0);
+                    encoder.start()
+                    const skip = Math.max(0, screens.length - max_images);
+                    if (skip >= 0){
+                        info = `${screens.length} Images are too much for a resolution of ${width}, ${height}\n`
+                            + `only the last ${screens.length - skip} images are drawn\n\n` 
+                            + info;
+                    }
+                    for (const screen of screens.slice(skip)){
+                        ctx.fillRect(0, 0, width, height);
+                        ctx.putImageData(screen, 0, 0);
+                        ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
+                        encoder.addFrame(ctx);
+                    }
+                    encoder.finish();
+                    const buf = encoder.out.getData();
+                    files.push(new MessageAttachment(buf, "screen.gif"));
+                } else {
+                    ctx.fillRect(0,0, width, height);
+                    ctx.putImageData(screens[0], 0, 0, 0, 0, width, height);
+                    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
+                    const buf = canvas.toBuffer();
+                    files.push(new MessageAttachment(buf, "screen.png"));
+                }
+            }
             if (info.length + 7 > max_info){
                 const buf = Buffer.from(info)
                 files.push(new MessageAttachment(buf, "info.txt"));
@@ -78,9 +117,8 @@ client.on("messageCreate", (msg) => {
             } else {
                 content += code_block(out, max_total - content.length);
             }
-            for (const [i, screen] of screens.entries()){
-                files.push(new MessageAttachment(screen, `screen${i}.png`));
-            }
+
+
             msg.reply({content, files});
         });
     }
