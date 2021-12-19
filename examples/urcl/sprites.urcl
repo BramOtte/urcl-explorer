@@ -1,3 +1,5 @@
+BITS == 32
+
 DW 1 2 3 4 5
 .sprite
 DW 0 0 1 1 1 1 0 0
@@ -20,6 +22,7 @@ IN R8 %X // screen width
 
 
 .loop
+    OUT %BUFFER 0
     OUT %BUFFER 1
     BGE .flip R3 R7
     BLE .flip R3 0 
@@ -35,7 +38,7 @@ IN R8 %X // screen width
     POP R6
     POP R5
     POP R4
-    OUT %BUFFER 0
+    OUT %BUFFER 2
     OUT %WAIT 100
     IN R6 %WAIT
     JMP .loop
