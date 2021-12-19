@@ -4,6 +4,7 @@ import ds, { MessageAttachment } from "discord.js";
 import { emu_reply, emu_start } from "./bots/bot-emu.js";
 import GivEncoder from "gifencoder";
 import Canvas from "canvas";
+import { Step_Result } from "../emulator/emulator.js";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -66,30 +67,35 @@ client.on("messageCreate", (msg) => {
         reply(res);
     }
     function reply(res) {
-        then(res, ({ out, info, screens, scale }) => {
+        then(res, ({ out, info, screens, all_screens, scale, state }) => {
             let content = "";
             let files = [];
             let screen_at;
-            if (screens.length > 0) {
-                const w = screens[0].width, h = screens[0].height;
+            const to_draw = state == Step_Result.Halt ? all_screens : screens;
+            if (to_draw.length > 0) {
+                const w = to_draw[0].width, h = to_draw[0].height;
                 const width = w * scale, height = h * scale;
                 const max_images = 0 | 1_000_000 / (width * height);
                 const canvas = Canvas.createCanvas(width, height);
                 const ctx = canvas.getContext("2d", { alpha: false });
+                ctx.imageSmoothingEnabled = false;
                 ctx.fillStyle = "black";
-                if (screens.length > 1) {
+                if (to_draw.length > 1) {
                     const encoder = new GivEncoder(width, height);
                     encoder.setQuality(1);
                     encoder.setDelay(1 / 6);
                     encoder.setRepeat(0);
                     encoder.start();
-                    const skip = Math.max(0, screens.length - max_images);
+                    const skip = Math.max(0, to_draw.length - max_images);
                     if (skip > 0) {
-                        info = `${screens.length} Images are too much for a resolution of ${width}, ${height}\n`
-                            + `only the last ${screens.length - skip} images are drawn\n\n`
+                        info += `${to_draw.length} Images are too much for a resolution of ${width}, ${height}\n`
+                            + `only the last ${to_draw.length - skip} images are drawn\n`
                             + info;
                     }
-                    for (const screen of screens.slice(skip)) {
+                    else {
+                        info = `Drew gif of ${to_draw.length} images \n` + info;
+                    }
+                    for (const screen of to_draw.slice(skip)) {
                         ctx.fillRect(0, 0, width, height);
                         ctx.putImageData(screen, 0, 0);
                         ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
@@ -101,7 +107,7 @@ client.on("messageCreate", (msg) => {
                 }
                 else {
                     ctx.fillRect(0, 0, width, height);
-                    ctx.putImageData(screens[0], 0, 0, 0, 0, width, height);
+                    ctx.putImageData(to_draw[0], 0, 0, 0, 0, width, height);
                     ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
                     const buf = canvas.toBuffer();
                     screen_at = new MessageAttachment(buf, "screen.png");

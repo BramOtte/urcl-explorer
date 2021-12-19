@@ -46,6 +46,7 @@ export class Display {
         this.clear();
         this.ctx.putImageData(this.image, 0, 0);
         this.buffer_enabled = 0;
+        this.buffers.length = 0;
     }
     constructor(ctx, bits, color_mode = Color_Mode.Bin, save_buffers = false) {
         this.bits = bits;
@@ -109,6 +110,9 @@ export class Display {
             case 0:
                 {
                     this.ctx.putImageData(this.image, 0, 0);
+                    if (this.save_buffers) {
+                        this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
+                    }
                     this.clear();
                     this.buffer_enabled = 0;
                 }

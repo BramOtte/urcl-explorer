@@ -39,12 +39,13 @@ export function emu_stop(id: unknown) {
 const max_time = 1000;
 
 function discord_emu(){
-    let running = false;
+    let state = Step_Result.Halt;
     let busy = false;
     let stdout = "";
     let std_info = "";
     let text_cb: undefined | (()=>void);
     let scale = 1;
+    let rendered_count = 0;
     
     const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n"});
     let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d"), 8, Color_Mode.PICO8, true)
@@ -68,6 +69,7 @@ function discord_emu(){
     function on_continue(){
         try {
             const res = emulator.run(max_time);
+            state = res;
             switch (res){
                 case Step_Result.Continue: {
                     std_info += `\nProgram took more than ${max_time}ms and is paused.\n`
@@ -78,26 +80,27 @@ function discord_emu(){
                 } break;
                 case Step_Result.Halt: {
                     std_info += "\nProgram Halted!\n";
-                    running = false;
                 } break;
                 default: {
+                    state = Step_Result.Halt;
                     throw new Error("\nunknown step result");
                 }
             }
         } catch (e) {
             std_info += `[ERROR]: ${e}`
-            running = false;
+            state = Step_Result.Halt;
         }
         std_info += "\nregisters:\n" + registers_to_string(emulator);
     }
     function o(){
         const out = stdout;
         const info = std_info;
-        const screens = display.buffers.slice();
+        const all_screens = display.buffers.slice();
+        const screens = all_screens.slice(rendered_count);
         stdout = "";
         std_info = "";
-        display.buffers.length = 0;
-        return {out, info, screens, scale};
+        rendered_count = all_screens.length;
+        return {out, info, screens, all_screens, scale, state};
     }
     function start(argv: string[], source?: string){
         if (busy){
@@ -153,7 +156,7 @@ function discord_emu(){
         display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
         emulator.add_io_device(display);
 
-        running = true;
+        state = Step_Result.Continue;
         on_continue();
         return o();
     } catch (e){
@@ -163,7 +166,7 @@ function discord_emu(){
     }
     function reply(msg: string) {
     try {
-        if (!running){
+        if (state === Step_Result.Halt){
             std_info += `No Program running`;
             return o();
         }
