@@ -49,22 +49,28 @@ client.on("messageCreate", (msg) => {
         return;
     if (msg.channel.name !== "bots" && msg.channel.name !== "urcl-bot")
         return;
-    const { content } = msg;
-    if (content.startsWith("!urcx-emu")) {
-        const argv = content.split("\n")[0].split(" ");
-        let source = parse_code_block(content);
-        if (!source) {
-            const source_attach = msg.attachments.find(v => !!v.name?.endsWith?.(".urcl"));
-            if (source_attach) {
-                argv.push(source_attach.url);
+    try {
+        const { content } = msg;
+        if (content.startsWith("!urcx-emu")) {
+            const argv = content.split("\n")[0].split(" ");
+            let source = parse_code_block(content);
+            if (!source) {
+                const source_attach = msg.attachments.find(v => !!v.name?.endsWith?.(".urcl"));
+                if (source_attach) {
+                    argv.push(source_attach.url);
+                }
             }
+            const res = emu_start(msg.channelId, argv, source);
+            reply(res);
         }
-        const res = emu_start(msg.channelId, argv, source);
-        reply(res);
+        if (content.startsWith("?")) {
+            const res = emu_reply(msg.channelId, content.substring(1) + "\n");
+            reply(res);
+        }
     }
-    if (content.startsWith("?")) {
-        const res = emu_reply(msg.channelId, content.substring(1) + "\n");
-        reply(res);
+    catch (e) {
+        const buf = Buffer.from("" + e);
+        msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
     function reply(res) {
         then(res, ({ out, info, screens, all_screens, scale, state, quality }) => {

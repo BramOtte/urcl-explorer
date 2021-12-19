@@ -46,6 +46,7 @@ function code_block(str: string, max: number){
 client.on("messageCreate", (msg) => {
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
     if (msg.channel.name !== "bots" && msg.channel.name !== "urcl-bot") return;
+    try {
     const {content} = msg;
     if (content.startsWith("!urcx-emu")){
         const argv = content.split("\n")[0].split(" ");
@@ -64,6 +65,10 @@ client.on("messageCreate", (msg) => {
     if (content.startsWith("?")){
         const res = emu_reply(msg.channelId, content.substring(1)+"\n");
         reply(res);
+    }
+    } catch (e) {
+        const buf = Buffer.from("" + e);
+        msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
 
     function reply(res: ReturnType<typeof emu_start>){
