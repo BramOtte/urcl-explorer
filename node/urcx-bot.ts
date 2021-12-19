@@ -89,7 +89,7 @@ client.on("messageCreate", (msg) => {
                     encoder.start()
                     const skip = Math.max(0, to_draw.length - max_images);
                     if (skip > 0){
-                        info += `${to_draw.length} Images are too much for a resolution of ${width}, ${height}\n`
+                        info = `${to_draw.length} Images are too much for a resolution of ${width}, ${height}\n`
                             + `only the last ${to_draw.length - skip} images are drawn\n` 
                             + info;
                     } else {
