@@ -65,6 +65,8 @@ export class Emulator {
     reset() {
         this.stack_ptr = this.memory.length;
         this.pc = 0;
+        this.ins = [];
+        this.outs = [];
         for (const reset of this.device_resets) {
             reset();
         }
