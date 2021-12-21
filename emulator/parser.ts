@@ -41,7 +41,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
 
     lines                      : string[] = [];
     readonly headers           : Header_Obj = {} as Header_Obj;
-    constants         : Record<string, string> = {};
+    readonly constants         : Record<string, string> = {};
     readonly labels            : Record<string, Label> = {};
     readonly instr_line_nrs    : i53[] = [];
     readonly opcodes           : Opcode[] = [];
@@ -69,7 +69,7 @@ interface Parse_Options {
 export function parse(source: string, options: Parse_Options = {}): Parser_output
 {
     const out = new Parser_output();
-    out.constants = options.constants ?? {};
+    Object.assign(out.constants, options.constants ?? {});
     console.log(out.constants);
 
     out.lines = source.split('\n').map(line => 

@@ -38,7 +38,7 @@ export class Parser_output {
 }
 export function parse(source, options = {}) {
     const out = new Parser_output();
-    out.constants = options.constants ?? {};
+    Object.assign(out.constants, options.constants ?? {});
     console.log(out.constants);
     out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim());
     //TODO: multiline comments
