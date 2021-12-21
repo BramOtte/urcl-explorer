@@ -9,6 +9,7 @@ import Canvas from "canvas"
 import { Color_Mode, Display } from "../../emulator/devices/display.js";
 import { URCL_Header } from "../../emulator/instructions.js";
 import { Storage } from "../../emulator/devices/storage.js";
+import { RNG } from "../../emulator/devices/rng.js";
 
 const emus: Map<any, ReturnType<typeof discord_emu>> = new Map();
 
@@ -56,6 +57,7 @@ function discord_emu(){
     let bytes: Uint8Array | undefined = undefined;
     
     const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n"});
+    emulator.add_io_device(new RNG());
     let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d"), 8, Color_Mode.PICO8, true)
     
     const console_io = new Console_IO({

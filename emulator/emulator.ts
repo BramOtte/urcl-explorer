@@ -138,11 +138,16 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
         return this.memory[this.stack_ptr++];
     }
+    ins: number[] = [];
+    outs: number[] = [];
     in(port: Word): boolean {
     try {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
-            this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
+            if (this.ins[port] === undefined){
+                this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
+            }
+            this.ins[port] = 1;
             return false;
         }
         const res = device(this.finish_step_in.bind(this));
@@ -160,7 +165,10 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     try {
         const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
-            this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
+            if (this.outs[port]){
+                this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=${value}`);
+                this.outs[port] = value
+            }
             return;
         }
         device(value);
