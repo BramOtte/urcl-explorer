@@ -70,8 +70,6 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
 {
     const out = new Parser_output();
     Object.assign(out.constants, options.constants ?? {});
-    console.log(out.constants);
-
     out.lines = source.split('\n').map(line => 
         line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim()
     );

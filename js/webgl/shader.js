@@ -27,7 +27,6 @@ function loadShader(gl, type, source) {
     }
     gl.shaderSource(shader, source);
     gl.compileShader(shader);
-    console.log(gl.getShaderParameter(shader, gl.COMPILE_STATUS));
     if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
         const info = gl.getShaderInfoLog(shader);
         gl.deleteShader(shader);

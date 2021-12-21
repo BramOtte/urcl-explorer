@@ -57,7 +57,6 @@ const color_mode_input = document.getElementById("color-mode");
 color_mode_input.addEventListener("change", change_color_mode);
 function change_color_mode() {
     const color_mode = enum_from_str(Color_Mode, color_mode_input.value);
-    console.log(color_mode_input.value, color_mode);
     display.color_mode = color_mode ?? display.color_mode;
     display.update_display();
 }
