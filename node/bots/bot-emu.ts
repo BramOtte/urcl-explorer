@@ -215,7 +215,8 @@ options:
         if (__storage || __storage_size){
             if (__storage){
                 const buf = await (await fetch(__storage)).arrayBuffer();
-                bytes = new Uint8Array(buf, 0, (__storage_size * 1024) || buf.byteLength);
+                bytes = new Uint8Array((__storage_size * 1024) || buf.byteLength);
+                bytes.set(new Uint8Array(buf, 0, buf.byteLength));
             } else {
                 bytes = new Uint8Array(__storage_size * 1024);
             }
