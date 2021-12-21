@@ -33,12 +33,12 @@ BRZ .right r1
     OUT %TEXT '>'
 .right
 
-AND r1 down @A // J
+AND r1 down @A // K
 BRZ .A r1
     OUT %TEXT 'A'
 .A
 
-AND r1 down @B // K
+AND r1 down @B // J
 BRZ .B r1
     OUT %TEXT 'B'
 .B
