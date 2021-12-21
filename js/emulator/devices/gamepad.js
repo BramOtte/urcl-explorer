@@ -11,18 +11,25 @@ export var Gamepad_Key;
     Gamepad_Key[Gamepad_Key["DOWN"] = 7] = "DOWN";
 })(Gamepad_Key || (Gamepad_Key = {}));
 const { A, B, SELECT, START, LEFT, RIGHT, UP, DOWN } = Gamepad_Key;
+function k(key, pad = 0) {
+    return { key, pad };
+}
 export class Pad {
     keymap;
-    pad1 = 0;
+    pads = [0];
+    selected = 0;
     constructor(options = {}) {
         this.keymap = options.keymap ?? {
-            k: A, j: B, n: START, v: SELECT, a: LEFT, d: RIGHT, w: UP, s: DOWN,
+            k: k(A), j: k(B), n: k(START), v: k(SELECT), a: k(LEFT), d: k(RIGHT), w: k(UP), s: k(DOWN),
         };
         addEventListener("keydown", this.onkeydown.bind(this));
         addEventListener("keyup", this.onkeyup.bind(this));
     }
     inputs = {
-        [IO_Port.GAMEPAD]: () => this.pad1
+        [IO_Port.GAMEPAD]: () => this.pads[this.selected] ?? 0
+    };
+    outputs = {
+        [IO_Port.GAMEPAD]: (i) => this.selected = i
     };
     key(e) {
         return this.keymap[e.key.toLowerCase()];
@@ -30,13 +37,13 @@ export class Pad {
     onkeydown(e) {
         const k = this.key(e);
         if (k !== undefined) {
-            this.pad1 |= 1 << k;
+            this.pads[k.pad] |= 1 << k.key;
         }
     }
     onkeyup(e) {
         const k = this.key(e);
         if (k !== undefined) {
-            this.pad1 &= ~(1 << k);
+            this.pads[k.pad] &= ~(1 << k.key);
         }
     }
 }
