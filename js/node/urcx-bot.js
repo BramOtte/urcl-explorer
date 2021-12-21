@@ -64,7 +64,7 @@ client.on("messageCreate", (msg) => {
             reply(res);
         }
         if (content.startsWith("?")) {
-            const res = emu_reply(msg.channelId, content.substring(1) + "\n");
+            const res = emu_reply(msg.channelId, content.substring(1));
             reply(res);
         }
     }
