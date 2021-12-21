@@ -72,72 +72,71 @@ client.on("messageCreate", (msg) => {
         const buf = Buffer.from("" + e);
         msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
-    function reply(res) {
-        then(res, ({ out, info, screens, all_screens, scale, state, quality }) => {
-            let content = "";
-            let files = [];
-            let screen_at;
-            const to_draw = state == Step_Result.Halt ? all_screens : screens;
-            if (to_draw.length > 0) {
-                const w = to_draw[0].width, h = to_draw[0].height;
-                const width = w * scale, height = h * scale;
-                const max_images = 0 | 1_000_000 / (width * height);
-                const canvas = Canvas.createCanvas(width, height);
-                const ctx = canvas.getContext("2d", { alpha: false });
-                ctx.imageSmoothingEnabled = false;
-                ctx.fillStyle = "black";
-                if (to_draw.length > 1) {
-                    const encoder = new GivEncoder(width, height);
-                    encoder.setQuality(quality);
-                    encoder.setDelay(1 / 6);
-                    encoder.setRepeat(0);
-                    encoder.start();
-                    const skip = Math.max(0, to_draw.length - max_images);
-                    if (skip > 0) {
-                        info = `${to_draw.length} Images are too much for a resolution of ${width}, ${height}\n`
-                            + `only the last ${to_draw.length - skip} images are drawn\n`
-                            + info;
-                    }
-                    else {
-                        info = `Drew gif of ${to_draw.length} images \n` + info;
-                    }
-                    for (const screen of to_draw.slice(skip)) {
-                        ctx.fillRect(0, 0, width, height);
-                        ctx.putImageData(screen, 0, 0);
-                        ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
-                        encoder.addFrame(ctx);
-                    }
-                    encoder.finish();
-                    const buf = encoder.out.getData();
-                    screen_at = new MessageAttachment(buf, "screen.gif");
+    async function reply(res) {
+        let { out, info, screens, all_screens, scale, state, quality } = await res;
+        let content = "";
+        let files = [];
+        let screen_at;
+        const to_draw = state == Step_Result.Halt ? all_screens : screens;
+        if (to_draw.length > 0) {
+            const w = to_draw[0].width, h = to_draw[0].height;
+            const width = w * scale, height = h * scale;
+            const max_images = 0 | 1_000_000 / (width * height);
+            const canvas = Canvas.createCanvas(width, height);
+            const ctx = canvas.getContext("2d", { alpha: false });
+            ctx.imageSmoothingEnabled = false;
+            ctx.fillStyle = "black";
+            if (to_draw.length > 1) {
+                const encoder = new GivEncoder(width, height);
+                encoder.setQuality(quality);
+                encoder.setDelay(1 / 6);
+                encoder.setRepeat(0);
+                encoder.start();
+                const skip = Math.max(0, to_draw.length - max_images);
+                if (skip > 0) {
+                    info = `${to_draw.length} Images are too much for a resolution of ${width}, ${height}\n`
+                        + `only the last ${to_draw.length - skip} images are drawn\n`
+                        + info;
                 }
                 else {
-                    ctx.fillRect(0, 0, width, height);
-                    ctx.putImageData(to_draw[0], 0, 0, 0, 0, width, height);
-                    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
-                    const buf = canvas.toBuffer();
-                    screen_at = new MessageAttachment(buf, "screen.png");
+                    info = `Drew gif of ${to_draw.length} images \n` + info;
                 }
-            }
-            if (info.length + 7 > max_info) {
-                const buf = Buffer.from(info);
-                files.push(new MessageAttachment(buf, "info.txt"));
-            }
-            else {
-                content += code_block(info, max_info);
-            }
-            if (out.length + 7 > max_total - content.length) {
-                const buf = Buffer.from(out);
-                files.push(new MessageAttachment(buf, "out.txt"));
+                for (const screen of to_draw.slice(skip)) {
+                    ctx.fillRect(0, 0, width, height);
+                    ctx.putImageData(screen, 0, 0);
+                    ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
+                    encoder.addFrame(ctx);
+                }
+                encoder.finish();
+                const buf = encoder.out.getData();
+                screen_at = new MessageAttachment(buf, "screen.gif");
             }
             else {
-                content += code_block(out, max_total - content.length);
+                ctx.fillRect(0, 0, width, height);
+                ctx.putImageData(to_draw[0], 0, 0, 0, 0, width, height);
+                ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
+                const buf = canvas.toBuffer();
+                screen_at = new MessageAttachment(buf, "screen.png");
             }
-            if (screen_at) {
-                files.push(screen_at);
-            }
-            msg.reply({ content, files });
-        });
+        }
+        if (info.length + 7 > max_info) {
+            const buf = Buffer.from(info);
+            files.push(new MessageAttachment(buf, "info.txt"));
+        }
+        else {
+            content += code_block(info, max_info);
+        }
+        if (out.length + 7 > max_total - content.length) {
+            const buf = Buffer.from(out);
+            files.push(new MessageAttachment(buf, "out.txt"));
+        }
+        else {
+            content += code_block(out, max_total - content.length);
+        }
+        if (screen_at) {
+            files.push(screen_at);
+        }
+        await msg.reply({ content, files });
     }
 });
 console.log("started");
