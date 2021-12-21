@@ -127,7 +127,11 @@ function discord_emu() {
             });
             const usage = `Usage:
 start emulator: 
-    !urcx-emu [<...options>] <filename>
+    !urcx-emu [<...options>] [<source url>]
+    [\`\`\`
+    <source code>
+    \`\`\`]
+    [<attachment of .urcl file>]
 
 continue program:
     ?
