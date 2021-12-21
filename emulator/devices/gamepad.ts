@@ -26,7 +26,7 @@ export class Pad implements Device {
     selected = 0
     constructor (options: Gamepad_Options = {}){
         this.keymap = options.keymap ?? {
-            k: k(A), j: k(B), n: k(START), v: k(SELECT), a: k(LEFT), d: k(RIGHT), w: k(UP), s: k(DOWN),
+            keyk: k(A), keyj: k(B), keyn: k(START), keyv: k(SELECT), keya: k(LEFT), keyd: k(RIGHT), keyw: k(UP), keys: k(DOWN),
         };
         addEventListener("keydown", this.onkeydown.bind(this));
         addEventListener("keyup", this.onkeyup.bind(this));
@@ -39,7 +39,7 @@ export class Pad implements Device {
     }
 
     private key(e: KeyboardEvent): Game_Key | undefined {
-        return this.keymap[e.key.toLowerCase()]
+        return this.keymap[e.code.toLowerCase()]
     }
     private onkeydown(e: KeyboardEvent){
         const k = this.key(e);

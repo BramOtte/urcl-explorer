@@ -2,7 +2,7 @@ import { IO_Port } from "../instructions.js";
 import { Device, Device_Reset } from "./device.js";
 
 export class Storage implements Device {
-    constructor(private bits: number, data: ArrayBufferView){
+    constructor(public bits: number, data: ArrayBufferView){
         switch (bits){
             case 8: {
                 this.address_mask = 0xff;

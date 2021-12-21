@@ -5,6 +5,7 @@ import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
+import { RNG } from "./emulator/devices/rng.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
@@ -87,6 +88,7 @@ emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
+emulator.add_io_device(new RNG);
 
 source_input.oninput = compile_and_run;
 fetch("examples/urcl/game.urcl").then(res => res.text()).then((text) => {

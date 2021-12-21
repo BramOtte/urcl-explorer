@@ -7,6 +7,7 @@ import { parse } from "../emulator/parser.js";
 import { parse_argv } from "./args.js";
 import { Storage } from "../emulator/devices/storage.js";
 import { URCL_Header } from "../emulator/instructions.js";
+import { RNG } from "../emulator/devices/rng.js";
 
 function error(msg: string){
     console.error(`ERROR: ${msg}\n${usage}\n`);
@@ -52,6 +53,7 @@ const console_io = new Console_IO({
     () => {/*nothing todo here program is only executed ones*/}
 );
 emulator.add_io_device(console_io)
+emulator.add_io_device(new RNG())
 
 const code = parse(urcl);
 if (code.errors.length > 0){

@@ -58,6 +58,9 @@ export class Emulator {
             this.memory[i] = static_data[i];
         }
         this.reset();
+        for (const device of this.devices) {
+            device.bits = bits;
+        }
     }
     reset() {
         this.stack_ptr = this.memory.length;
@@ -85,7 +88,9 @@ export class Emulator {
     device_inputs = {};
     device_outputs = {};
     device_resets = [];
+    devices = [];
     add_io_device(device) {
+        this.devices.push(device);
         if (device.inputs) {
             for (const port in device.inputs) {
                 const input = device.inputs[port];

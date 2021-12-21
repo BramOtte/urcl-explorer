@@ -63,6 +63,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
 
         this.reset();
+        for (const device of this.devices){
+            device.bits = bits;
+        }
     }
     reset(){
         this.stack_ptr = this.memory.length;
@@ -90,7 +93,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     private device_inputs: {[K in IO_Port]?: Device_Input} = {};
     private device_outputs: {[K in IO_Port]?: Device_Output} = {};
     private device_resets: Device_Reset[] = [];
+    private devices: Device[] = []
     public add_io_device(device: Device){
+        this.devices.push(device);
         if (device.inputs){
             for (const port in device.inputs){
                 const input = device.inputs[port as any as IO_Port] as Device_Input;
