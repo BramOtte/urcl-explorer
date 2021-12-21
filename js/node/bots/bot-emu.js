@@ -205,10 +205,10 @@ options:
             if (__storage || __storage_size) {
                 if (__storage) {
                     const buf = await (await fetch(__storage)).arrayBuffer();
-                    bytes = new Uint8Array(buf, 0, (__storage_size * 1000) || buf.byteLength);
+                    bytes = new Uint8Array(buf, 0, (__storage_size * 1024) || buf.byteLength);
                 }
                 else {
-                    bytes = new Uint8Array(__storage_size);
+                    bytes = new Uint8Array(__storage_size * 1024);
                 }
                 const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes);
                 emulator.add_io_device(storage);
