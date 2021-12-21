@@ -139,6 +139,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         return this.memory[this.stack_ptr++];
     }
     in(port: Word): boolean {
+    try {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
             this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
@@ -151,14 +152,21 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             this.a = res as number;
             return false;
         }
+    } catch (e){
+        this.error(""+e);
+    }
     }
     out(port: Word, value: Word): void{
+    try {
         const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
             this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
             return;
         }
         device(value);
+    } catch (e){
+        this.error(""+e);
+    }
     }
     run(max_duration: number): Step_Result {
         const burst_length = 128;

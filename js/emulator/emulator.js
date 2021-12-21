@@ -132,27 +132,37 @@ export class Emulator {
         return this.memory[this.stack_ptr++];
     }
     in(port) {
-        const device = this.device_inputs[port];
-        if (device === undefined) {
-            this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
-            return false;
+        try {
+            const device = this.device_inputs[port];
+            if (device === undefined) {
+                this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
+                return false;
+            }
+            const res = device(this.finish_step_in.bind(this));
+            if (res === undefined) {
+                return true;
+            }
+            else {
+                this.a = res;
+                return false;
+            }
         }
-        const res = device(this.finish_step_in.bind(this));
-        if (res === undefined) {
-            return true;
-        }
-        else {
-            this.a = res;
-            return false;
+        catch (e) {
+            this.error("" + e);
         }
     }
     out(port, value) {
-        const device = this.device_outputs[port];
-        if (device === undefined) {
-            this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
-            return;
+        try {
+            const device = this.device_outputs[port];
+            if (device === undefined) {
+                this.warn(`unsupported output device port ${port} (${IO_Port[port]})`);
+                return;
+            }
+            device(value);
         }
-        device(value);
+        catch (e) {
+            this.error("" + e);
+        }
     }
     run(max_duration) {
         const burst_length = 128;
