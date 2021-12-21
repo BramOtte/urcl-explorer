@@ -73,7 +73,7 @@ client.on("messageCreate", (msg) => {
         msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
     async function reply(res) {
-        let { out, info, screens, all_screens, scale, state, quality } = await res;
+        let { out, info, screens, all_screens, scale, state, quality, storage } = await res;
         let content = "";
         let files = [];
         let screen_at;
@@ -135,6 +135,9 @@ client.on("messageCreate", (msg) => {
         }
         if (screen_at) {
             files.push(screen_at);
+        }
+        if (storage) {
+            files.push(new MessageAttachment(Buffer.from(storage), "storage.bin"));
         }
         await msg.reply({ content, files });
     }

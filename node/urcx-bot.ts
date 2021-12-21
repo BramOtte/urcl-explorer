@@ -72,7 +72,7 @@ client.on("messageCreate", (msg) => {
     }
 
     async function reply(res: ReturnType<typeof emu_start>){
-        let {out, info, screens, all_screens, scale, state, quality} = await res;
+        let {out, info, screens, all_screens, scale, state, quality, storage} = await res;
         let content = "";
         let files: MessageAttachment[] = [];
         let screen_at: undefined | MessageAttachment;
@@ -131,6 +131,9 @@ client.on("messageCreate", (msg) => {
         }
         if (screen_at){
             files.push(screen_at);
+        }
+        if (storage){
+            files.push(new MessageAttachment(Buffer.from(storage), "storage.bin"));
         }
 
         await msg.reply({content, files});

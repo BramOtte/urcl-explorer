@@ -8,6 +8,7 @@ import { parse_argv } from "../args.js";
 import Canvas from "canvas"
 import { Color_Mode, Display } from "../../emulator/devices/display.js";
 import { URCL_Header } from "../../emulator/instructions.js";
+import { Storage } from "../../emulator/devices/storage.js";
 
 const emus: Map<any, ReturnType<typeof discord_emu>> = new Map();
 
@@ -52,6 +53,7 @@ function discord_emu(){
     let rendered_count = 0;
     let quality = 10;
     let text_end = "\n";
+    let bytes: Uint8Array | undefined = undefined;
     
     const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n"});
     let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d"), 8, Color_Mode.PICO8, true)
@@ -106,7 +108,7 @@ function discord_emu(){
         stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
-        return {out, info, screens, all_screens, scale, state, quality};
+        return {out, info, screens, all_screens, scale, state, quality, storage: bytes};
     }
     function start(argv: string[], source?: string){
         if (busy){
@@ -120,15 +122,18 @@ function discord_emu(){
     }
     async function _start(argv: string[], source?: string) {
     try {
+        bytes = undefined;
         stdout = "";
-        const {args, flags: {__width, __height, __color, __scale, __quality, __text_end, __help}} = parse_argv(["",...argv], {
+        const {args, flags: {__width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size}} = parse_argv(["",...argv], {
             __width: 32,
             __height: 32,
             __color: {val: Color_Mode.PICO8, in: Color_Mode},
             __scale: 1,
             __quality: 10,
             __help: false,
-            __text_end: {val: TextEnd.LF, in: TextEnd}
+            __text_end: {val: TextEnd.LF, in: TextEnd},
+            __storage: "",
+            __storage_size: 0
         });
         const usage = `Usage:
 start emulator: 
@@ -162,6 +167,12 @@ options:
 
     --scale <number>
         sets the scale of the display output; defaults to 1, meaning the output is the same size as the buffer
+
+    --storage <file>
+        the file the storage device should open
+    
+    --storage-size <kibibytes>
+        how big the storage file will be
 `
         if (__help){
             std_info = usage;
@@ -181,6 +192,7 @@ options:
             source = await (await fetch(file_name)).text();
             s_name = file_name.split("/").at(-1);
         }
+
         const code = parse(source);
         if (code.errors.length > 0){
             std_info += "ERRORS:\n"
@@ -197,6 +209,17 @@ options:
         }
         const [program, debug_info] = compile(code);
         emulator.load_program(program, debug_info);
+
+        if (__storage || __storage_size){
+            if (__storage){
+                const buf = await (await fetch(__storage)).arrayBuffer();
+                bytes = new Uint8Array(buf, 0, (__storage_size * 1000) || buf.byteLength);
+            } else {
+                bytes = new Uint8Array(__storage_size);
+            }
+            const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes);
+            emulator.add_io_device(storage);
+        }
         
         const canvas = Canvas.createCanvas(__width, __height);
         const ctx = canvas.getContext("2d", {alpha: false});
