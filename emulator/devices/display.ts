@@ -18,6 +18,7 @@ export class Display implements Device {
     private ctx: CanvasRenderingContext2D
     public buffers: ImageData[] = [];
     private image: ImageData;
+    private read_buffer: Uint32Array;
     private get data(){
         return this.image.data;
     }
@@ -55,11 +56,17 @@ export class Display implements Device {
         const {width, height} = ctx.canvas;
         this.ctx = ctx;
         this.image = ctx.createImageData(width, height);
+        this.read_buffer = new Uint32Array(width * height);
     }
     resize(width: number, height: number){
+        const ow = this.width, oh = this.height;
         this.image = this.ctx.getImageData(0, 0, width, height);
         this.width = width; this.height = height;
         this.ctx.putImageData(this.image, 0, 0);
+        const read_buf = new Uint32Array(width * height);
+        for (let y = 0; y < height; y++){
+            read_buf.set(this.read_buffer.subarray(y*oh, y*oh + Math.min(width, ow)), y*height);
+        }
     }
     clear() {
         for (let i = 0; i < this.data.length; i+=4){
@@ -86,8 +93,8 @@ export class Display implements Device {
         if (!this.in_bounds(this.x, this.y)){
             return 0;
         }
-        const i = (this.x + this.y * this.width) * 4;
-        return this.full_to_short(this.data[i], this.data[i+1], this.data[i+2]);
+        const i = this.x + this.y * this.width;
+        return this.read_buffer[i];
     }
     // rrrgggbb
     // rrrrrggggggbbbbb
@@ -96,8 +103,9 @@ export class Display implements Device {
         if (!this.in_bounds(this.x, this.y)){
             return;
         }
-        const i = (this.x + this.y * this.width) * 4;
-        this.data.set(this.short_to_full(color), i);
+        const i = this.x + this.y * this.width
+        this.data.set(this.short_to_full(color), i * 4);
+        this.read_buffer[i] = color;
         if (!this.buffer_enabled){
             this.ctx.putImageData(this.image, 0, 0);
         }
