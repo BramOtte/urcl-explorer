@@ -282,7 +282,7 @@ export class Emulator {
             view = view.reverse();
         }
         for (const [i, v] of view.entries()) {
-            const j = reverse ? start + i : end - i;
+            const j = reverse ? end - i : start + i;
             const index = hex(j, w, " ");
             const h = hex(v, w, " ");
             const value = pad_left("" + v, w);
