@@ -41,7 +41,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
 
     lines                      : string[] = [];
     readonly headers           : Header_Obj = {} as Header_Obj;
-    readonly constants         : Record<string, string> = {};
+    constants         : Record<string, string> = {};
     readonly labels            : Record<string, Label> = {};
     readonly instr_line_nrs    : i53[] = [];
     readonly opcodes           : Opcode[] = [];
@@ -62,9 +62,16 @@ interface Instruction_Out {
     readonly labels            : Record<string, Label>;
 }
 
-export function parse(source: string): Parser_output
+interface Parse_Options {
+    constants?: Record<string, string>
+}
+
+export function parse(source: string, options: Parse_Options = {}): Parser_output
 {
     const out = new Parser_output();
+    out.constants = options.constants ?? {};
+    console.log(out.constants);
+
     out.lines = source.split('\n').map(line => 
         line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim()
     );
@@ -92,7 +99,7 @@ export function parse(source: string): Parser_output
                     continue;
                 }
                 const [name, value] = parts;
-                out.constants[name] = value;
+                out.constants[name.toUpperCase()] = value;
                 continue
             }
             out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
@@ -245,7 +252,7 @@ function parse_operant(
     undefined | [type: Operant_Type, value: Word]
 {
     for (let i = 0; i < 10; i++){
-        const macro = macro_constants[operant];
+        const macro = macro_constants[operant.toUpperCase()];
         if (macro !== undefined){
             operant = macro;
         } else {

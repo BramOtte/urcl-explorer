@@ -199,6 +199,7 @@ export var IO_Port;
     IO_Port[IO_Port["UD14"] = 61] = "UD14";
     IO_Port[IO_Port["UD15"] = 62] = "UD15";
     IO_Port[IO_Port["UD16"] = 63] = "UD16";
+    IO_Port[IO_Port["GAMEPAD"] = 48] = "GAMEPAD";
 })(IO_Port || (IO_Port = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {

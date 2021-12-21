@@ -2,10 +2,11 @@ import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode } from "./emulator/devices/display.js";
+import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
-import { enum_from_str, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
+import { enum_from_str, enum_strings, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
 let animation_frame;
 let running = false;
 const source_input = document.getElementById("urcl-source");
@@ -74,8 +75,9 @@ const emulator = new Emulator({ on_continue: frame });
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
+emulator.add_io_device(new Pad());
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/text-io.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/game.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
@@ -124,7 +126,9 @@ function compile_and_reset() {
     output_element.innerText = "";
     try {
         const source = source_input.value;
-        const parsed = parse(source);
+        const parsed = parse(source, {
+            constants: Object.fromEntries(enum_strings(Gamepad_Key).map(key => ["@" + key, "" + (1 << Gamepad_Key[key])])),
+        });
         if (parsed.errors.length > 0) {
             output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines) + "\n").join("");
             output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");

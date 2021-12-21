@@ -1,0 +1,57 @@
+@DEFINE key r8
+@DEFINE last r7
+@DEFINE down r6
+@DEFINE up r5
+
+.loop
+MOV last key
+IN key %GAMEPAD
+XOR down key last
+AND down down key
+
+XOR up key last
+AND up up last
+
+AND r2 down @UP // W
+BRZ .up r2
+    OUT %TEXT '^'
+.up
+
+AND r2 down @DOWN // S
+BRZ .down r2
+    OUT %TEXT 'v'
+.down
+
+AND r2 down @LEFT // A
+BRZ .left r2
+    OUT %TEXT '<'
+.left
+
+AND r2 down @RIGHT // D
+BRZ .right r2
+    OUT %TEXT '>'
+.right
+
+AND r2 down @A // J
+BRZ .A r2
+    OUT %TEXT 'A'
+.A
+
+AND r2 down @B // K
+BRZ .B r2
+    OUT %TEXT 'B'
+.B
+
+AND r2 down @START // N
+BRZ .start r2
+    OUT %TEXT '!'
+.start
+
+AND r2 down @SELECT // V
+BRZ .select r2
+    OUT %TEXT '?'
+.select
+
+OUT %WAIT 100
+IN down %WAIT
+JMP .loop

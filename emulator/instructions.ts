@@ -90,6 +90,8 @@ export enum IO_Port {
     RNG, NOTE, INSTR, NLEG, WAIT, NADDR, DATA, M_SPECIAL,
     // User defined
     UD1, UD2, UD3, UD4, UD5, UD6, UD7, UD8, UD9, UD10, UD11, UD12, UD13, UD14, UD15, UD16,
+
+    GAMEPAD = IO_Port.UD1
 }
 
 export interface Instruction_Ctx {

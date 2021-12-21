@@ -36,8 +36,10 @@ export class Parser_output {
     operant_types = [];
     operant_values = [];
 }
-export function parse(source) {
+export function parse(source, options = {}) {
     const out = new Parser_output();
+    out.constants = options.constants ?? {};
+    console.log(out.constants);
     out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim());
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++) {
@@ -71,7 +73,7 @@ export function parse(source) {
                     continue;
                 }
                 const [name, value] = parts;
-                out.constants[name] = value;
+                out.constants[name.toUpperCase()] = value;
                 continue;
             }
             out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
@@ -201,7 +203,7 @@ function parse_instructions(line_nr, inst_i, out, errors, warnings) {
 }
 function parse_operant(operant, line_nr, inst_i, labels, macro_constants, errors, warnings) {
     for (let i = 0; i < 10; i++) {
-        const macro = macro_constants[operant];
+        const macro = macro_constants[operant.toUpperCase()];
         if (macro !== undefined) {
             operant = macro;
         }
