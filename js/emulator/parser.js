@@ -85,18 +85,25 @@ export function parse(source, options = {}) {
                 last_label.index = out.data.length;
             }
             for (const str of value_strs) {
-                const value = my_parse_int(str);
-                if (!Number.isInteger(value)) {
-                    out.warnings.push(warn(line_nr, `Value ${str} for DW is not an integer.`));
-                }
-                out.data.push(value);
+                out.data.push(0);
             }
             continue;
         }
         out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
     }
+    out.data.length = 0;
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++) {
         parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
+    }
+    for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++) {
+        const line = out.lines[line_nr];
+        if (line.startsWith("DW")) {
+            const [_, ...value_strs] = line.split(" ");
+            for (const str of value_strs) {
+                const res = parse_operant(str, line_nr, -1, out.labels, out.constants, out.errors, out.warnings);
+                out.data.push(res ? res[1] : -1);
+            }
+        }
     }
     return out;
 }
