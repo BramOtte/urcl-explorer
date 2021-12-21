@@ -1,4 +1,4 @@
-import { registers_to_string, indent } from "./util.js";
+import { registers_to_string, indent, hex, pad_center, pad_left } from "./util.js";
 import { Opcode, Operant_Prim, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns } from "./instructions.js";
 export var Step_Result;
 (function (Step_Result) {
@@ -255,7 +255,8 @@ export class Emulator {
     error(msg) {
         const { pc_line_nrs, lines, file_name } = this.debug_info;
         const line_nr = pc_line_nrs[this.pc - 1];
-        const content = `${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`;
+        const trace = this.decode_memory(this.stack_ptr, this.memory.length, false);
+        const content = `${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}\n\nstack trace:\n${trace}`;
         if (this.options.error) {
             this.options.error(content);
         }
@@ -271,6 +272,26 @@ export class Emulator {
         else {
             console.warn(content);
         }
+    }
+    decode_memory(start, end, reverse) {
+        const w = 8;
+        const headers = ["hexaddr", "hexval", "value", "*value", "linenr", "*opcode"];
+        let str = headers.map(v => pad_center(v, w)).join("|");
+        let view = this.memory.slice(start, end);
+        if (reverse) {
+            view = view.reverse();
+        }
+        for (const [i, v] of view.entries()) {
+            const j = reverse ? start + i : end - i;
+            const index = hex(j, w, " ");
+            const h = hex(v, w, " ");
+            const value = pad_left("" + v, w);
+            const opcode = pad_left(Opcode[this.program.opcodes[v]] ?? ".", w);
+            const linenr = pad_left("" + (this.debug_info.pc_line_nrs[v] ?? "."), w);
+            const mem = pad_left("" + (this.memory[v] ?? "."), w);
+            str += `\n${index}|${h}|${value}|${mem}|${linenr}|${opcode}`;
+        }
+        return str;
     }
 }
 //# sourceMappingURL=emulator.js.map

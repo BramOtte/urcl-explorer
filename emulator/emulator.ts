@@ -1,4 +1,4 @@
-import { Word, Arr, registers_to_string, indent } from "./util.js";
+import { Word, registers_to_string, indent, hex, pad_center, pad_left } from "./util.js";
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns, Opcodes_operant_lengths} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
@@ -6,6 +6,7 @@ import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "
 export enum Step_Result {
     Continue, Halt, Input
 }
+type WordArray = Uint8Array | Uint16Array | Uint32Array;
 
 interface Emu_Options {
     error?: (a: string) => never;
@@ -76,8 +77,8 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
     }
     buffer = new ArrayBuffer(1024*1024*512);
-    registers: Arr & {byteLength: number, byteOffset: number, [Symbol.iterator](): IterableIterator<number> } = new Uint8Array(32);
-    memory: Arr & {byteLength: number, byteOffset: number} = new Uint8Array(256);
+    registers: WordArray = new Uint8Array(32);
+    memory: WordArray = new Uint8Array(256);
     get pc(){
         return this.registers[Register.PC];
     }
@@ -250,7 +251,8 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     error(msg: string): never {
         const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        const content = `${file_name??"eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}`;
+        const trace = this.decode_memory(this.stack_ptr, this.memory.length, false);
+        const content = `${file_name??"eval"}:${line_nr + 1} - ERROR - ${msg}\n    ${lines[line_nr]}\n\n${indent(registers_to_string(this), 1)}\n\nstack trace:\n${trace}`;
         if (this.options.error){
             this.options.error(content)
         }
@@ -265,5 +267,26 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         } else {
             console.warn(content);
         }
+    }
+
+    decode_memory(start: number, end: number, reverse: boolean): string {
+        const w = 8;
+        const headers = ["hexaddr", "hexval", "value", "*value", "linenr", "*opcode"]
+        let str = headers.map(v => pad_center(v, w)).join("|");
+        let view = this.memory.slice(start, end);
+        if (reverse){
+            view = view.reverse();
+        }
+        for (const [i, v] of view.entries()){
+            const j = reverse ? start+i : end - i;
+            const index = hex(j, w, " ");
+            const h = hex(v, w, " ");
+            const value = pad_left(""+v, w);
+            const opcode = pad_left(Opcode[this.program.opcodes[v]] ?? ".", w);
+            const linenr = pad_left(""+(this.debug_info.pc_line_nrs[v] ?? "."), w)
+            const mem = pad_left(""+(this.memory[v] ?? "."), w);
+            str += `\n${index}|${h}|${value}|${mem}|${linenr}|${opcode}`
+        }
+        return str
     }
 }
