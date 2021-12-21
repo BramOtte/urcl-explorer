@@ -78,7 +78,7 @@ emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG);
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/game.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/snake.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }

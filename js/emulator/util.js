@@ -23,7 +23,7 @@ export function pad_center(str, size, left_char = " ", right_char = left_char) {
     const right = pad - left;
     return left_char.repeat(left) + str + right_char.repeat(right);
 }
-export function hex(num, size, pad = "_") {
+export function hex(num, size, pad = " ") {
     return pad_left(num.toString(16), size, pad).toUpperCase();
 }
 export function hex_size(bits) {

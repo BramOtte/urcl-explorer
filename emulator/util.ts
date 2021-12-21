@@ -35,7 +35,7 @@ export function pad_center(str: string, size: number, left_char = " ", right_cha
     const right = pad - left;
     return left_char.repeat(left) + str + right_char.repeat(right);
 }
-export function hex(num: number, size: number, pad="_"){
+export function hex(num: number, size: number, pad=" "){
     return pad_left(num.toString(16), size, pad).toUpperCase();
 }
 export function hex_size(bits: number){

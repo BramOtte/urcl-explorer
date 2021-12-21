@@ -7,7 +7,6 @@ import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { RNG } from "./emulator/devices/rng.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
-import { Register, register_count } from "./emulator/instructions.js";
 import { parse } from "./emulator/parser.js";
 import { Arr, enum_from_str, enum_strings, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
 
@@ -91,7 +90,7 @@ emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG);
 
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/game.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/snake.urcl").then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
     }
