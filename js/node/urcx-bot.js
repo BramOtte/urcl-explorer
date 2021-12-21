@@ -69,7 +69,7 @@ client.on("messageCreate", (msg) => {
         }
     }
     catch (e) {
-        const buf = Buffer.from("" + e);
+        const buf = Buffer.from(("" + e).substring(0, 1_000_000));
         msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
     async function reply(res) {
