@@ -55,25 +55,27 @@ export enum Constants {
 
 
 export enum Header_Operant {
-    "==", "<=", ">="
+    EQ, LE, GE
 }
 export enum Header_Run {
     ROM, RAM
 }
 
 interface URCL_Header_Def {
-    def: number,
-    def_operant?: Header_Operant,
+    val: number,
+    op?: Header_Operant,
     in?: Record<string, unknown>
 }
-
-export const urcl_headers: Record<URCL_Header, URCL_Header_Def> = {
-    [URCL_Header.BITS]: {def: 8, def_operant: Header_Operant["=="]},
-    [URCL_Header.MINREG]: {def: 8},
-    [URCL_Header.MINHEAP]: {def: 16},
-    [URCL_Header.RUN]: {def: Header_Run.ROM, in: Header_Run},
-    [URCL_Header.MINSTACK]: {def: 8},
+function headers<T>(obj: {[K in keyof T]: T[K] & URCL_Header_Def}){
+    return obj;
 }
+export const urcl_headers = headers({
+    bits: {val: 8, op: Header_Operant.EQ},
+    minreg: {val: 8},
+    minheap: {val: 16},
+    minrun: {val: Header_Run.ROM, in: Header_Run},
+    minstack: {val: 8},
+});
 
 export enum IO_Port {
     // General
@@ -109,6 +111,7 @@ export interface Instruction_Ctx {
     pop(): number;
     in(port: number): boolean;
     out(port: number, value: number): void;
+    warn(msg: string): void;
 }
 
 type Instruction_Callback = (ctx: Instruction_Ctx) => void | boolean;
@@ -262,9 +265,7 @@ export const Opcodes_operant_lengths: Record<Opcode, number>
     }, []);
 
 
-function fail_assert(ctx: {out(port: number, value: number):void, pc: number}){
+function fail_assert(ctx: Instruction_Ctx, pc: number}){
     const message = `Assertion failed at pc=${ctx.pc}\n`;
-    for (let i = 0; i < message.length; i++){
-        ctx.out(IO_Port.TEXT, message.charCodeAt(i));
-    }
+    ctx.warn(message);
 }

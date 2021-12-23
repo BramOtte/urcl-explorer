@@ -30,6 +30,8 @@ IMM i 0
 IMM j 0
 IMM down 0
 
+OUT %BUFFER 1
+
 OUT %COLOR 1
 
 CAL .apple
@@ -38,6 +40,7 @@ MOV r1 x
 MOV r2 y
 CAL .push
 
+OUT %BUFFER 2
 .loop
     MOV last key
     IN key %GAMEPAD
@@ -46,13 +49,14 @@ CAL .push
     OR down down r1
 
     INC wait wait
-    BRL .skip_step wait 9
+    BRL .skip_step wait 4
         CAL .step
+        OUT %BUFFER 2
         IMM wait 0
         IMM down 0
     .skip_step
 
-    OUT %WAIT 5
+    OUT %WAIT 15
     IN r1 %WAIT
     JMP .loop
 
@@ -60,8 +64,9 @@ CAL .push
     AND r1 down @UP // W
     BRZ .up r1
     BGE .up dy @SMAX
-    IMM dy -1
-    IMM dx 0 
+        IMM dy -1
+        IMM dx 0 
+        JMP .input_end
     .up
 
     AND r1 down @DOWN // S
