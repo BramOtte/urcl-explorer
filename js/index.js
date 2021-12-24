@@ -18,6 +18,12 @@ const register_view = document.getElementById("register-view");
 const console_input = document.getElementById("stdin");
 const console_output = document.getElementById("stdout");
 const null_terminate_input = document.getElementById("null-terminate");
+const share_button = document.getElementById("share-button");
+share_button.onclick = e => {
+    const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
+    const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
+    console.log(share);
+};
 let input_callback;
 console_input.addEventListener("keydown", e => {
     if (!e.shiftKey && e.key === "Enter" && input_callback) {
@@ -79,8 +85,10 @@ emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG);
+const def_url = "examples/urcl/snake.urcl";
+const url = new URL(location.href, location.origin).searchParams.get("srcurl") ?? def_url;
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/audio.urcl").then(res => res.text()).then((text) => {
+fetch(url).then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
