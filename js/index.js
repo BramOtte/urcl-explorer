@@ -5,6 +5,7 @@ import { Color_Mode } from "./emulator/devices/display.js";
 import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { RNG } from "./emulator/devices/rng.js";
+import { Sound } from "./emulator/devices/sound.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
 import { enum_from_str, enum_strings, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
@@ -72,13 +73,14 @@ function resize_display() {
     display.resize(width, height);
 }
 const emulator = new Emulator({ on_continue: frame });
+emulator.add_io_device(new Sound());
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG);
 source_input.oninput = compile_and_run;
-fetch("examples/urcl/snake.urcl").then(res => res.text()).then((text) => {
+fetch("examples/urcl/audio.urcl").then(res => res.text()).then((text) => {
     if (source_input.value) {
         return;
     }
