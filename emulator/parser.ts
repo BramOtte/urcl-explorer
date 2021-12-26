@@ -104,7 +104,16 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             continue
         }
         if (line.startsWith("DW")){
-            const [_, ...value_strs] = line.split(" ");
+            let [_, ...value_strs] = line.split(" ");
+            if (value_strs.length > 1){
+                if (value_strs[0][0] !== "[" || value_strs.at(-1)?.at(-1) !== "]"){
+                    out.warnings.push(warn(line_nr, `Omitting square brackets around a value list is not standard`));
+                }
+                value_strs[0] = value_strs[0].replace("[", "").trim();
+                if (value_strs[0].length === 0){value_strs.shift();}
+                value_strs[value_strs.length-1] = value_strs.at(-1)?.replaceAll("]", "").trim() ?? "";
+                if (value_strs.at(-1)?.length === 0){value_strs.pop();}
+            }
             if (last_label){
                 last_label.type = Label_Type.DW;
                 last_label.index = out.data.length;
@@ -123,7 +132,13 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
         if (line.startsWith("DW")){
-            const [_, ...value_strs] = line.split(" ");
+            let [_, ...value_strs] = line.split(" ");
+            if (value_strs.length > 1){
+                value_strs[0] = value_strs[0].replace("[", "").trim();
+                if (value_strs[0].length === 0){value_strs.shift();}
+                value_strs[value_strs.length-1] = value_strs.at(-1)?.replaceAll("]", "").trim() ?? "";
+                if (value_strs.at(-1)?.length === 0){value_strs.pop();}
+            }
             for (const str of value_strs){
                 const res = parse_operant(str, line_nr, -1, out.labels, out.constants, out.errors, out.warnings);
                 out.data.push(res ? res[1] : -1);
