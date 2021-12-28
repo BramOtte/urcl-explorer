@@ -51,7 +51,6 @@ export class Console_IO implements Device {
             const num = parseInt(this.input.text);
             if (Number.isInteger(num)){
                 this.input.text = this.input.text.trimStart().slice(num.toString().length);
-                console.log(num)
                 return num;
             }
         }
