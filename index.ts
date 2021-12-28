@@ -23,6 +23,8 @@ const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
 const console_output = document.getElementById("stdout") as HTMLElement;
 const null_terminate_input = document.getElementById("null-terminate") as HTMLInputElement;
 const share_button = document.getElementById("share-button") as HTMLButtonElement;
+const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
+
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
@@ -102,7 +104,14 @@ emulator.add_io_device(new RNG);
 const def_url = "examples/urcl/snake.urcl"
 const url = new URL(location.href, location.origin).searchParams.get("srcurl") ?? def_url
 
-source_input.oninput = compile_and_run;
+source_input.oninput = oninput;
+auto_run_input.onchange = oninput;
+
+function oninput(){
+    if (auto_run_input.checked){
+        compile_and_run();
+    }
+}
 fetch(url).then(res => res.text()).then((text) => {
     if (source_input.value){
         return;
