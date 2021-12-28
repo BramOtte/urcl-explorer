@@ -3,6 +3,7 @@ import { f32_encode, f32_decode, Word } from "../util.js";
 import { Device } from "./device.js";
 
 export class Console_IO implements Device {
+    bits = 32;
     constructor(
         public input: {
             read: (callback: ()=>void) => void,
@@ -19,9 +20,17 @@ export class Console_IO implements Device {
     outputs = {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
+        [IO_Port.UINT]: this.numb_out,
         [IO_Port.HEX]: (v: number) => this.write(v.toString(16)), 
         [IO_Port.BIN]: (v: number) => this.write(v.toString(2)),
-        [IO_Port.FLOAT]: (v: number) => this.write(f32_decode(v).toString())
+        [IO_Port.FLOAT]: (v: number) => this.write(f32_decode(v).toString()),
+        [IO_Port.INT]: (v: number) => {
+            const sign_bit = 1 << (this.bits - 1);
+            if (v & sign_bit){
+                v = (v & (sign_bit-1)) - sign_bit;
+            }
+            this.write(v.toString());
+        }
     }
     set_text(text: string){
         this.input.text = text;

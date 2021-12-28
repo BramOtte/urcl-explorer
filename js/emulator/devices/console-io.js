@@ -4,6 +4,7 @@ export class Console_IO {
     input;
     write;
     _reset;
+    bits = 32;
     constructor(input, write, _reset) {
         this.input = input;
         this.write = write;
@@ -16,9 +17,17 @@ export class Console_IO {
     outputs = {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
+        [IO_Port.UINT]: this.numb_out,
         [IO_Port.HEX]: (v) => this.write(v.toString(16)),
         [IO_Port.BIN]: (v) => this.write(v.toString(2)),
-        [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString())
+        [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString()),
+        [IO_Port.INT]: (v) => {
+            const sign_bit = 1 << (this.bits - 1);
+            if (v & sign_bit) {
+                v = (v & (sign_bit - 1)) - sign_bit;
+            }
+            this.write(v.toString());
+        }
     };
     set_text(text) {
         this.input.text = text;
