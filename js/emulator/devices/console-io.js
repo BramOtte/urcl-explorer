@@ -16,7 +16,7 @@ export class Console_IO {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.HEX]: (v) => this.write(v.toString(16)),
-        [IO_Port.BIN]: (v) => this.write(v.toString(16)),
+        [IO_Port.BIN]: (v) => this.write(v.toString(2)),
     };
     set_text(text) {
         this.input.text = text;

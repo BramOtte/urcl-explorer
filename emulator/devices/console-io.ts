@@ -20,7 +20,7 @@ export class Console_IO implements Device {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.HEX]: (v: number) => this.write(v.toString(16)), 
-        [IO_Port.BIN]: (v: number) => this.write(v.toString(16)), 
+        [IO_Port.BIN]: (v: number) => this.write(v.toString(2)),
     }
     set_text(text: string){
         this.input.text = text;
