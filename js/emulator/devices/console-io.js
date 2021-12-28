@@ -1,4 +1,5 @@
 import { IO_Port } from "../instructions.js";
+import { f32_decode } from "../util.js";
 export class Console_IO {
     input;
     write;
@@ -17,6 +18,7 @@ export class Console_IO {
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.HEX]: (v) => this.write(v.toString(16)),
         [IO_Port.BIN]: (v) => this.write(v.toString(2)),
+        [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString())
     };
     set_text(text) {
         this.input.text = text;

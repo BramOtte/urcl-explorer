@@ -103,4 +103,13 @@ export function with_defaults(defaults, options) {
     }
     return with_defaults;
 }
+const conversion_buffer = new DataView(new ArrayBuffer(8));
+export function f32_decode(int) {
+    conversion_buffer.setInt32(0, int, true);
+    return conversion_buffer.getFloat32(0, true);
+}
+export function f32_encode(float) {
+    conversion_buffer.setFloat32(0, float, true);
+    return conversion_buffer.getInt32(0, true);
+}
 //# sourceMappingURL=util.js.map

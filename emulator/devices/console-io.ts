@@ -1,5 +1,5 @@
 import { IO_Port } from "../instructions.js";
-import { Word } from "../util.js";
+import { f32_encode, f32_decode, Word } from "../util.js";
 import { Device } from "./device.js";
 
 export class Console_IO implements Device {
@@ -21,6 +21,7 @@ export class Console_IO implements Device {
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.HEX]: (v: number) => this.write(v.toString(16)), 
         [IO_Port.BIN]: (v: number) => this.write(v.toString(2)),
+        [IO_Port.FLOAT]: (v: number) => this.write(f32_decode(v).toString())
     }
     set_text(text: string){
         this.input.text = text;

@@ -1,5 +1,5 @@
 import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Prim, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
-import { enum_count, enum_from_str, enum_strings, i53, is_digit, warn, Warning, Word } from "./util.js";
+import { enum_count, enum_from_str, enum_strings, f32_encode, i53, is_digit, warn, Warning, Word } from "./util.js";
 
 function my_parse_int(x: string){
     x = x.replace(/\_/g, "");
@@ -8,15 +8,13 @@ function my_parse_int(x: string){
     }
     return parseInt(x);
 }
-const conversion_buffer = new DataView(new ArrayBuffer(8)); 
 function my_parse_f32(x: string){
     x = x.replace(/\_/g, "");
     const float = parseFloat(x);
     if (isNaN(float)){
         return undefined;
     }
-    conversion_buffer.setFloat32(0, float, true);
-    return conversion_buffer.getInt32(0, true);
+    return f32_encode(float);
 }
 
 enum Label_Type {
