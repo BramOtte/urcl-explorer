@@ -22,9 +22,9 @@ export class Console_IO {
         [IO_Port.BIN]: (v) => this.write(v.toString(2)),
         [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString()),
         [IO_Port.INT]: (v) => {
-            const max_signed = 2 ** (this.bits - 1) - 1;
-            if (v > max_signed) {
-                v = (v & max_signed) - max_signed - 1;
+            const sign_bit = 2 ** (this.bits - 1);
+            if (v & sign_bit) {
+                v = (v & (sign_bit - 1)) - sign_bit;
             }
             this.write(v.toString());
         }
