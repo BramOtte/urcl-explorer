@@ -1,7 +1,5 @@
-CAL .prompt
-MOV $2 $1
-CAL .prompt
-MOV $3 $1
+IMM $2 1
+IMM $3 1
 
 OUT %NUMB $2
 OUT %TEXT '\n'
@@ -18,24 +16,3 @@ OUT %TEXT '\n'
     BNC .loop $2 $3
 .stop
 HLT
-.prompt
-    OUT %TEXT 'E'
-    OUT %TEXT 'n'
-    OUT %TEXT 't'
-    OUT %TEXT 'e'
-    OUT %TEXT 'r'
-    OUT %TEXT ' '
-    OUT %TEXT 'a'
-    OUT %TEXT ' '
-    OUT %TEXT 'n'
-    OUT %TEXT 'u'
-    OUT %TEXT 'm'
-    OUT %TEXT 'b'
-    OUT %TEXT 'e'
-    OUT %TEXT 'r'
-    OUT %TEXT ':'
-    OUT %TEXT ' '
-    IN $1 %NUMB
-    OUT %NUMB $1
-    OUT %TEXT '\n'
-    RET

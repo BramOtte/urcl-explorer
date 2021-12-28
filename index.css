@@ -2,6 +2,15 @@
   font-family: "unscii";
   src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");
 }
+a {
+  color: lightgrey;
+}
+a:visited {
+  color: lightblue;
+}
+a:hover {
+  color: white;
+}
 
 html, body {
   margin: 0;

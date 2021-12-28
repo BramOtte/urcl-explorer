@@ -131,7 +131,7 @@ OUT %BUFFER 2
     RET
 
 .end_text
-DW 18 'g' 'a' 'm' 'e' '-' 'o' 'v' 'e' 'r' '\n' 's' 'c' 'o' 'r' 'e' ':' ':'
+DW [ 18 'g' 'a' 'm' 'e' '-' 'o' 'v' 'e' 'r' '\n' 's' 'c' 'o' 'r' 'e' ':' ':' ]
 
 .gameover
     IMM r1 .end_text

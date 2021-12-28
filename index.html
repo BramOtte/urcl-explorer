@@ -13,7 +13,10 @@
 <body>
     <main>
         <div>
-            <h2>URCL Source <button id="share-button" style="font-size: 1em;">copy share url</button></h2>
+            <h2>
+                URCL Source
+                <button id="share-button" style="font-size: 1em;">copy share url</button>
+            </h2>
             <editor-window id="urcl-source"></editor-window>
         </div>
         <div>
@@ -22,8 +25,26 @@
                 <button id="pause-button">Pause</button><br>
                 <button id="compile-and-run-button">Compile and run</button>
                 <button id=step-button disabled>Step</button>
-                <h2>Output</h2>
-                <pre id="output"></pre>
+                <div style="display: flex;">
+                    <details open>
+                        <summary>Examples</summary>
+                        <ul>
+                            <li><a href="?srcurl=examples/urcl/add.urcl">Addition</a></li>
+                            <li><a href="?srcurl=examples/urcl/fib.urcl">Fibonacci Sequence </a></li>
+                            <li><a href="?srcurl=examples/urcl/audio.urcl">Audio Ports</a></li>
+                            <li><a href="?srcurl=examples/urcl/display-io.urcl">Display Ports</a></li>
+                            <li><a href="?srcurl=examples/urcl/gamepad.urcl">Gamepad Port</a></li>
+                            <li><a href="?srcurl=examples/urcl/sprites.urcl">Ball Sprite</a></li>
+                            <li><a href="?srcurl=examples/urcl/game.urcl">Jumping Square</a></li>
+                            <li><a href="?srcurl=examples/urcl/snake.urcl">Snake</a></li>
+                            <li><a href="?srcurl=examples/urcl/pallet-test.urcl">Pallet Test</a></li>
+                        </ul>
+                    </details>
+                    <div>
+                        <h2>Output</h2>
+                        <pre id="output"></pre>
+                    </div>
+                </div>
             </div>
             <div>
                 <h3>registers</h3>

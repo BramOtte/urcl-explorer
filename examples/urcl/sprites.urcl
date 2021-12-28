@@ -1,15 +1,15 @@
 BITS == 32
 
-DW 1 2 3 4 5
+DW [ 1 2 3 4 5 ]
 .sprite
-DW 0 0 1 1 1 1 0 0
-DW 0 1 1 1 1 1 1 0
-DW 1 1 1 1 1 1 1 1
-DW 1 1 1 1 1 1 1 1
-DW 1 1 1 1 1 1 1 1
-DW 1 1 1 1 1 1 1 1
-DW 0 1 1 1 1 1 1 0
-DW 0 0 1 1 1 1 0 0
+DW [ 0 0 1 1 1 1 0 0 ]
+DW [ 0 1 1 1 1 1 1 0 ]
+DW [ 1 1 1 1 1 1 1 1 ]
+DW [ 1 1 1 1 1 1 1 1 ]
+DW [ 1 1 1 1 1 1 1 1 ]
+DW [ 1 1 1 1 1 1 1 1 ]
+DW [ 0 1 1 1 1 1 1 0 ]
+DW [ 0 0 1 1 1 1 0 0 ]
 
 IMM R1 .sprite 
 IMM R2 8 // x
@@ -45,7 +45,7 @@ IN R8 %X // screen width
 HLT
 
 
-// image: R1 const Bin[64]*, x: R2 const int, y: R3 const int,
+// image: R1 const Bin[ 64 ]*, x: R2 const int, y: R3 const int,
 // src_x: var R4, src_y: var R5, src_i/color: var R6
 // screen_width: const R8
 .draw_sprite8x8

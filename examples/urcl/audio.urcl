@@ -38,35 +38,35 @@ BITS == 16
 @DEFINE i r7
 
 .bar0
-DW e1 d8    e1 d8    0 d8    e1 d8   0 d8    c1 d8   c1 d4
+DW [ e1 d8    e1 d8    0 d8    e1 d8   0 d8    c1 d8   c1 d4 ]
 .bar1
-DW g1 d4    0 d4    g d4    0 d4
+DW [ g1 d4    0 d4    g d4    0 d4 ]
 .bar2
-DW c1 d4    0 d8    g d4    0 d8    e d4
+DW [ c1 d4    0 d8    g d4    0 d8    e d4 ]
 .bar3
-DW 0 d4     a1 d4   b1 d4   as1 d8  a1 d4
+DW [ 0 d4     a1 d4   b1 d4   as1 d8  a1 d4 ]
 .bar4
-DW g d6     e1 d6   g1 d6   a2 d4   f1 d8   g1 d8 
+DW [ g d6     e1 d6   g1 d6   a2 d4   f1 d8   g1 d8 ] 
 .bar5
-DW 0 d8     e1 d4   c1 d8   d1 d8   b1 d4   0 d8 // play from bar 2 again
+DW [ 0 d8     e1 d4   c1 d8   d1 d8   b1 d4   0 d8 ] // play from bar 2 again
 .bar6
-DW 0 d4     g1 d8   fs1 d8  ds1 d8  e1 d8
+DW [ 0 d4     g1 d8   fs1 d8  ds1 d8  e1 d8 ]
 .bar7
-DW gs d8    a1 d8   c1 d8   0 d8    a1 d8   c1 d8   d1 d8 
+DW [ gs d8    a1 d8   c1 d8   0 d8    a1 d8   c1 d8   d1 d8 ] 
 .bar8
-DW 0 d4     g1 d8   fs1 d8  ds1 d4  e1 d8
+DW [ 0 d4     g1 d8   fs1 d8  ds1 d4  e1 d8 ]
 .bar9
-DW 0 d8     c2 d4   c2 d8   c2 d4   0 d8
+DW [ 0 d8     c2 d4   c2 d8   c2 d4   0 d8 ]
 .bar10
-DW 0 d4     g1 d8   fs1 d8  ds1 d4  e1 d8
+DW [ 0 d4     g1 d8   fs1 d8  ds1 d4  e1 d8 ]
 .bar11
-DW 0 d8     gs d8   a1 d8   c1 d8   0 d8    a1 d8   c1 d8   d1 d8
+DW [ 0 d8     gs d8   a1 d8   c1 d8   0 d8    a1 d8   c1 d8   d1 d8 ]
 .bar12
-DW 0 d4     ds1 d4  0 d8    d1 d4   0 d8
+DW [ 0 d4     ds1 d4  0 d8    d1 d4   0 d8 ]
 .bar13
-DW c1 d4    0 d2    0 d4
+DW [ c1 d4    0 d2    0 d4 ]
 .bar14
-DW c1 d8    c1 d8   0 d8    c1 d8   0 d8    c1 d8   d1 d4
+DW [ c1 d8    c1 d8   0 d8    c1 d8   0 d8    c1 d8   d1 d4 ]
 .end
 DW
 
