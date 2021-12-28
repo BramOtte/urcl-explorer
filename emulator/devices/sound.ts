@@ -25,7 +25,7 @@ class NoteBlock {
         }
         this.oscillator.frequency.value = base_frequency * 2 ** (note/12);
         this.gain.gain.setTargetAtTime(0.1, this.ctx.currentTime, ramp_up);
-        this.gain.gain.setTargetAtTime(0, this.ctx.currentTime + length*0.1, ramp_down);
+        this.gain.gain.setTargetAtTime(0, this.ctx.currentTime + length*0.001, ramp_down);
         setTimeout(() => {
             cb();
         }, length*0.1+ramp_down);

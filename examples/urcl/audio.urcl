@@ -104,7 +104,7 @@ OUT %TEXT 'H'
 HLT
 
 .play
-    DIV r1 len 120
+    SUB r1 len 20
     OUT %NLEG r1
     OUT %WAIT len
     IN r0 %WAIT
