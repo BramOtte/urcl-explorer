@@ -1,5 +1,5 @@
 # URCl Explorer
-just an emulator now, but plans for more tools
+An IDE for URCL
 
 ## Important notes ⚠️
 Keep in mind that currently there is **no** saving functionality build into the website, thus make sure to save your code to a file before you close your browser tab.

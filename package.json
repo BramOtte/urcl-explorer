@@ -19,5 +19,19 @@
     "discord.js": "^13.3.1",
     "gifencoder": "^2.0.1",
     "node-fetch": "^3.1.0"
-  }
+  },
+  "description": "An IDE for URCL",
+  "directories": {
+    "example": "examples"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/BramOtte/urcl-explorer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "bugs": {
+    "url": "https://github.com/BramOtte/urcl-explorer/issues"
+  },
+  "homepage": "https://github.com/BramOtte/urcl-explorer#readme"
 }
