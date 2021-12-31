@@ -1,0 +1,94 @@
+MINREG 16
+@DEFINE ax r16
+@DEFINE ay r15
+@DEFINE bx r14
+@DEFINE by r13
+@DEFINE dx r12
+@DEFINE dy r11
+@DEFINE sx r10
+@DEFINE sy r9
+@DEFINE cx r8
+@DEFINE cy r7
+@DEFINE x r6
+@DEFINE y r5
+@DEFINE i r4
+
+
+IMM ax 1
+IMM ay 1
+IMM bx 2
+IMM by 10
+CAL .draw_line
+
+HLT
+
+.draw_line // in ax, ay, bx, by; var dx, dy, sx, sy, cx, cy, x, y, i 
+    MOV x ax
+    MOV y ay
+
+    OUT %X x
+    OUT %Y y
+    OUT %COLOR 255
+
+    IMM sx 1
+    SETG sx ax bx   // sx = ax > bx ? -1 : 1
+
+    BRE .draw_line_eq_y ay by
+
+    IMM sy 1
+    SETG sy ay by   // sy = ay > by ? -1 : 1
+
+    BRE .draw_line_eq_x ax bx
+
+    SUB dx bx ax
+    SUB dy by ay
+
+    RSH cx dx // cx = dx >>> 2
+    RSH cy dy // cy = dy >>> 2
+
+    BRG .else dx dy //  if dx < dy
+        BGE .end dx dy 
+        INC cx cx   //      cx++
+    JMP .end        //  else if dx > dy
+    .else           //  
+        INC cy cy   //      cy++
+    .end
+
+    ADD i dx dy
+    .loop   // for (i = dx+dy; i != 0; i--)
+        BGE .cxg cy cx  //  if cy < cx
+            SUB cx cx cy//      cx -= cy
+            IMM cy dy   //      cy = dy
+            ADD x x sx  //      x += sx
+        JMP .cxg_end
+        .cxg            // else
+            SUB cy cy cx//      cy -= cx
+            IMM cx dx   //      cx = dx
+            ADD y y sy  //      y += sy
+        .cxg_end
+        OUT %X x
+        OUT %Y y
+        OUT %COLOR 255
+        DEC i i
+        BNZ .loop i
+    RET
+
+    .draw_line_eq_y
+        BRE .eq_y_ret ax bx
+        .eq_y_loop
+            ADD x x sx
+            OUT %X x
+            OUT %COLOR 255
+            BNE .eq_y_loop x bx
+        .eq_y_ret
+        RET
+
+    .draw_line_eq_x
+        BRE .eq_x_ret ay by
+        .eq_x_loop
+            ADD y y sy
+            OUT %Y y
+            OUT %COLOR 255
+            BNE .eq_x_loop y by
+        .eq_x_ret
+        RET
