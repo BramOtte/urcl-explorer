@@ -13,12 +13,14 @@ MINREG 16
 @DEFINE y r5
 @DEFINE i r4
 
+OUT %BUFFER 1
 
 IMM ax 1
-IMM ay 1
-IMM bx 2
-IMM by 10
+IMM ay 31
+IMM bx 27
+IMM by 2
 CAL .draw_line
+OUT %BUFFER 2
 
 HLT
 
@@ -30,18 +32,23 @@ HLT
     OUT %Y y
     OUT %COLOR 255
 
+    SUB dx bx ax
     IMM sx 1
-    SETG sx ax bx   // sx = ax > bx ? -1 : 1
+    BGE .bx_ge_ax bx ax
+        IMM sx -1
+        SUB dx ax bx
+    .bx_ge_ax
 
     BRE .draw_line_eq_y ay by
 
+    SUB dy by ay
     IMM sy 1
-    SETG sy ay by   // sy = ay > by ? -1 : 1
+    BGE .by_ge_ay by ay
+        IMM sy -1
+        SUB dy ay by
+    .by_ge_ay
 
     BRE .draw_line_eq_x ax bx
-
-    SUB dx bx ax
-    SUB dy by ay
 
     RSH cx dx // cx = dx >>> 2
     RSH cy dy // cy = dy >>> 2
