@@ -76,7 +76,7 @@ editor-window .colors {
     color: #9cdcfe;
 }
 .white, .white-inline {
-    text-decoration: underline dashed gray;
+    text-decoration: underline dashed rgb(69, 69, 69);
 }
 .macro {
     color: #c586c0;
