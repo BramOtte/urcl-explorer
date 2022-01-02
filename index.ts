@@ -14,6 +14,7 @@ import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, 
 
 let animation_frame: number | undefined;
 let running = false;
+let started = false;
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
@@ -136,18 +137,17 @@ source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
 
 function oninput(){
+    if (started){
+        const size = Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 128));
+        localStorage.setItem("history-size", ""+size)
+        const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % size;
+        localStorage.setItem("history-offset", ""+offset);
+        localStorage.setItem(`history-${offset}`, source_input.value);
+    }
     if (auto_run_input.checked){
         compile_and_run();
     }
 }
-fetch(url).then(res => res.text()).then((text) => {
-    if (source_input.value){
-        return;
-    }
-    source_input.value = text;
-    compile_and_run();
-});
-
 
 const compile_and_run_button = document.getElementById("compile-and-run-button") as HTMLButtonElement;
 const pause_button = document.getElementById("pause-button") as HTMLButtonElement;
@@ -285,3 +285,14 @@ function update_views(){
 }
 
 change_color_mode();
+
+
+autofill:
+{
+    const offset = Number(localStorage.getItem("history-offset"));
+    if (!Number.isInteger(offset)){
+        break autofill;
+    }
+    source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
+}
+started = true;
