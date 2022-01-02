@@ -147,6 +147,7 @@ export class Emulator {
             }
             const res = device(this.finish_step_in.bind(this));
             if (res === undefined) {
+                this.pc--;
                 return true;
             }
             else {
@@ -230,7 +231,7 @@ export class Emulator {
     }
     // this method only needs to be called for the IN instruction
     finish_step_in(result) {
-        const pc = this.pc - 1;
+        const pc = this.pc++;
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
         this.write(type, value, result);

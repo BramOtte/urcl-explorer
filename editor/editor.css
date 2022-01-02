@@ -46,6 +46,9 @@ editor-window .colors {
     height: 100%;
 }
 
+.pc-line {
+    color: greenyellow;
+}
 
 .opcode, .dw, .name {
     color: #569cd6;

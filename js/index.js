@@ -113,8 +113,7 @@ emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG);
-const def_url = "examples/urcl/snake.urcl";
-const url = new URL(location.href, location.origin).searchParams.get("srcurl") ?? def_url;
+const url = new URL(location.href, location.origin).searchParams.get("srcurl");
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
 function oninput() {
@@ -209,6 +208,9 @@ memory-size: ${emulator.memory.length}
     }
 }
 function frame() {
+    if (!started) {
+        return;
+    }
     if (running) {
         try {
             process_step_result(emulator.run(16));
@@ -262,14 +264,28 @@ function update_views() {
     memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
     register_view.innerText =
         registers_to_string(emulator);
+    const lines = emulator.debug_info.pc_line_nrs;
+    const line = lines[Math.min(emulator.pc, lines.length - 1)];
+    source_input.set_pc_line(line);
 }
 change_color_mode();
-autofill: {
-    const offset = Number(localStorage.getItem("history-offset"));
-    if (!Number.isInteger(offset)) {
-        break autofill;
-    }
-    source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
-}
 started = true;
+if (url) {
+    fetch(url).then(res => res.text()).then((text) => {
+        if (source_input.value) {
+            return;
+        }
+        source_input.value = text;
+        compile_and_run();
+    });
+}
+else
+    autofill: {
+        const offset = Number(localStorage.getItem("history-offset"));
+        if (!Number.isInteger(offset)) {
+            break autofill;
+        }
+        console.log(offset);
+        source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
+    }
 //# sourceMappingURL=index.js.map

@@ -28,6 +28,19 @@ export class Editor_Window extends HTMLElement {
         this.input.value = value;
         this.input_cb()
     }
+    private pc_line = 0;
+    public set_pc_line(line: number){
+        const old = this.line_nrs.children[this.pc_line];
+        if (old){
+            old.classList.remove("pc-line");
+        }
+
+        const child = this.line_nrs.children[line];
+        if (child){
+            child.classList.add("pc-line");
+        }
+        this.pc_line = line;
+    }
     private keydown_cb(event: KeyboardEvent){
         if (event.key === "Tab"){
             event.preventDefault();
@@ -100,7 +113,7 @@ export class Editor_Window extends HTMLElement {
 
         const src = this.input.value;
         const lines = line_starts(src);
-        this.line_nrs.innerText = lines.map((_,i) => i+1).join("\n");
+        this.line_nrs.innerHTML = lines.map((_,i) => `<div>${i+1}</div>`).join("");
 
         const tokens: Token[] = [];
         const end = tokenize(src, 0, tokens);
