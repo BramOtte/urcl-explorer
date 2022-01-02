@@ -137,7 +137,7 @@ export function read16(buf, endianness) {
     const view = new DataView(buf.buffer, buf.byteOffset);
     const out = new Uint16Array(Math.ceil(buf.byteLength / 2));
     for (let i = 0; i < out.length; i++) {
-        out[i] = view.getUint16(i * 4, endianness);
+        out[i] = view.getUint16(i * 2, endianness);
     }
     return out;
 }
