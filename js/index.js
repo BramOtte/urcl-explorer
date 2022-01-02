@@ -6,6 +6,7 @@ import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { RNG } from "./emulator/devices/rng.js";
 import { Sound } from "./emulator/devices/sound.js";
+import { Storage } from "./emulator/devices/storage.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
 import { enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString } from "./emulator/util.js";
@@ -20,10 +21,34 @@ const console_output = document.getElementById("stdout");
 const null_terminate_input = document.getElementById("null-terminate");
 const share_button = document.getElementById("share-button");
 const auto_run_input = document.getElementById("auto-run-input");
+const storage_input = document.getElementById("storage-input");
+const storage_msg = document.getElementById("storage-msg");
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
     console.log(share);
+};
+let storage;
+storage_input.oninput = async (e) => {
+    storage_msg.classList.remove("error");
+    const files = storage_input.files;
+    if (files === null || files.length < 0) {
+        storage_msg.classList.add("error");
+        storage_msg.innerText = "No file specified";
+        return;
+    }
+    const file = files[0];
+    try {
+        const data = await file.arrayBuffer();
+        const bytes = new Uint8Array(data);
+        emulator.add_io_device(new Storage(emulator.bits, bytes));
+        storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+        storage = bytes;
+    }
+    catch (error) {
+        storage_msg.classList.add("error");
+        storage_msg.innerText = "" + error;
+    }
 };
 let input_callback;
 console_input.addEventListener("keydown", e => {
