@@ -179,6 +179,15 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         this.error(""+e);
     }
     }
+    burst(burst_length: number){
+        for (let i = 0; i < burst_length; i++){
+            const res = this.step();
+            if (res !== Step_Result.Continue){
+                return res;
+            }
+        }
+        return Step_Result.Continue;
+    }
     run(max_duration: number): Step_Result {
         const burst_length = 128;
         const end = Date.now() + max_duration;

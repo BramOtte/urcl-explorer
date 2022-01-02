@@ -175,6 +175,15 @@ export class Emulator {
             this.error("" + e);
         }
     }
+    burst(burst_length) {
+        for (let i = 0; i < burst_length; i++) {
+            const res = this.step();
+            if (res !== Step_Result.Continue) {
+                return res;
+            }
+        }
+        return Step_Result.Continue;
+    }
     run(max_duration) {
         const burst_length = 128;
         const end = Date.now() + max_duration;

@@ -17,6 +17,7 @@ let running = false;
 let started = false;
 let input = false;
 let last_step = performance.now();
+let clock_speed = 0;
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
@@ -31,6 +32,15 @@ const auto_run_input = document.getElementById("auto-run-input") as HTMLInputEle
 const storage_input = document.getElementById("storage-input") as HTMLInputElement;
 const storage_msg = document.getElementById("storage-msg") as HTMLInputElement;
 const clock_speed_input = document.getElementById("clock-speed-input") as HTMLInputElement;
+const clock_speed_output = document.getElementById("clock-speed-output") as HTMLInputElement;
+
+const max_clock_speed = 30_000_000;
+const max_its = 1.2 * max_clock_speed / 16;
+clock_speed_input.oninput = () => {
+    clock_speed = Math.min(max_clock_speed, Math.max(0, Number(clock_speed_input.value) || 0));
+    clock_speed_output.value = ""+clock_speed;
+    last_step = performance.now();
+}
 
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
@@ -238,18 +248,20 @@ memory-size: ${emulator.memory.length}
 function frame(){
     if (running){
         try {
-        if (clock_speed_input.value){
+        if (clock_speed > 0){
             const now = performance.now();
-            const int = 1000 / Math.min(16_000_000, (Number(clock_speed_input.value) || 0));
-            while (last_step <= now + int && running){
-                process_step_result(emulator.step(), false);
-                last_step += int;
-            }
-            if (running && !input){
-                requestAnimationFrame(frame);
+            const dt = now - last_step;
+            const its = Math.min(max_its, 0| dt * clock_speed / 1000);
+            process_step_result(emulator.burst(its));
+            if (its === max_its){
+                last_step = now;
+                clock_speed_output.value = clock_speed + " slowdown";
+            } else {
+                last_step += its * 1000 / clock_speed;
+                clock_speed_output.value = clock_speed + "";
             }
         } else {
-            process_step_result(emulator.run(16), true);
+            process_step_result(emulator.run(16));
         }
         } catch (e){
             output_element.innerText += (e as Error).message + "\nProgram Halted";
@@ -260,13 +272,13 @@ function frame(){
         pause_button.disabled = false;
     }
 }
-function process_step_result(result: Step_Result, request: boolean){
+function process_step_result(result: Step_Result){
     animation_frame = undefined;
     input = false;
     switch (result){
         case Step_Result.Continue: {
             if (running){
-                if (request){animation_frame = requestAnimationFrame(frame);}
+                animation_frame = requestAnimationFrame(frame);
                 running = true;
                 step_button.disabled = running;
                 pause_button.disabled = false;
@@ -288,7 +300,7 @@ function process_step_result(result: Step_Result, request: boolean){
             console.warn("unkown step result");
         }
     }
-    update_views()
+    update_views();
 }
 function update_views(){
     const bits = emulator.bits

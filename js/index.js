@@ -15,6 +15,7 @@ let running = false;
 let started = false;
 let input = false;
 let last_step = performance.now();
+let clock_speed = 0;
 const source_input = document.getElementById("urcl-source");
 const output_element = document.getElementById("output");
 const memory_view = document.getElementById("memory-view");
@@ -27,6 +28,14 @@ const auto_run_input = document.getElementById("auto-run-input");
 const storage_input = document.getElementById("storage-input");
 const storage_msg = document.getElementById("storage-msg");
 const clock_speed_input = document.getElementById("clock-speed-input");
+const clock_speed_output = document.getElementById("clock-speed-output");
+const max_clock_speed = 30_000_000;
+const max_its = 1.2 * max_clock_speed / 16;
+clock_speed_input.oninput = () => {
+    clock_speed = Math.min(max_clock_speed, Math.max(0, Number(clock_speed_input.value) || 0));
+    clock_speed_output.value = "" + clock_speed;
+    last_step = performance.now();
+};
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
@@ -213,19 +222,22 @@ memory-size: ${emulator.memory.length}
 function frame() {
     if (running) {
         try {
-            if (clock_speed_input.value) {
+            if (clock_speed > 0) {
                 const now = performance.now();
-                const int = 1000 / Math.min(16_000_000, (Number(clock_speed_input.value) || 0));
-                while (last_step <= now + int && running) {
-                    process_step_result(emulator.step(), false);
-                    last_step += int;
+                const dt = now - last_step;
+                const its = Math.min(max_its, 0 | dt * clock_speed / 1000);
+                process_step_result(emulator.burst(its));
+                if (its === max_its) {
+                    last_step = now;
+                    clock_speed_output.value = clock_speed + " slowdown";
                 }
-                if (running && !input) {
-                    requestAnimationFrame(frame);
+                else {
+                    last_step += its * 1000 / clock_speed;
+                    clock_speed_output.value = clock_speed + "";
                 }
             }
             else {
-                process_step_result(emulator.run(16), true);
+                process_step_result(emulator.run(16));
             }
         }
         catch (e) {
@@ -238,16 +250,14 @@ function frame() {
         pause_button.disabled = false;
     }
 }
-function process_step_result(result, request) {
+function process_step_result(result) {
     animation_frame = undefined;
     input = false;
     switch (result) {
         case Step_Result.Continue:
             {
                 if (running) {
-                    if (request) {
-                        animation_frame = requestAnimationFrame(frame);
-                    }
+                    animation_frame = requestAnimationFrame(frame);
                     running = true;
                     step_button.disabled = running;
                     pause_button.disabled = false;
