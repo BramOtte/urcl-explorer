@@ -48,6 +48,7 @@ editor-window .colors {
 
 .pc-line {
     color: greenyellow;
+    width: max-content;
 }
 .pc-line::before {
     content: "->";
