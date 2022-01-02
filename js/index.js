@@ -28,11 +28,13 @@ share_button.onclick = e => {
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
     console.log(share);
 };
+let uploaded_storage;
 let storage;
+let storage_loads = 0;
 storage_input.oninput = async (e) => {
     storage_msg.classList.remove("error");
     const files = storage_input.files;
-    if (files === null || files.length < 0) {
+    if (files === null || files.length < 1) {
         storage_msg.classList.add("error");
         storage_msg.innerText = "No file specified";
         return;
@@ -40,7 +42,8 @@ storage_input.oninput = async (e) => {
     const file = files[0];
     try {
         const data = await file.arrayBuffer();
-        const bytes = new Uint8Array(data);
+        uploaded_storage = new Uint8Array(data);
+        const bytes = uploaded_storage.slice();
         emulator.add_io_device(new Storage(emulator.bits, bytes));
         storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
         storage = bytes;
@@ -180,6 +183,12 @@ function compile_and_reset() {
         output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");
         const [program, debug_info] = compile(parsed);
         emulator.load_program(program, debug_info);
+        if (uploaded_storage) {
+            const bytes = uploaded_storage.slice();
+            emulator.add_io_device(new Storage(emulator.bits, bytes));
+            storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+            storage = bytes;
+        }
         output_element.innerText += `
 compilation done
 bits: ${emulator.bits}
