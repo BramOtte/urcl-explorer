@@ -97,18 +97,18 @@ function discord_emu() {
             state = Step_Result.Halt;
         }
         std_info += "\nregisters:\n" + registers_to_string(emulator);
+        if (argv_res.flags.__mem_start !== argv_res.flags.__mem_end) {
+            std_info += `\n\nmemory:\n` + memoryToString(emulator.memory, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator.bits) + "\n\n";
+        }
     }
     function o() {
         const out = stdout;
-        let info = std_info;
+        const info = std_info;
         const all_screens = display.buffers.slice();
         const screens = all_screens.slice(rendered_count);
         stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
-        if (argv_res.flags.__mem_start !== argv_res.flags.__mem_end) {
-            info += `\n\nmemory:\n` + memoryToString(emulator.memory, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator.bits) + "\n\n";
-        }
         return { out, info, screens, all_screens, scale, state, quality, storage: bytes };
     }
     function start(argv, source) {
