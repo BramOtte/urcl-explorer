@@ -44,8 +44,31 @@ export function hex_size(bits: number){
 export function registers_to_string(emulator: Emulator) {
     const nibbles = hex_size(emulator.bits);
     return Array.from({ length: register_count }, (_,i) => pad_center(Register[i], nibbles) + " ").join("") +
-        Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_center(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
+        Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
         Array.from(emulator.registers, (v)=> hex(v, nibbles) + " ").join("");
+}
+
+export function memoryToString(view: Arr, from = 0x0, length = 0x1000, bits = 8) {
+    const width = 0x10;
+    const end = Math.min(from + length, view.length);
+    const hexes = hex_size(bits);
+    let lines: string[] = [
+        " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
+            return pad_left(hex(i, 1), hexes);
+        }).join(" ")
+    ];
+
+    for (let i = from; i < end;) {
+        const sub_end = Math.min(i + width, end);
+        let subs = [];
+        const addr = hex(0 | i / width, hexes - 1, " ");
+        for (; i < sub_end; i++) {
+            subs.push(hex(view[i], hexes));
+        }
+        const line = subs.join(" ");
+        lines.push(addr + " ".repeat(hexes - addr.length) + line);
+    }
+    return lines.join("\n");
 }
 
 export function indent(string: string, spaces: number){

@@ -9,7 +9,7 @@ import { RNG } from "./emulator/devices/rng.js";
 import { Sound } from "./emulator/devices/sound.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
-import { Arr, enum_from_str, enum_strings, expand_warning, hex, hex_size, pad_center, registers_to_string } from "./emulator/util.js";
+import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString } from "./emulator/util.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -247,28 +247,6 @@ function update_views(){
     memory_view.innerText = memoryToString(emulator.memory as Arr, 0, emulator.memory.length, bits);
     register_view.innerText = 
         registers_to_string(emulator)
-}
-
-function memoryToString(view: Arr, from = 0x0, length=0x1000, bits=8){
-    const width = 0x10;
-    const end = Math.min(from+length, view.length);
-    const hexes = hex_size(bits)
-    let lines: string[] = [
-        " ".repeat(hexes) + Array.from({length: width}, (_,i)=>{
-        return pad_center(hex(i, 1), hexes); 
-    }).join(" ") ];
-
-    for (let i = from; i < end;){
-        const sub_end = Math.min(i + width, end);
-        let subs = [];
-        const addr = hex(0| i / width, hexes-1, " ");
-        for (; i < sub_end; i++){
-            subs.push(hex(view[i], hexes));
-        }
-        const line =  subs.join(" ");
-        lines.push(addr + " ".repeat(hexes - addr.length) + line);
-    }
-    return lines.join("\n");
 }
 
 change_color_mode();

@@ -3,7 +3,7 @@ import { compile } from "../../emulator/compiler.js";
 import { Console_IO } from "../../emulator/devices/console-io.js";
 import { Emulator, Step_Result } from "../../emulator/emulator.js";
 import { parse } from "../../emulator/parser.js";
-import { enum_strings, expand_warnings, registers_to_string } from "../../emulator/util.js";
+import { enum_strings, expand_warnings, memoryToString, registers_to_string } from "../../emulator/util.js";
 import { parse_argv } from "../args.js";
 import Canvas from "canvas";
 import { Color_Mode, Display } from "../../emulator/devices/display.js";
@@ -52,6 +52,7 @@ function discord_emu() {
     let quality = 10;
     let text_end = "\n";
     let bytes = undefined;
+    let argv_res;
     const emulator = new Emulator({ on_continue, warn: (str) => std_info += str + "\n" });
     emulator.add_io_device(new RNG());
     let display = new Display(Canvas.createCanvas(1, 1).getContext("2d"), 8, Color_Mode.PICO8, true);
@@ -99,12 +100,15 @@ function discord_emu() {
     }
     function o() {
         const out = stdout;
-        const info = std_info;
+        let info = std_info;
         const all_screens = display.buffers.slice();
         const screens = all_screens.slice(rendered_count);
         stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
+        if (argv_res.flags.__mem_start !== argv_res.flags.__mem_end) {
+            info += `\n\nmemory:\n` + memoryToString(emulator.memory, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator.bits) + "\n\n";
+        }
         return { out, info, screens, all_screens, scale, state, quality, storage: bytes };
     }
     function start(argv, source) {
@@ -121,7 +125,7 @@ function discord_emu() {
         try {
             bytes = undefined;
             stdout = "";
-            const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size } } = parse_argv(["", ...argv], {
+            argv_res = parse_argv(["", ...argv], {
                 __width: 32,
                 __height: 32,
                 __color: { val: Color_Mode.PICO8, in: Color_Mode },
@@ -130,8 +134,11 @@ function discord_emu() {
                 __help: false,
                 __text_end: { val: TextEnd.LF, in: TextEnd },
                 __storage: "",
-                __storage_size: 0
+                __storage_size: 0,
+                __mem_start: 0,
+                __mem_end: -1,
             });
+            const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size } } = argv_res;
             const usage = `Usage:
 start emulator: 
     !urcx-emu [<...options>] [<source url>]
@@ -149,6 +156,12 @@ enter text:
 options:
     --help
         bring up this menu
+
+    --mem-start <words>
+        the start of the memory view, default is 0
+
+    --mem-end <words>
+        the end of the memory view, default is -1 for the last byte in memory
 
     --text-end <LF|Null|None>
         Sets what character to append to the end when text is inputted; defaults to LF
