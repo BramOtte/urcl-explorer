@@ -163,15 +163,13 @@ function step(){
 
 function pause(){
     if (running){
-        console.log("hello");
         if (animation_frame){
             cancelAnimationFrame(animation_frame);
         }
-            animation_frame = undefined;
-            pause_button.textContent = "Start";
-            running = false;
-            step_button.disabled = running || input;
-        // }
+        animation_frame = undefined;
+        pause_button.textContent = "Start";
+        running = false;
+        step_button.disabled = running || input;
     } else {
         animation_frame = requestAnimationFrame(frame);
         pause_button.textContent = "Pause";
@@ -310,7 +308,6 @@ autofill:
     if (!Number.isInteger(offset)){
         break autofill;
     }
-    console.log(offset);
     source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
 }
 
