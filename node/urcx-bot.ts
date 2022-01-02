@@ -62,6 +62,11 @@ client.on("messageCreate", (msg) => {
         const res = emu_start(msg.channelId, argv, source);
         reply(res);
     }
+    else if (content.startsWith("!")){
+        const reply = `unknown command ${JSON.stringify(content)} try sending:\n`
+            + `!urcx-emu --help`
+        msg.reply({content: reply});
+    }
     if (content.startsWith("?")){
         const res = emu_reply(msg.channelId, content.substring(1));
         reply(res);

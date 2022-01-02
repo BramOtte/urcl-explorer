@@ -167,7 +167,7 @@ options:
         the start of the memory view, default is 0
 
     --mem-end <words>
-        the end of the memory view, default is -1 for the last byte in memory
+        the end of the memory view, default is -1 for the last word in memory
 
     --text-end <LF|Null|None>
         Sets what character to append to the end when text is inputted; defaults to LF
