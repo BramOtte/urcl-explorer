@@ -30,7 +30,6 @@ share_button.onclick = e => {
     console.log(share);
 };
 let uploaded_storage;
-let storage;
 let storage_loads = 0;
 storage_input.oninput = async (e) => {
     storage_msg.classList.remove("error");
@@ -45,9 +44,8 @@ storage_input.oninput = async (e) => {
         const data = await file.arrayBuffer();
         uploaded_storage = new Uint8Array(data);
         const bytes = uploaded_storage.slice();
-        emulator.add_io_device(new Storage(emulator.bits, bytes));
+        emulator.add_io_device(new Storage(emulator.bits, bytes, false)); // TODO: add little endian option
         storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
-        storage = bytes;
     }
     catch (error) {
         storage_msg.classList.add("error");
@@ -186,9 +184,8 @@ function compile_and_reset() {
         emulator.load_program(program, debug_info);
         if (uploaded_storage) {
             const bytes = uploaded_storage.slice();
-            emulator.add_io_device(new Storage(emulator.bits, bytes));
+            emulator.add_io_device(new Storage(emulator.bits, bytes, false)); // TODO: add little endian option
             storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
-            storage = bytes;
         }
         output_element.innerText += `
 compilation done

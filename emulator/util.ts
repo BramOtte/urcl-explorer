@@ -170,3 +170,21 @@ export function f32_encode(float: number){
     conversion_buffer.setFloat32(0, float, true);
     return conversion_buffer.getInt32(0, true);
 }
+
+
+export function read16(buf: ArrayBufferView, endianness: boolean): Uint16Array {
+    const view = new DataView(buf.buffer, buf.byteOffset);
+    const out = new Uint16Array(Math.ceil(buf.byteLength / 2));
+    for (let i = 0; i < out.length; i++){
+        out[i] = view.getUint16(i*4, endianness);
+    }
+    return out;
+}
+export function read32(buf: ArrayBufferView, littleEndian: boolean): Uint32Array {
+    const view = new DataView(buf.buffer, buf.byteOffset);
+    const out = new Uint32Array(Math.ceil(buf.byteLength / 4));
+    for (let i = 0; i < out.length; i++){
+        out[i] = view.getUint32(i*4, littleEndian);
+    }
+    return out;
+}

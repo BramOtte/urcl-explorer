@@ -65,7 +65,7 @@ if (__storage) {
         bytes = new Uint8Array(__storage_size * 1024);
         bytes.set(file);
     }
-    const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes);
+    const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false); // TODO: add little endian flag
     emulator.add_io_device(storage);
 }
 if (__text_file) {
