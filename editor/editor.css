@@ -49,6 +49,9 @@ editor-window .colors {
 .pc-line {
     color: greenyellow;
 }
+.pc-line::before {
+    content: "->";
+}
 
 .opcode, .dw, .name {
     color: #569cd6;
