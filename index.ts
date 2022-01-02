@@ -16,6 +16,7 @@ let animation_frame: number | undefined;
 let running = false;
 let started = false;
 let input = false;
+let last_step = performance.now();
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
@@ -29,6 +30,7 @@ const share_button = document.getElementById("share-button") as HTMLButtonElemen
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
 const storage_input = document.getElementById("storage-input") as HTMLInputElement;
 const storage_msg = document.getElementById("storage-msg") as HTMLInputElement;
+const clock_speed_input = document.getElementById("clock-speed-input") as HTMLInputElement;
 
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
@@ -234,12 +236,21 @@ memory-size: ${emulator.memory.length}
 }
 
 function frame(){
-    if (!started){
-        return;
-    }
     if (running){
         try {
-        process_step_result(emulator.run(16));
+        if (clock_speed_input.value){
+            const now = performance.now();
+            const int = 1000 / Math.min(16_000_000, (Number(clock_speed_input.value) || 0));
+            while (last_step <= now + int && running){
+                process_step_result(emulator.step(), false);
+                last_step += int;
+            }
+            if (running && !input){
+                requestAnimationFrame(frame);
+            }
+        } else {
+            process_step_result(emulator.run(16), true);
+        }
         } catch (e){
             output_element.innerText += (e as Error).message + "\nProgram Halted";
             throw e;
@@ -249,13 +260,13 @@ function frame(){
         pause_button.disabled = false;
     }
 }
-function process_step_result(result: Step_Result){
+function process_step_result(result: Step_Result, request: boolean){
     animation_frame = undefined;
     input = false;
     switch (result){
         case Step_Result.Continue: {
             if (running){
-                animation_frame = requestAnimationFrame(frame); 
+                if (request){animation_frame = requestAnimationFrame(frame);}
                 running = true;
                 step_button.disabled = running;
                 pause_button.disabled = false;
