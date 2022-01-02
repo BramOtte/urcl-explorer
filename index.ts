@@ -15,6 +15,7 @@ import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, 
 let animation_frame: number | undefined;
 let running = false;
 let started = false;
+let input = false;
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
@@ -162,13 +163,15 @@ function step(){
 
 function pause(){
     if (running){
+        console.log("hello");
         if (animation_frame){
             cancelAnimationFrame(animation_frame);
+        }
             animation_frame = undefined;
             pause_button.textContent = "Start";
             running = false;
-            step_button.disabled = running;
-        }
+            step_button.disabled = running || input;
+        // }
     } else {
         animation_frame = requestAnimationFrame(frame);
         pause_button.textContent = "Pause";
@@ -250,6 +253,7 @@ function frame(){
 }
 function process_step_result(result: Step_Result){
     animation_frame = undefined;
+    input = false;
     switch (result){
         case Step_Result.Continue: {
             if (running){
@@ -261,7 +265,8 @@ function process_step_result(result: Step_Result){
         } break;
         case Step_Result.Input: {
             step_button.disabled = true;
-            pause_button.disabled = true;
+            pause_button.disabled = false;
+            input = true;
         } break;
         case Step_Result.Halt: {
             output_element.innerText += "Program halted";

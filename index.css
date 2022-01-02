@@ -86,6 +86,16 @@ button {
   font-family: unscii;
   width: 20%;
   border: 0px;
+  filter: brightness(75%);
+}
+button:hover {
+  filter: brightness(85%);
+}
+button:disabled {
+  filter: brightness(40%);
+}
+button:active {
+  filter: brightness(100%);
 }
 
 input {

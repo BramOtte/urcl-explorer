@@ -13,6 +13,7 @@ import { enum_from_str, enum_strings, expand_warning, registers_to_string, memor
 let animation_frame;
 let running = false;
 let started = false;
+let input = false;
 const source_input = document.getElementById("urcl-source");
 const output_element = document.getElementById("output");
 const memory_view = document.getElementById("memory-view");
@@ -141,13 +142,15 @@ function step() {
 }
 function pause() {
     if (running) {
+        console.log("hello");
         if (animation_frame) {
             cancelAnimationFrame(animation_frame);
-            animation_frame = undefined;
-            pause_button.textContent = "Start";
-            running = false;
-            step_button.disabled = running;
         }
+        animation_frame = undefined;
+        pause_button.textContent = "Start";
+        running = false;
+        step_button.disabled = running || input;
+        // }
     }
     else {
         animation_frame = requestAnimationFrame(frame);
@@ -227,6 +230,7 @@ function frame() {
 }
 function process_step_result(result) {
     animation_frame = undefined;
+    input = false;
     switch (result) {
         case Step_Result.Continue:
             {
@@ -241,7 +245,8 @@ function process_step_result(result) {
         case Step_Result.Input:
             {
                 step_button.disabled = true;
-                pause_button.disabled = true;
+                pause_button.disabled = false;
+                input = true;
             }
             break;
         case Step_Result.Halt:
