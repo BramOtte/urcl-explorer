@@ -188,3 +188,14 @@ export function read32(buf: ArrayBufferView, littleEndian: boolean): Uint32Array
     }
     return out;
 }
+
+export function format_int(n: number){
+    const base = (0|n).toString();
+    let out = "";
+    let i = base.length;
+    for (; i > 3; i-=3){
+        out += "_" + base.substring(i, i-3);
+    }
+    out = base.substring(0, i) + out;
+    return out;
+}

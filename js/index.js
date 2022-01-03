@@ -9,7 +9,7 @@ import { Sound } from "./emulator/devices/sound.js";
 import { Storage } from "./emulator/devices/storage.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
-import { enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString } from "./emulator/util.js";
+import { enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString, format_int } from "./emulator/util.js";
 let animation_frame;
 let running = false;
 let started = false;
@@ -180,6 +180,7 @@ function compile_and_run() {
     }
 }
 function compile_and_reset() {
+    clock_count = 0;
     output_element.innerText = "";
     try {
         const source = source_input.value;
@@ -232,15 +233,17 @@ function frame() {
                 process_step_result(res, steps);
                 if (its === max_its || (res === Step_Result.Continue && steps !== its)) {
                     last_step = now;
-                    clock_speed_output.value = `${clock_speed} slowdown to ${0 | steps * 1000 / 16}`;
+                    clock_speed_output.value = `${format_int(clock_speed)}Hz slowdown to ${format_int(steps * 1000 / 16)}Hz, executed ${format_int(clock_count)} instructions`;
                 }
                 else {
                     last_step += its * 1000 / clock_speed;
-                    clock_speed_output.value = clock_speed + "";
+                    clock_speed_output.value = `${format_int(clock_speed)}Hz, executed ${format_int(clock_count)} instructions`;
                 }
             }
             else {
-                process_step_result(...emulator.run(16));
+                const [res, steps] = emulator.run(16);
+                process_step_result(res, steps);
+                clock_speed_output.value = `${format_int(steps * 1000 / 16)}Hz, executed ${format_int(clock_count)} instructions`;
             }
         }
         catch (e) {
