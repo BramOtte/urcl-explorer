@@ -89,7 +89,7 @@ const console_io = new Console_IO({
         console_input.value = value;
     }
 }, (text) => {
-    console_output.innerText += text;
+    console_output.value += text;
 }, () => {
     console_output.textContent = "";
     input_callback = undefined;

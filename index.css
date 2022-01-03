@@ -71,6 +71,8 @@ textarea {
   background: #000;
   color: #FFF;
   font-family: "unscii";
+  display: block;
+  white-space: pre;
 }
 
 #stdin {

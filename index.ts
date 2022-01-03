@@ -26,7 +26,7 @@ const memory_view = document.getElementById("memory-view") as HTMLElement;
 const register_view = document.getElementById("register-view") as HTMLElement;
 
 const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
-const console_output = document.getElementById("stdout") as HTMLElement;
+const console_output = document.getElementById("stdout") as HTMLOutputElement;
 const null_terminate_input = document.getElementById("null-terminate") as HTMLInputElement;
 const share_button = document.getElementById("share-button") as HTMLButtonElement;
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
@@ -101,7 +101,7 @@ const console_io = new Console_IO({
         }
     }, 
     (text) => {
-        console_output.innerText += text
+        console_output.value += text
     },
     () => {
         console_output.textContent = "";
