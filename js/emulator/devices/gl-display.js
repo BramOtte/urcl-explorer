@@ -55,6 +55,9 @@ export class Gl_Display {
         uint g = (c >> 2u) & 1u;
         uint b = (c >> 1u) & 1u;
         uint i = ((c >> 0u) & 1u) + 1u;
+        if ((c & 15u) == 1u){
+            return vec4(0.25, 0.25, 0.25, 1.);
+        }
         return vec4(float(r*i)/2.1, float(g*i)/2.1, float(b*i)/2.1, 1.);
     }
     vec4 pallet_pico8[16] = vec4[16](

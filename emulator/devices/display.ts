@@ -147,6 +147,9 @@ export class Display implements Device {
         case Color_Mode.RGB16: return this.short_to_full_rgb(short, 16);
         case Color_Mode.RGB24: return this.short_to_full_rgb(short, 24);
         case Color_Mode.RGBI: {
+            if ((short & 15) == 1){
+                return [64, 64, 64];
+            }
             const r = (short >>> 3) & 1;
             const g = (short >>> 2) & 1;
             const b = (short >>> 1) & 1;
