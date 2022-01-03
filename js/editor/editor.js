@@ -1,3 +1,4 @@
+import { pad_left } from "../emulator/util.js";
 import { regex_end, tokenize } from "./tokenizer.js";
 export class Editor_Window extends HTMLElement {
     line_nrs = document.createElement("div");
@@ -119,7 +120,8 @@ export class Editor_Window extends HTMLElement {
         this.colors.style.height = `${height}px`;
         const src = this.input.value;
         const lines = line_starts(src);
-        this.line_nrs.innerHTML = lines.map((_, i) => `<div>${i + 1}</div>`).join("");
+        const width = (lines.length + "").length;
+        this.line_nrs.innerHTML = lines.map((_, i) => `<div>${pad_left("" + (i + 1), width)}</div>`).join("");
         const tokens = [];
         const end = tokenize(src, 0, tokens);
         let span = this.colors.firstElementChild;
