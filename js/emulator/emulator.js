@@ -189,7 +189,6 @@ export class Emulator {
             if (Date.now() > end) {
                 return [Step_Result.Continue, start_length - length];
             }
-            document.title = "" + length;
         }
         for (let i = 0; i < length; i++) {
             const res = this.step();
