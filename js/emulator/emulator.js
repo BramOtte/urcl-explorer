@@ -175,27 +175,44 @@ export class Emulator {
             this.error("" + e);
         }
     }
-    burst(burst_length) {
-        for (let i = 0; i < burst_length; i++) {
+    burst(length, max_duration) {
+        const start_length = length;
+        const burst_length = 1024;
+        const end = Date.now() + max_duration;
+        for (; length >= burst_length; length -= burst_length) {
+            for (let i = 0; i < burst_length; i++) {
+                const res = this.step();
+                if (res !== Step_Result.Continue) {
+                    return [res, start_length - length];
+                }
+            }
+            if (Date.now() > end) {
+                return [Step_Result.Continue, start_length - length];
+            }
+            document.title = "" + length;
+        }
+        for (let i = 0; i < length; i++) {
             const res = this.step();
             if (res !== Step_Result.Continue) {
-                return res;
+                return [res, start_length - length];
             }
         }
-        return Step_Result.Continue;
+        return [Step_Result.Continue, start_length];
     }
     run(max_duration) {
-        const burst_length = 128;
+        const burst_length = 1024;
         const end = Date.now() + max_duration;
+        let j = 0;
         do {
             for (let i = 0; i < burst_length; i++) {
                 const res = this.step();
                 if (res !== Step_Result.Continue) {
-                    return res;
+                    return [res, j + i];
                 }
             }
+            j += burst_length;
         } while (Date.now() < end);
-        return Step_Result.Continue;
+        return [Step_Result.Continue, j];
     }
     step() {
         const pc = this.pc++;

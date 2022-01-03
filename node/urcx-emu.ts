@@ -88,7 +88,8 @@ setTimeout(on_continue, 1);
 
 async function on_continue(){
     try {
-        switch (emulator.run(2000)){
+        const [res, its] = emulator.run(2000)
+        switch (res){
             case Step_Result.Continue: {
                 emulator.warn("Long running program");
                 setTimeout(on_continue, 1); 

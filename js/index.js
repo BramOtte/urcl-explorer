@@ -16,6 +16,7 @@ let started = false;
 let input = false;
 let last_step = performance.now();
 let clock_speed = 0;
+let clock_count = 0;
 const source_input = document.getElementById("urcl-source");
 const output_element = document.getElementById("output");
 const memory_view = document.getElementById("memory-view");
@@ -29,7 +30,7 @@ const storage_input = document.getElementById("storage-input");
 const storage_msg = document.getElementById("storage-msg");
 const clock_speed_input = document.getElementById("clock-speed-input");
 const clock_speed_output = document.getElementById("clock-speed-output");
-const max_clock_speed = 30_000_000;
+const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = () => {
     clock_speed = Math.min(max_clock_speed, Math.max(0, Number(clock_speed_input.value) || 0));
@@ -149,7 +150,7 @@ compile_and_reset_button.addEventListener("click", compile_and_reset);
 pause_button.addEventListener("click", pause);
 step_button.addEventListener("click", step);
 function step() {
-    process_step_result(emulator.step());
+    process_step_result(emulator.step(), 1);
 }
 function pause() {
     if (running) {
@@ -226,10 +227,12 @@ function frame() {
                 const now = performance.now();
                 const dt = now - last_step;
                 const its = Math.min(max_its, 0 | dt * clock_speed / 1000);
-                process_step_result(emulator.burst(its));
-                if (its === max_its) {
+                const [res, steps] = emulator.burst(its, 16);
+                clock_count += steps;
+                process_step_result(res, steps);
+                if (its === max_its || (res === Step_Result.Continue && steps !== its)) {
                     last_step = now;
-                    clock_speed_output.value = clock_speed + " slowdown";
+                    clock_speed_output.value = `${clock_speed} slowdown to ${0 | steps * 1000 / 16}`;
                 }
                 else {
                     last_step += its * 1000 / clock_speed;
@@ -237,7 +240,7 @@ function frame() {
                 }
             }
             else {
-                process_step_result(emulator.run(16));
+                process_step_result(...emulator.run(16));
             }
         }
         catch (e) {
@@ -250,7 +253,8 @@ function frame() {
         pause_button.disabled = false;
     }
 }
-function process_step_result(result) {
+function process_step_result(result, steps) {
+    clock_count += steps;
     animation_frame = undefined;
     input = false;
     switch (result) {

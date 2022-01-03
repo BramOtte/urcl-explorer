@@ -79,7 +79,7 @@ function discord_emu(){
     
     function on_continue(){
         try {
-            const res = emulator.run(max_time);
+            const [res, steps] = emulator.run(max_time);
             state = res;
             switch (res){
                 case Step_Result.Continue: {
