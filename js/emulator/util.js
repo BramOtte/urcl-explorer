@@ -150,13 +150,16 @@ export function read32(buf, littleEndian) {
     return out;
 }
 export function format_int(n) {
-    const base = (0 | n).toString();
+    const base = Math.floor(n).toString();
     let out = "";
     let i = base.length;
-    for (; i > 3; i -= 3) {
-        out += "_" + base.substring(i, i - 3);
+    out = base.substring(i - 3, i);
+    for (i -= 3; i > 3; i -= 3) {
+        out = base.substring(i - 3, i) + "_" + out;
     }
-    out = base.substring(0, i) + out;
+    if (i > 0) {
+        out = base.substring(0, i) + "_" + out;
+    }
     return out;
 }
 export function bound(n, min, max) {
