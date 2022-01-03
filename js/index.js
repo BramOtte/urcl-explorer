@@ -32,11 +32,13 @@ const clock_speed_input = document.getElementById("clock-speed-input");
 const clock_speed_output = document.getElementById("clock-speed-output");
 const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
-clock_speed_input.oninput = () => {
+clock_speed_input.oninput = change_clockspeed;
+function change_clockspeed() {
     clock_speed = Math.min(max_clock_speed, Math.max(0, Number(clock_speed_input.value) || 0));
     clock_speed_output.value = "" + clock_speed;
     last_step = performance.now();
-};
+}
+change_clockspeed();
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
@@ -89,9 +91,9 @@ const console_io = new Console_IO({
         console_input.value = value;
     }
 }, (text) => {
-    console_output.value += text;
+    console_output.write(text);
 }, () => {
-    console_output.textContent = "";
+    console_output.clear();
     input_callback = undefined;
 });
 const canvas = document.getElementsByTagName("canvas")[0];
@@ -301,6 +303,7 @@ function update_views() {
     const lines = emulator.debug_info.pc_line_nrs;
     const line = lines[Math.min(emulator.pc, lines.length - 1)];
     source_input.set_pc_line(line);
+    console_output.flush();
 }
 change_color_mode();
 started = true;

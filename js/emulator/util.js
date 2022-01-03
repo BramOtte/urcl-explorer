@@ -159,4 +159,7 @@ export function format_int(n) {
     out = base.substring(0, i) + out;
     return out;
 }
+export function bound(n, min, max) {
+    return Math.max(min, Math.min(max, n));
+}
 //# sourceMappingURL=util.js.map

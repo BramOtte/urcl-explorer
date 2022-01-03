@@ -199,3 +199,7 @@ export function format_int(n: number){
     out = base.substring(0, i) + out;
     return out;
 }
+
+export function bound(n: number, min: number, max: number){
+    return Math.max(min, Math.min(max, n));
+}

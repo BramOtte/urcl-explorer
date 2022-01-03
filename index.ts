@@ -11,6 +11,7 @@ import { Storage } from "./emulator/devices/storage.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
 import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString, format_int } from "./emulator/util.js";
+import { Scroll_Out } from "./scroll-out/scroll-out.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -26,7 +27,7 @@ const memory_view = document.getElementById("memory-view") as HTMLElement;
 const register_view = document.getElementById("register-view") as HTMLElement;
 
 const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
-const console_output = document.getElementById("stdout") as HTMLOutputElement;
+const console_output = document.getElementById("stdout") as Scroll_Out;
 const null_terminate_input = document.getElementById("null-terminate") as HTMLInputElement;
 const share_button = document.getElementById("share-button") as HTMLButtonElement;
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
@@ -37,11 +38,13 @@ const clock_speed_output = document.getElementById("clock-speed-output") as HTML
 
 const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
-clock_speed_input.oninput = () => {
+clock_speed_input.oninput = change_clockspeed
+function change_clockspeed() {
     clock_speed = Math.min(max_clock_speed, Math.max(0, Number(clock_speed_input.value) || 0));
     clock_speed_output.value = ""+clock_speed;
     last_step = performance.now();
 }
+change_clockspeed();
 
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
@@ -101,10 +104,10 @@ const console_io = new Console_IO({
         }
     }, 
     (text) => {
-        console_output.value += text
+        console_output.write(text)
     },
     () => {
-        console_output.textContent = "";
+        console_output.clear();
         input_callback = undefined
     }
 );
@@ -317,6 +320,7 @@ function update_views(){
     const lines = emulator.debug_info.pc_line_nrs
     const line = lines[Math.min(emulator.pc, lines.length-1)];
     source_input.set_pc_line(line);
+    console_output.flush();
 }
 change_color_mode();
 

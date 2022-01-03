@@ -7,6 +7,8 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URCL Explorer</title>
+    <script type="module" src="js/scroll-out/scroll-out.js"></script>
+    <link rel="stylesheet" href="scroll-out/scoll-out.css">
     <script type="module" src="js/editor/editor.js"></script>
     <link rel="stylesheet" href="editor/editor.css">
 </head>
@@ -61,7 +63,7 @@
             <div style="display: flex; gap: 2rem;">
                 <div>
                     <h3>Console</h3>
-                    <output id="stdout"></output>
+                    <scroll-out id="stdout"></scroll-out>
                     <textarea id="stdin" type="text"></textarea>
                     <br>
                     null terminate<input type="checkbox" id="null-terminate">
