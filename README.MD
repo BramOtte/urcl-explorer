@@ -49,9 +49,11 @@ urcx-emu [<...options>] <sourcefile>
 
 
 ## Features
+This feature list is not complete yet.
+🚧🚧🚧
 ### Devices
 #### Display
-This device is operated via the %X, %Y, %COLOR, and %BUFFER ports 
+This device is operated via the [%X, %Y, %COLOR, and %BUFFER ports](https://docs.google.com/spreadsheets/d/1_ztRKWEm2LjHLb3Bxw0JOyZjJ9Drsj-hyOE-TFpwtS4/edit#gid=0&range=B11:B18)
 ##### Color modes
 The color mode defines how the colors being outputted via the %COLOR port should be displayed.
 Mode    | Description
@@ -62,7 +64,7 @@ BIN     | 0 is black any thing else is white
 [RGB8](https://en.wikipedia.org/wiki/8-bit_color)    | 5 <r>red</r>, 6 <g>green</g>, 5 <b>blue</b> the highest 3 bits represent a red value the next 3 green and the last 2 blue
 [RGB16](https://en.wikipedia.org/wiki/High_color)   | 5 <r>red</r>, 6 <g>green</g>, 5 <b>blue</b>
 [RGB24](https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#24-bit_RGB)   | 8 <r>red</r>, 8 <g>green</g>, 8 <b>blue</b>
-RGB     | Automatically pics RGB8, RGB16 or RGB24 depending on the BITS header
+RGB     | Automatically picks RGB8, RGB16 or RGB24 depending on the BITS header
 <style>
 r {
     color: red;
