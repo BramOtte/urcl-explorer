@@ -16,6 +16,7 @@ export class Gl_Display implements Device {
     private x = 0;
     private y = 0;
     private pref_display?: HTMLElement | null = globalThis?.document?.getElementById?.("pref-display");
+    bits = 8;
 
     private vert_src = /*vert*/ `#version 300 es
     precision mediump float;
@@ -262,7 +263,16 @@ export class Gl_Display implements Device {
     }
 
     update_display(){
-        const {gl, width, height, bytes, uni_mode, color_mode} = this;
+        let {gl, width, height, bytes, uni_mode, color_mode, bits} = this;
+        if (color_mode === Color_Mode.RGB){
+            if (this.bits >= 24){
+                color_mode = Color_Mode.RGB24;
+            } else if (this.bits >= 16){
+                color_mode = Color_Mode.RGB16;
+            } else {
+                color_mode = Color_Mode.RGB8;
+            }
+        }
         gl.uniform1ui(uni_mode, color_mode)
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
