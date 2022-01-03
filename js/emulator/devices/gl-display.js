@@ -49,6 +49,14 @@ export class Gl_Display {
         uint c = uint(v.x * 255.);
         return vec4(float((c >> 5u) & 7u)/7., float((c >> 2u) & 7u)/7., float(c & 3u)/3., 1.);
     }
+    vec4 rgbi(vec4 v){
+        uint c = uint(v.x * 255.);
+        uint r = (c >> 3u) & 1u;
+        uint g = (c >> 2u) & 1u;
+        uint b = (c >> 1u) & 1u;
+        uint i = ((c >> 0u) & 1u) + 1u;
+        return vec4(float(r*i)/2.1, float(g*i)/2.1, float(b*i)/2.1, 1.);
+    }
     vec4 pallet_pico8[16] = vec4[16](
         ${pico8.map(v => `vec4(${v.map(n => (n / 255))},1.)`).join(",")}
     );
@@ -76,6 +84,7 @@ export class Gl_Display {
             case ${Color_Mode.RGB8}u: color = rgb8(c); break;
             case ${Color_Mode.RGB16}u: color = rgb16(c); break;
             case ${Color_Mode.RGB24}u: color = rgb24(c); break;
+            case ${Color_Mode.RGBI}u: color = rgbi(c); break;
             default: color = pico8(c); break;
         }
     }

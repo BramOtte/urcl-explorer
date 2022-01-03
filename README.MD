@@ -65,3 +65,4 @@ BIN     | 0 is black any thing else is white
 [RGB16](https://en.wikipedia.org/wiki/High_color)   | 5 <b style="color: red">red</b>, 6 <b style="color: green">green</b>, 5 <b style="color: blue">blue</b>
 [RGB24](https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#24-bit_RGB)   | 8 <b style="color: red">red</b>, 8 <b style="color: green">green</b>, 8 <b style="color: blue">blue</b>
 RGB     | Automatically picks RGB8, RGB16 or RGB24 depending on the BITS header
+[RGBI](https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#4-bit_RGBI)    | 1 red, 1 green, 1 blue, 1 intensity, intensity 0 colors are at half brightness with 1 full.

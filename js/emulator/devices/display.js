@@ -8,6 +8,7 @@ export var Color_Mode;
     Color_Mode[Color_Mode["RGB16"] = 4] = "RGB16";
     Color_Mode[Color_Mode["RGB24"] = 5] = "RGB24";
     Color_Mode[Color_Mode["PICO8"] = 6] = "PICO8";
+    Color_Mode[Color_Mode["RGBI"] = 7] = "RGBI";
 })(Color_Mode || (Color_Mode = {}));
 export const pico8 = [
     0x000000, 0x1D2B53, 0x7E2553, 0x008751,
@@ -151,6 +152,13 @@ export class Display {
             case Color_Mode.RGB8: return this.short_to_full_rgb(short, 8);
             case Color_Mode.RGB16: return this.short_to_full_rgb(short, 16);
             case Color_Mode.RGB24: return this.short_to_full_rgb(short, 24);
+            case Color_Mode.RGBI: {
+                const r = (short >>> 3) & 1;
+                const g = (short >>> 2) & 1;
+                const b = (short >>> 1) & 1;
+                const i = (short >>> 0) & 1;
+                return [(r >> i) * 127, (g >> i) * 127, (b >> i) * 127];
+            }
             case Color_Mode.Mono: {
                 const val = Math.max(0, Math.min(255, short));
                 return [val, val, val];
