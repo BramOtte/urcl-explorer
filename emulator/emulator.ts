@@ -223,6 +223,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
         const opcode = this.program.opcodes[pc];
         if (opcode === Opcode.HLT){
+            this.pc--;
             return Step_Result.Halt;
         }
         const func = inst_fns[opcode];
