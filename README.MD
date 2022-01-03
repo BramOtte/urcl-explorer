@@ -61,7 +61,7 @@ Mode    | Description
 PICO8   | The [color pallet](https://lospec.com/palette-list/pico-8) the fantasy console [PICO-8](https://www.lexaloffle.com/pico-8.php) uses
 MONO    | The lowest 8 bits represent a brightness value 0 is black 255 is white
 BIN     | 0 is black any thing else is white
-[RGB8](https://en.wikipedia.org/wiki/8-bit_color)    | 5 <r>red</r>, 6 <g>green</g>, 5 <b>blue</b> the highest 3 bits represent a red value the next 3 green and the last 2 blue
+[RGB8](https://en.wikipedia.org/wiki/8-bit_color)    | 5 <r>red</r>, 6 <g>green</g>, 5 <b>blue</b> the highest 3 bits represent a red value the next 3 green and the lowest 2 blue
 [RGB16](https://en.wikipedia.org/wiki/High_color)   | 5 <r>red</r>, 6 <g>green</g>, 5 <b>blue</b>
 [RGB24](https://en.wikipedia.org/wiki/List_of_monochrome_and_RGB_color_formats#24-bit_RGB)   | 8 <r>red</r>, 8 <g>green</g>, 8 <b>blue</b>
 RGB     | Automatically picks RGB8, RGB16 or RGB24 depending on the BITS header
