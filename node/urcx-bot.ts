@@ -43,9 +43,11 @@ function code_block(str: string, max: number){
     return "```\n" + str + "```";
 }
 
+const channels = ["bots", "urcl-bot", "counting"];
+
 client.on("messageCreate", (msg) => {
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
-    if (msg.channel.name !== "bots" && msg.channel.name !== "urcl-bot") return;
+    if (!channels.includes(msg.channel.name)) return;
     try {
     const {content} = msg;
     if (content.startsWith("!urcx-emu")){
