@@ -57,15 +57,11 @@ if (code.warnings.length > 0) {
 const [program, debug_info] = compile(code);
 debug_info.file_name = args[0];
 emulator.load_program(program, debug_info);
-let bytes;
+let storage;
 if (__storage) {
     const file = (await fs.readFile(__storage));
-    bytes = file;
-    if (__storage_size) {
-        bytes = new Uint8Array(__storage_size * 1024);
-        bytes.set(file);
-    }
-    const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false); // TODO: add little endian flag
+    let bytes = file;
+    storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false, __storage_size * 1024); // TODO: add little endian flag
     emulator.add_io_device(storage);
 }
 if (__text_file) {
@@ -101,8 +97,8 @@ async function on_continue() {
     }
 }
 async function on_halt() {
-    if (__storage && bytes) {
-        await fs.writeFile(__storage, bytes);
+    if (__storage && storage) {
+        await fs.writeFile(__storage, storage.get_bytes());
     }
 }
 //# sourceMappingURL=urcx-emu.js.map

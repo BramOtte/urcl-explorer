@@ -68,7 +68,7 @@ storage_input.oninput = async e => {
         const data =  await file.arrayBuffer();
         uploaded_storage = new Uint8Array(data);
         const bytes = uploaded_storage.slice();
-        emulator.add_io_device(new Storage(emulator.bits, bytes, false)); // TODO: add little endian option
+        emulator.add_io_device(new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
         storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words`;
     } catch (error: any) {
         storage_msg.classList.add("error");
@@ -225,7 +225,7 @@ try {
 
     if (uploaded_storage){
         const bytes = uploaded_storage.slice();
-        emulator.add_io_device(new Storage(emulator.bits, bytes, false)); // TODO: add little endian option
+        emulator.add_io_device(new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
         storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 

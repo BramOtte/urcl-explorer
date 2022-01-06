@@ -54,7 +54,7 @@ function discord_emu(){
     let rendered_count = 0;
     let quality = 10;
     let text_end = "\n";
-    let bytes: Uint8Array | undefined = undefined;
+    let storage: undefined | Storage;
     let argv_res: any;
     
     const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n"});
@@ -115,7 +115,7 @@ function discord_emu(){
         std_info = "";
         rendered_count = all_screens.length;
 
-        return {out, info, screens, all_screens, scale, state, quality, storage: bytes};
+        return {out, info, screens, all_screens, scale, state, quality, storage: storage?.get_bytes()};
     }
     function start(argv: string[], source?: string){
         if (busy){
@@ -129,7 +129,6 @@ function discord_emu(){
     }
     async function _start(argv: string[], source?: string) {
     try {
-        bytes = undefined;
         stdout = "";
         argv_res = parse_argv(["",...argv], {
             __width: 32,
@@ -227,14 +226,14 @@ options:
         emulator.load_program(program, debug_info);
 
         if (__storage || __storage_size){
+            let bytes: Uint8Array;
             if (__storage){
                 const buf = await (await fetch(__storage)).arrayBuffer();
-                bytes = new Uint8Array((__storage_size * 1024) || buf.byteLength);
-                bytes.set(new Uint8Array(buf, 0, buf.byteLength));
+                bytes = new Uint8Array(buf);
             } else {
-                bytes = new Uint8Array(__storage_size * 1024);
+                bytes = new Uint8Array();
             }
-            const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false); // TODO: add little endian flag
+            storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false, __storage_size*1024); // TODO: add little endian flag
             emulator.add_io_device(storage);
         }
         

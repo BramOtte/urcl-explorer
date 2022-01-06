@@ -172,19 +172,36 @@ export function f32_encode(float: number){
 }
 
 
-export function read16(buf: ArrayBufferView, endianness: boolean): Uint16Array {
-    const view = new DataView(buf.buffer, buf.byteOffset);
-    const out = new Uint16Array(Math.ceil(buf.byteLength / 2));
-    for (let i = 0; i < out.length; i++){
-        out[i] = view.getUint16(i*2, endianness);
+export function read16(buf: ArrayBufferView, little_endian: boolean, size: number): Uint16Array {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const out = new Uint16Array(Math.floor( Math.max(size, buf.byteLength) / 2));
+    for (let i = 0; i < Math.floor(buf.byteLength / 2); i++){
+        out[i] = view.getUint16(i*2, little_endian);
     }
     return out;
 }
-export function read32(buf: ArrayBufferView, littleEndian: boolean): Uint32Array {
-    const view = new DataView(buf.buffer, buf.byteOffset);
-    const out = new Uint32Array(Math.ceil(buf.byteLength / 4));
-    for (let i = 0; i < out.length; i++){
+export function read32(buf: ArrayBufferView, littleEndian: boolean, size: number): Uint32Array {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const out = new Uint32Array(Math.floor(Math.max(size, buf.byteLength) / 4));
+    for (let i = 0; i < Math.floor(buf.byteLength / 4); i++){
         out[i] = view.getUint32(i*4, littleEndian);
+    }
+    return out;
+}
+
+export function write16(arr: Uint16Array, little_endian: boolean): Uint8Array {
+    const out = new Uint8Array(arr.length*2);
+    const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+    for (let i = 0; i < arr.length; i++){
+        view.setUint16(i*2, arr[i], little_endian);
+    }
+    return out;
+}
+export function write32(arr: Uint32Array, little_endian: boolean): Uint8Array {
+    const out = new Uint8Array(arr.length*4);
+    const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+    for (let i = 0; i < arr.length; i++){
+        view.setUint32(i*4, arr[i], little_endian);
     }
     return out;
 }

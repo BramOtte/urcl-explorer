@@ -133,19 +133,35 @@ export function f32_encode(float) {
     conversion_buffer.setFloat32(0, float, true);
     return conversion_buffer.getInt32(0, true);
 }
-export function read16(buf, endianness) {
-    const view = new DataView(buf.buffer, buf.byteOffset);
-    const out = new Uint16Array(Math.ceil(buf.byteLength / 2));
-    for (let i = 0; i < out.length; i++) {
-        out[i] = view.getUint16(i * 2, endianness);
+export function read16(buf, little_endian, size) {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const out = new Uint16Array(Math.floor(Math.max(size, buf.byteLength) / 2));
+    for (let i = 0; i < Math.floor(buf.byteLength / 2); i++) {
+        out[i] = view.getUint16(i * 2, little_endian);
     }
     return out;
 }
-export function read32(buf, littleEndian) {
-    const view = new DataView(buf.buffer, buf.byteOffset);
-    const out = new Uint32Array(Math.ceil(buf.byteLength / 4));
-    for (let i = 0; i < out.length; i++) {
+export function read32(buf, littleEndian, size) {
+    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
+    const out = new Uint32Array(Math.floor(Math.max(size, buf.byteLength) / 4));
+    for (let i = 0; i < Math.floor(buf.byteLength / 4); i++) {
         out[i] = view.getUint32(i * 4, littleEndian);
+    }
+    return out;
+}
+export function write16(arr, little_endian) {
+    const out = new Uint8Array(arr.length * 2);
+    const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+    for (let i = 0; i < arr.length; i++) {
+        view.setUint16(i * 2, arr[i], little_endian);
+    }
+    return out;
+}
+export function write32(arr, little_endian) {
+    const out = new Uint8Array(arr.length * 4);
+    const view = new DataView(out.buffer, out.byteOffset, out.byteLength);
+    for (let i = 0; i < arr.length; i++) {
+        view.setUint32(i * 4, arr[i], little_endian);
     }
     return out;
 }

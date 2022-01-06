@@ -51,7 +51,7 @@ function discord_emu() {
     let rendered_count = 0;
     let quality = 10;
     let text_end = "\n";
-    let bytes = undefined;
+    let storage;
     let argv_res;
     const emulator = new Emulator({ on_continue, warn: (str) => std_info += str + "\n" });
     emulator.add_io_device(new RNG());
@@ -109,7 +109,7 @@ function discord_emu() {
         stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
-        return { out, info, screens, all_screens, scale, state, quality, storage: bytes };
+        return { out, info, screens, all_screens, scale, state, quality, storage: storage?.get_bytes() };
     }
     function start(argv, source) {
         if (busy) {
@@ -123,7 +123,6 @@ function discord_emu() {
     }
     async function _start(argv, source) {
         try {
-            bytes = undefined;
             stdout = "";
             argv_res = parse_argv(["", ...argv], {
                 __width: 32,
@@ -218,15 +217,15 @@ options:
             const [program, debug_info] = compile(code);
             emulator.load_program(program, debug_info);
             if (__storage || __storage_size) {
+                let bytes;
                 if (__storage) {
                     const buf = await (await fetch(__storage)).arrayBuffer();
-                    bytes = new Uint8Array((__storage_size * 1024) || buf.byteLength);
-                    bytes.set(new Uint8Array(buf, 0, buf.byteLength));
+                    bytes = new Uint8Array(buf);
                 }
                 else {
-                    bytes = new Uint8Array(__storage_size * 1024);
+                    bytes = new Uint8Array();
                 }
-                const storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false); // TODO: add little endian flag
+                storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false, __storage_size * 1024); // TODO: add little endian flag
                 emulator.add_io_device(storage);
             }
             const canvas = Canvas.createCanvas(__width, __height);
