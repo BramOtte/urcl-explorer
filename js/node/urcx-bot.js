@@ -5,6 +5,7 @@ import { emu_reply, emu_start } from "./bots/bot-emu.js";
 import GivEncoder from "gifencoder";
 import Canvas from "canvas";
 import { Step_Result } from "../emulator/emulator.js";
+import { my_exec } from "./exec.js";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -45,14 +46,36 @@ function code_block(str, max) {
     return "```\n" + str + "```";
 }
 const channels = ["bots", "urcl-bot", "counting"];
-client.on("messageCreate", (msg) => {
+client.on("messageCreate", async (msg) => {
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))
         return;
     if (!channels.includes(msg.channel.name))
         return;
     try {
         const { content } = msg;
-        if (content.startsWith("!urcx-emu")) {
+        if (content.startsWith("!urclpp")) {
+            let source = parse_code_block(content);
+            if (source === undefined) {
+                msg.reply("no source specified");
+                return;
+            }
+            const { code, out, errors } = await my_exec("python", "URCLpp-compiler/compiler2.py", `imm:${source}`);
+            if (errors) {
+                msg.reply(`exit code ${code}\n\`\`\`\n${out}\`\`\`errors: \`\`\`\n${errors}\`\`\``);
+            }
+            else {
+                msg.reply(`exit code ${code}\n\`\`\`\n${out}\`\`\``);
+            }
+            const urcx = content.indexOf("urcx-emu");
+            if (urcx < 0) {
+                return;
+            }
+            const end = content.indexOf(" ");
+            const argv = content.substring(end).split("\n")[0].split(" ");
+            const res = emu_start(msg.channelId, argv, out);
+            reply(res);
+        }
+        if (content.startsWith("urcx-emu")) {
             const argv = content.split("\n")[0].split(" ");
             let source = parse_code_block(content);
             if (!source) {
