@@ -345,7 +345,7 @@ function parse_operant(
                 errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
             }
-            return [Operant_Type.Imm, char_lit.charCodeAt(0)];
+            return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
         }
         case '&': warnings.push(warn(line_nr, `Compiler constants with & are deprecated`));
         case '@': {
