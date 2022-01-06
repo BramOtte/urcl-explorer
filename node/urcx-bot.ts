@@ -70,7 +70,7 @@ client.on("messageCreate", async (msg) => {
         }
         const end = content.indexOf(" ");
         const argv = content.substring(end).split("\n")[0].split(" ");
-        const res = emu_start(msg.channelId, argv, out);
+        const res = emu_start(msg.channelId, argv, out + "\nHLT");
         reply(res);
     } else
     if (content.startsWith("!urcx-emu")){
