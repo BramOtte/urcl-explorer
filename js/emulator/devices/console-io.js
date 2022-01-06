@@ -27,7 +27,15 @@ export class Console_IO {
                 v = (v & (sign_bit - 1)) - sign_bit;
             }
             this.write(v.toString());
-        }
+        },
+        // TODO: make specific implementations for these
+        [IO_Port.ASCII]: this.text_out,
+        [IO_Port.CHAR5]: this.text_out,
+        [IO_Port.CHAR6]: this.text_out,
+        [IO_Port.ASCII]: this.text_out,
+        [IO_Port.UTF8]: this.text_out,
+        [IO_Port.UTF16]: this.text_out,
+        [IO_Port.UTF32]: this.text_out,
     };
     set_text(text) {
         this.input.text = text;

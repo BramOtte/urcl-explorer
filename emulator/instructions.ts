@@ -81,7 +81,7 @@ export enum IO_Port {
     // Graphics
     X, Y, COLOR, BUFFER, G_SPECIAL = 15,
     // Text
-    ASCII, CHAR5, CHAR6, ASCII7, UTF8, T_SPECIAL = 23,
+    ASCII, CHAR5, CHAR6, ASCII7, UTF8, UTF16, UTF32, T_SPECIAL = 23,
     // Numbers
     INT, UINT, BIN, HEX, FLOAT, FIXED, N_SPECIAL=31,
     // Storage

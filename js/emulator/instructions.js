@@ -159,6 +159,8 @@ export var IO_Port;
     IO_Port[IO_Port["CHAR6"] = 18] = "CHAR6";
     IO_Port[IO_Port["ASCII7"] = 19] = "ASCII7";
     IO_Port[IO_Port["UTF8"] = 20] = "UTF8";
+    IO_Port[IO_Port["UTF16"] = 21] = "UTF16";
+    IO_Port[IO_Port["UTF32"] = 22] = "UTF32";
     IO_Port[IO_Port["T_SPECIAL"] = 23] = "T_SPECIAL";
     // Numbers
     IO_Port[IO_Port["INT"] = 24] = "INT";
