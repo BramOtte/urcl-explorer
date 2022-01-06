@@ -66,11 +66,11 @@ client.on("messageCreate", async (msg) => {
             else {
                 msg.reply(`exit code ${code}\n\`\`\`\n${out}\`\`\``);
             }
-            const urcx = content.indexOf("urcx-emu");
+            const urcx = content.indexOf("emu");
             if (urcx < 0) {
                 return;
             }
-            const end = content.indexOf(" ");
+            const end = content.indexOf(" ", urcx);
             const argv = content.substring(end).split("\n")[0].split(" ");
             const res = emu_start(msg.channelId, argv, out + "\nHLT");
             reply(res);
