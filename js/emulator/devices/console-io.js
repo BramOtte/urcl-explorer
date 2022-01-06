@@ -47,7 +47,7 @@ export class Console_IO {
     text_in(callback) {
         if (this.input.text.length === 0) {
             this.input.read(() => {
-                const char_code = this.input.text.charCodeAt(0);
+                const char_code = this.input.text.codePointAt(0) ?? this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
                 callback(char_code);
             });
@@ -58,7 +58,7 @@ export class Console_IO {
         return char_code;
     }
     text_out(value) {
-        this.write(String.fromCharCode(value));
+        this.write(String.fromCodePoint(value));
     }
     numb_in(callback) {
         if (this.input.text.length !== 0) {

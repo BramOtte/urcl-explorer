@@ -50,7 +50,7 @@ export class Console_IO implements Device {
     text_in(callback: (value: Word) => void): undefined | number {
         if (this.input.text.length === 0){
             this.input.read(()=>{
-                const char_code = this.input.text.charCodeAt(0);
+                const char_code = this.input.text.codePointAt(0) ?? this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
                 callback(char_code);
             });
@@ -61,7 +61,7 @@ export class Console_IO implements Device {
         return char_code;
     }
     text_out(value: Word): void {
-        this.write(String.fromCharCode(value));
+        this.write(String.fromCodePoint(value));
     }
     numb_in(callback: (value: Word) => void): undefined | number {
         if (this.input.text.length !== 0){
