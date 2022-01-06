@@ -75,7 +75,7 @@ client.on("messageCreate", async (msg) => {
             const res = emu_start(msg.channelId, argv, out);
             reply(res);
         }
-        if (content.startsWith("urcx-emu")) {
+        else if (content.startsWith("urcx-emu")) {
             const argv = content.split("\n")[0].split(" ");
             let source = parse_code_block(content);
             if (!source) {
@@ -88,8 +88,10 @@ client.on("messageCreate", async (msg) => {
             reply(res);
         }
         else if (content.startsWith("!")) {
-            const reply = `unknown command ${JSON.stringify(content)} try sending:\n`
-                + `!urcx-emu --help`;
+            const reply = `unknown command ${JSON.stringify(content)} try sending one of:\n`
+                + `!urcx-emu --help\n`
+                + `!urclpp\n`
+                + `!urclpp | urcx-emu`;
             msg.reply({ content: reply });
         }
         if (content.startsWith("?")) {
