@@ -75,7 +75,7 @@ client.on("messageCreate", async (msg) => {
             const res = emu_start(msg.channelId, argv, out);
             reply(res);
         }
-        else if (content.startsWith("urcx-emu")) {
+        else if (content.startsWith("!urcx-emu")) {
             const argv = content.split("\n")[0].split(" ");
             let source = parse_code_block(content);
             if (!source) {
