@@ -215,21 +215,21 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     // Signed right shift Op2, Op3 times then put result into Op1
     [Opcode.BSS  ]: [[SET, GET, GET], (s) => {s.a = signed(s, s.b) >> s.c}],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETE ]: [[SET, GET, GET], (s) => {if (s.b === s.c) s.a = s.max_value}],
+    [Opcode.SETE ]: [[SET, GET, GET], (s) => {s.a = s.b === s.c ? s.max_value : 0}],
     // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETNE]: [[SET, GET, GET], (s) => {if (s.b !== s.c) s.a = s.max_value}],
+    [Opcode.SETNE]: [[SET, GET, GET], (s) => {s.a = s.b !== s.c ? s.max_value : 0}],
     // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETG ]: [[SET, GET, GET], (s) => {if (s.b > s.c) s.a = s.max_value}],
+    [Opcode.SETG ]: [[SET, GET, GET], (s) => {s.a = s.b > s.c ? s.max_value : 0}],
     // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETL ]: [[SET, GET, GET], (s) => {if (s.b < s.c) s.a = s.max_value}],
+    [Opcode.SETL ]: [[SET, GET, GET], (s) => {s.a = s.b < s.c ? s.max_value : 0}],
     // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETGE]: [[SET, GET, GET], (s) => {if (s.b >= s.c) s.a = s.max_value}],
+    [Opcode.SETGE]: [[SET, GET, GET], (s) => {s.a = s.b >= s.c ? s.max_value : 0}],
     // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
-    [Opcode.SETLE]: [[SET, GET, GET], (s) => {if (s.b <= s.c) s.a = s.max_value}],
+    [Opcode.SETLE]: [[SET, GET, GET], (s) => {s.a = s.b <= s.c ? s.max_value : 0}],
     // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcode.SETC ]: [[SET, GET, GET], (s) => {if (s.b + s.c > s.max_value) s.a = s.max_value}],
+    [Opcode.SETC ]: [[SET, GET, GET], (s) => {s.a = s.b + s.c > s.max_value ? s.max_value : 0}],
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
-    [Opcode.SETNC]: [[SET, GET, GET], (s) => {if (s.b + s.c <= s.max_value) s.a = s.max_value}],
+    [Opcode.SETNC]: [[SET, GET, GET], (s) => {s.a = s.b + s.c <= s.max_value ? s.max_value : 0}],
     // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
     [Opcode.LLOD ]: [[SET, RAO, GAM], (s) => {s.a = s.m_get(s.b + s.c)}],
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
