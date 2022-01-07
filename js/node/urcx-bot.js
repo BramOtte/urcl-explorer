@@ -61,7 +61,7 @@ client.on("messageCreate", async (msg) => {
             }
             const { code, out, errors } = await my_exec("python", "URCLpp-compiler/compiler2.py", `imm:${source}`);
             const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${errors}\`\`\`` : "");
-            await msg.reply({ files: [new MessageAttachment(Buffer.from(rep_msg), "output.txt")], content: rep_msg });
+            await msg.reply({ files: [new MessageAttachment(Buffer.from(out), "output.txt")], content: rep_msg });
             const urcx = content.indexOf("emu");
             if (urcx < 0) {
                 return;
