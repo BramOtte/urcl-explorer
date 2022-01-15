@@ -15,9 +15,21 @@ interface Emu_Options {
 }
 
 export class Emulator implements Instruction_Ctx, Device_Host {
+    private signed(v: number){
+        return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this.bits);
+    }
     a = 0;
     b = 0;
     c = 0;
+    get sa(){return this.signed(this.a);}
+    set sa(v: number){this.a = v;}
+
+    get sb(){return this.signed(this.b);}
+    set sb(v: number){this.b = v;}
+
+    get sc(){return this.signed(this.c);}
+    set sc(v: number){this.c = v;}
+
     public program!: Program;
     public debug_info!: Debug_Info;
     constructor(public options: Emu_Options){

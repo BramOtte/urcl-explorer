@@ -65,11 +65,21 @@ export var Opcode;
     // IO Instructions
     Opcode[Opcode["IN"] = 57] = "IN";
     Opcode[Opcode["OUT"] = 58] = "OUT";
+    // Signed Instructions
+    Opcode[Opcode["SDIV"] = 59] = "SDIV";
+    Opcode[Opcode["SBRL"] = 60] = "SBRL";
+    Opcode[Opcode["SBRG"] = 61] = "SBRG";
+    Opcode[Opcode["SBLE"] = 62] = "SBLE";
+    Opcode[Opcode["SBGE"] = 63] = "SBGE";
+    Opcode[Opcode["SSETL"] = 64] = "SSETL";
+    Opcode[Opcode["SSETG"] = 65] = "SSETG";
+    Opcode[Opcode["SSETLE"] = 66] = "SSETLE";
+    Opcode[Opcode["SSETGE"] = 67] = "SSETGE";
     //----- Debug Instructions
-    Opcode[Opcode["__ASSERT"] = 59] = "__ASSERT";
-    Opcode[Opcode["__ASSERT0"] = 60] = "__ASSERT0";
-    Opcode[Opcode["__ASSERT_EQ"] = 61] = "__ASSERT_EQ";
-    Opcode[Opcode["__ASSERT_NEQ"] = 62] = "__ASSERT_NEQ";
+    Opcode[Opcode["__ASSERT"] = 68] = "__ASSERT";
+    Opcode[Opcode["__ASSERT0"] = 69] = "__ASSERT0";
+    Opcode[Opcode["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
+    Opcode[Opcode["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
@@ -217,6 +227,8 @@ export const Opcodes_operants = {
     // Branch to address specified by Op1 if Op2 is more than or equal to Op3
     [Opcode.BGE]: [[GET, GET, GET], (s) => { if (s.b >= s.c)
             s.pc = s.a; }],
+    [Opcode.SBGE]: [[GET, GET, GET], (s) => { if (s.sb >= s.sc)
+            s.pc = s.a; }],
     // Bitwise NOR Op2 and Op3 then put result into Op1
     [Opcode.NOR]: [[SET, GET, GET], (s) => { s.a = ~(s.b | s.c); }],
     // Load immediate
@@ -253,9 +265,13 @@ export const Opcodes_operants = {
     // Branch to address specified by Op1 if Op2 is less than Op3
     [Opcode.BRL]: [[GET, GET, GET], (s) => { if (s.b < s.c)
             s.pc = s.a; }],
+    [Opcode.SBRL]: [[GET, GET, GET], (s) => { if (s.sb < s.sc)
+            s.pc = s.a; }],
     // Branch to address specified by Op1 if Op2 is more than Op3
     [Opcode.BRG]: [[GET, GET, GET], (s) => { if (s.b > s.c)
             s.pc = s.a; }],
+    [Opcode.SBRG]: [[GET, GET, GET], (s) => { if (s.sb > s.sc)
+            s.pc = s.sa; }],
     // Branch to address specified by Op1 if Op2 is equal to Op3
     [Opcode.BRE]: [[GET, GET, GET], (s) => { if (s.b === s.c)
             s.pc = s.a; }],
@@ -270,6 +286,8 @@ export const Opcodes_operants = {
             s.pc = s.a; }],
     // Branch to address specified by Op1 if Op2 is less than or equal to Op3
     [Opcode.BLE]: [[GET, GET, GET], (s) => { if (s.b <= s.c)
+            s.pc = s.a; }],
+    [Opcode.SBLE]: [[GET, GET, GET], (s) => { if (s.sb <= s.sc)
             s.pc = s.a; }],
     // Branch to address specified by Op1 if Op2 equal to 0
     [Opcode.BRZ]: [[GET, GET], (s) => { if (s.b === 0)
@@ -306,6 +324,7 @@ export const Opcodes_operants = {
     [Opcode.MLT]: [[SET, GET, GET], (s) => { s.a = s.b * s.c; }],
     // Unsigned division of Op2 by Op3 then put answer into Op1
     [Opcode.DIV]: [[SET, GET, GET], (s) => { s.a = s.b / s.c; }],
+    [Opcode.SDIV]: [[SET, GET, GET], (s) => { s.a = s.sb / s.sc; }],
     // Unsigned modulus of Op2 by Op3 then put answer into Op1
     [Opcode.MOD]: [[SET, GET, GET], (s) => { s.a = s.b % s.c; }],
     // Right shift Op2, Op3 times then put result into Op1
@@ -313,21 +332,25 @@ export const Opcodes_operants = {
     // Left shift Op2, Op3 times then put result into Op1
     [Opcode.BSL]: [[SET, GET, GET], (s) => { s.a = s.b << s.c; }],
     // Signed right shift Op2 once then put result into Op1
-    [Opcode.SRS]: [[SET, GET], (s) => { s.a = signed(s, s.b) >> 1; }],
+    [Opcode.SRS]: [[SET, GET], (s) => { s.a = s.sb >> 1; }],
     // Signed right shift Op2, Op3 times then put result into Op1
-    [Opcode.BSS]: [[SET, GET, GET], (s) => { s.a = signed(s, s.b) >> s.c; }],
+    [Opcode.BSS]: [[SET, GET, GET], (s) => { s.a = s.sb >> s.c; }],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETE]: [[SET, GET, GET], (s) => { s.a = s.b === s.c ? s.max_value : 0; }],
     // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETNE]: [[SET, GET, GET], (s) => { s.a = s.b !== s.c ? s.max_value : 0; }],
     // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETG]: [[SET, GET, GET], (s) => { s.a = s.b > s.c ? s.max_value : 0; }],
+    [Opcode.SSETG]: [[SET, GET, GET], (s) => { s.a = s.sb > s.sc ? s.max_value : 0; }],
     // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETL]: [[SET, GET, GET], (s) => { s.a = s.b < s.c ? s.max_value : 0; }],
+    [Opcode.SSETL]: [[SET, GET, GET], (s) => { s.a = s.sb < s.sc ? s.max_value : 0; }],
     // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETGE]: [[SET, GET, GET], (s) => { s.a = s.b >= s.c ? s.max_value : 0; }],
+    [Opcode.SSETGE]: [[SET, GET, GET], (s) => { s.a = s.sb >= s.sc ? s.max_value : 0; }],
     // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETLE]: [[SET, GET, GET], (s) => { s.a = s.b <= s.c ? s.max_value : 0; }],
+    [Opcode.SSETLE]: [[SET, GET, GET], (s) => { s.a = s.sb <= s.sc ? s.max_value : 0; }],
     // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
     [Opcode.SETC]: [[SET, GET, GET], (s) => { s.a = s.b + s.c > s.max_value ? s.max_value : 0; }],
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
@@ -349,9 +372,6 @@ export const Opcodes_operants = {
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => { if (s.a === s.b)
             fail_assert(s); }],
 };
-function signed(s, v) {
-    return (v & s.sign_bit) === 0 ? v : v | (0xffff_ffff << s.bits);
-}
 export const inst_fns = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
         throw new Error("instruction definition undefined");

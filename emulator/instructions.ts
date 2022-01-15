@@ -18,6 +18,9 @@ export enum Opcode {
 
     // IO Instructions
     IN, OUT,
+    
+    // Signed Instructions
+    SDIV, SBRL, SBRG, SBLE , SBGE, SSETL, SSETG, SSETLE, SSETGE,
 
     //----- Debug Instructions
     __ASSERT,
@@ -103,6 +106,9 @@ export interface Instruction_Ctx {
     a: number,
     b: number,
     c: number,
+    sa: number,
+    sb: number,
+    sc: number,
     m_set(a: number, v: number): void;
     m_get(a: number): number;
     push(a: number): void;
@@ -114,7 +120,7 @@ export interface Instruction_Ctx {
 type Instruction_Callback = (ctx: Instruction_Ctx) => void | boolean;
 
 const {SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO} = Operant_Operation;
-export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Instruction_Callback]>> = {
+export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_Callback]> = {
     //----- Core Instructions
     // Add Op2 to Op3 then put result into Op1
     [Opcode.ADD ]: [[SET, GET, GET], (s) => {s.a = s.b + s.c}],
@@ -126,6 +132,7 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.STR ]: [[SAM, GET     ], (s) => s.m_set(s.a, s.b)],
     // Branch to address specified by Op1 if Op2 is more than or equal to Op3
     [Opcode.BGE ]: [[GET, GET, GET], (s) => {if (s.b >= s.c) s.pc = s.a}],
+    [Opcode.SBGE ]: [[GET, GET, GET], (s) => {if (s.sb >= s.sc) s.pc = s.a}],
     // Bitwise NOR Op2 and Op3 then put result into Op1
     [Opcode.NOR ]: [[SET, GET, GET], (s) => {s.a = ~(s.b | s.c)}],
     // Load immediate
@@ -162,8 +169,10 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.NAND]: [[SET, GET, GET], (s) => {s.a = ~(s.b & s.c)}],
     // Branch to address specified by Op1 if Op2 is less than Op3
     [Opcode.BRL ]: [[GET, GET, GET], (s) => {if (s.b < s.c) s.pc = s.a}],
+    [Opcode.SBRL ]: [[GET, GET, GET], (s) => {if (s.sb < s.sc) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is more than Op3
     [Opcode.BRG ]: [[GET, GET, GET], (s) => {if (s.b > s.c) s.pc = s.a}],
+    [Opcode.SBRG ]: [[GET, GET, GET], (s) => {if (s.sb > s.sc) s.pc = s.sa}],
     // Branch to address specified by Op1 if Op2 is equal to Op3
     [Opcode.BRE ]: [[GET, GET, GET], (s) => {if (s.b === s.c) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is not equal to Op3
@@ -174,6 +183,7 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.BEV ]: [[GET, GET     ], (s) => {if (!(s.b & 1)) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is less than or equal to Op3
     [Opcode.BLE ]: [[GET, GET, GET], (s) => {if (s.b <= s.c) s.pc = s.a}],
+    [Opcode.SBLE ]: [[GET, GET, GET], (s) => {if (s.sb <= s.sc) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 equal to 0
     [Opcode.BRZ ]: [[GET, GET     ], (s) => {if (s.b === 0) s.pc = s.a}],
     // Branch to address specified by Op1 if Op2 is not equal to 0
@@ -204,6 +214,7 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.MLT  ]: [[SET, GET, GET], (s) => {s.a = s.b * s.c}],
     // Unsigned division of Op2 by Op3 then put answer into Op1
     [Opcode.DIV  ]: [[SET, GET, GET], (s) => {s.a = s.b / s.c}],
+    [Opcode.SDIV  ]: [[SET, GET, GET], (s) => {s.a = s.sb / s.sc}],
     // Unsigned modulus of Op2 by Op3 then put answer into Op1
     [Opcode.MOD  ]: [[SET, GET, GET], (s) => {s.a = s.b % s.c}],
     // Right shift Op2, Op3 times then put result into Op1
@@ -211,21 +222,25 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     // Left shift Op2, Op3 times then put result into Op1
     [Opcode.BSL  ]: [[SET, GET, GET], (s) => {s.a = s.b << s.c}],
     // Signed right shift Op2 once then put result into Op1
-    [Opcode.SRS  ]: [[SET, GET     ], (s) => {s.a = signed(s, s.b) >> 1}],
+    [Opcode.SRS  ]: [[SET, GET     ], (s) => {s.a = s.sb >> 1}],
     // Signed right shift Op2, Op3 times then put result into Op1
-    [Opcode.BSS  ]: [[SET, GET, GET], (s) => {s.a = signed(s, s.b) >> s.c}],
+    [Opcode.BSS  ]: [[SET, GET, GET], (s) => {s.a = s.sb >> s.c}],
     // If Op2 equals Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETE ]: [[SET, GET, GET], (s) => {s.a = s.b === s.c ? s.max_value : 0}],
     // If Op2 is not equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETNE]: [[SET, GET, GET], (s) => {s.a = s.b !== s.c ? s.max_value : 0}],
     // If Op2 if more than Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETG ]: [[SET, GET, GET], (s) => {s.a = s.b > s.c ? s.max_value : 0}],
+    [Opcode.SSETG ]: [[SET, GET, GET], (s) => {s.a = s.sb > s.sc ? s.max_value : 0}],
     // If Op2 if less than Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETL ]: [[SET, GET, GET], (s) => {s.a = s.b < s.c ? s.max_value : 0}],
+    [Opcode.SSETL ]: [[SET, GET, GET], (s) => {s.a = s.sb < s.sc ? s.max_value : 0}],
     // If Op2 if greater than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETGE]: [[SET, GET, GET], (s) => {s.a = s.b >= s.c ? s.max_value : 0}],
+    [Opcode.SSETGE]: [[SET, GET, GET], (s) => {s.a = s.sb >= s.sc ? s.max_value : 0}],
     // If Op2 if less than or equal to Op3 then set Op1 to all ones in binary else set Op1 to 0
     [Opcode.SETLE]: [[SET, GET, GET], (s) => {s.a = s.b <= s.c ? s.max_value : 0}],
+    [Opcode.SSETLE]: [[SET, GET, GET], (s) => {s.a = s.sb <= s.sc ? s.max_value : 0}],
     // If Op2 + Op3 produces a carry out then set Op1 to all ones in binary, else set Op1 to 0
     [Opcode.SETC ]: [[SET, GET, GET], (s) => {s.a = s.b + s.c > s.max_value ? s.max_value : 0}],
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
@@ -245,9 +260,6 @@ export const Opcodes_operants: Partial<Record<Opcode, [Operant_Operation[], Inst
     [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s)}],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s)}],
 };
-function signed(s: Instruction_Ctx, v: number){
-    return (v & s.sign_bit) === 0 ? v : v | (0xffff_ffff << s.bits);
-}
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 
     = object_map(Opcodes_operants, (key, value)=>{
