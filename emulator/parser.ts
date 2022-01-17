@@ -95,6 +95,9 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                     continue;
                 }
                 const [name, value] = parts;
+                if (out.constants[name.toLocaleUpperCase()] !== undefined){
+                    out.warnings.push(warn(line_nr, `Redefinition of macro ${name}`));
+                }
                 out.constants[name.toUpperCase()] = value;
                 continue
             }
