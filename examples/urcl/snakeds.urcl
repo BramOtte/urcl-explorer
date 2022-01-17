@@ -19,6 +19,9 @@ MINREG 32
 @DEFINE tail 3
 @DEFINE apple 8
 
+.end_text
+DW [ 18 'g' 'a' 'm' 'e' '-' 'o' 'v' 'e' 'r' '\n' 's' 'c' 'o' 'r' 'e' ':' ':' ]
+
 IMM dx 0
 IMM dy 0
 IMM score 5
@@ -112,9 +115,6 @@ CAL .push
         OUT %COLOR 0
     .skip
     RET
-
-.end_text
-DW [ 18 'g' 'a' 'm' 'e' '-' 'o' 'v' 'e' 'r' '\n' 's' 'c' 'o' 'r' 'e' ':' ':' ]
 
 .gameover
     IMM r1 .end_text

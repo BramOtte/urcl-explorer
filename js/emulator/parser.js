@@ -34,6 +34,13 @@ export class Parser_output {
     operant_types = [];
     operant_values = [];
 }
+var Labeled;
+(function (Labeled) {
+    Labeled[Labeled["None"] = 0] = "None";
+    Labeled[Labeled["INST"] = 1] = "INST";
+    Labeled[Labeled["DW"] = 2] = "DW";
+    Labeled[Labeled["Label"] = 3] = "Label";
+})(Labeled || (Labeled = {}));
 export function parse(source, options = {}) {
     const out = new Parser_output();
     Object.assign(out.constants, options.constants ?? {});
@@ -45,6 +52,7 @@ export function parse(source, options = {}) {
     }
     let label;
     let last_label;
+    let labeled = Labeled.None;
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++) {
         const line = out.lines[line_nr];
         if (line === "") {
@@ -59,6 +67,10 @@ export function parse(source, options = {}) {
             continue;
         }
         if (split_instruction(line, line_nr, inst_i, out, out.errors)) {
+            if (last_label && labeled === Labeled.DW) {
+                out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
+            }
+            labeled = Labeled.INST;
             inst_i++;
             continue;
         }
@@ -95,9 +107,13 @@ export function parse(source, options = {}) {
                 }
             }
             if (last_label) {
+                if (labeled === Labeled.INST) {
+                    out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
+                }
                 last_label.type = Label_Type.DW;
                 last_label.index = out.data.length;
             }
+            labeled = Labeled.DW;
             for (const str of value_strs) {
                 out.data.push(0);
             }

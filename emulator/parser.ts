@@ -64,6 +64,10 @@ interface Parse_Options {
     constants?: Record<string, string>
 }
 
+enum Labeled {
+    None, INST, DW, Label
+}
+
 export function parse(source: string, options: Parse_Options = {}): Parser_output
 {
     const out = new Parser_output();
@@ -78,6 +82,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     }
     let label: undefined | Label;
     let last_label: undefined | Label;
+    let labeled = Labeled.None as Labeled;
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
         if (line === ""){continue;};
@@ -85,6 +90,10 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         if (label = parse_label(line, line_nr, inst_i, out, out.warnings)){continue;}
         if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
         if (split_instruction(line, line_nr, inst_i, out, out.errors)){
+            if (last_label && labeled === Labeled.DW){
+                out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
+            }
+            labeled = Labeled.INST;
             inst_i++; continue;
         }
         if (line.startsWith("@")){
@@ -116,9 +125,13 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                 if (value_strs.at(-1)?.length === 0){value_strs.pop();}
             }
             if (last_label){
+                if (labeled === Labeled.INST){
+                    out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
+                }
                 last_label.type = Label_Type.DW;
                 last_label.index = out.data.length;
             }
+            labeled = Labeled.DW;
             for (const str of value_strs){
                 out.data.push(0)
             }
