@@ -70,7 +70,7 @@ export function parse(source, options = {}) {
                     continue;
                 }
                 const [name, value] = parts;
-                if (out.constants[name.toLocaleUpperCase()] !== undefined) {
+                if (out.constants[name.toUpperCase()] !== undefined) {
                     out.warnings.push(warn(line_nr, `Redefinition of macro ${name}`));
                 }
                 out.constants[name.toUpperCase()] = value;
