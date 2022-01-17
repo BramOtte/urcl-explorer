@@ -67,8 +67,8 @@ export class Scroll_Out extends HTMLElement {
             this.size += line.length;
             this.lines.push("");
         }
-        this.lines[this.lines.length-1] += this.buf.substring(j, this.buf.length);
-        this.text_width = Math.max(this.buf.length-j, this.text_width);
+        const full_line = this.lines[this.lines.length-1] += this.buf.substring(j, this.buf.length);
+        this.text_width = Math.max(full_line.length, this.text_width);
         this.size += this.buf.length-j;
         this.buf = "";
         let i = 0;
