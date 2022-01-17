@@ -174,7 +174,9 @@ pause_button.addEventListener("click", pause);
 step_button.addEventListener("click", step);
 
 function step(){
-    process_step_result(emulator.step(), 1); 
+    process_step_result(emulator.step(), 1);
+    clock_speed_output.value = `stepping, executed ${format_int(clock_count)} instructions`;
+    console_output.flush();
 }
 
 function pause(){
