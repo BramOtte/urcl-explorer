@@ -132,8 +132,12 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                 last_label.index = out.data.length;
             }
             labeled = Labeled.DW;
-            for (const str of value_strs){
-                out.data.push(0)
+            let i = 0;
+            while (i < value_strs.length){
+                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
+                if (res?.[0] !== Operant_Type.String){
+                    out.data.push(res ? res[1] : -1);
+                }
             }
             continue;
         }
