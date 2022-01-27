@@ -153,9 +153,12 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                 value_strs[value_strs.length-1] = value_strs.at(-1)?.replaceAll("]", "").trim() ?? "";
                 if (value_strs.at(-1)?.length === 0){value_strs.pop();}
             }
-            for (const str of value_strs){
-                const res = parse_operant(str, line_nr, -1, out.labels, out.constants, out.errors, out.warnings);
-                out.data.push(res ? res[1] : -1);
+            let i = 0;
+            while (i < value_strs.length){
+                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
+                if (res?.[0] !== Operant_Type.String){
+                    out.data.push(res ? res[1] : -1);
+                }
             }
         }
     }
@@ -268,23 +271,32 @@ function split_instruction
 function parse_instructions(line_nr: number, inst_i: number, out: Parser_output, errors: Warning[], warnings: Warning[]): number {
     const types: number[] = out.operant_types[inst_i] = [];
     const values: number[] = out.operant_values[inst_i] = [];
-    for (const operant of out.operant_strings[inst_i]){
-        const [type, value] = parse_operant(operant, line_nr, inst_i, out.labels, out.constants, errors, warnings) ?? [];
-        if (type !== undefined){
+    let i = 0;
+    const strings = out.operant_strings[inst_i];
+    while (i < strings.length){
+        const [type, value] = parse_operant(()=>strings[i++], line_nr, inst_i, out.labels, out.constants, out.data, errors, warnings) ?? [];
+        if (type === Operant_Type.String){
+            errors.push(warn(line_nr, "Strings are not allowed in instructions"));
+        } else if (type !== undefined){
             types.push(type);
             values.push(value as number);
         }
+        
     }
     return 0;
 }
 
 function parse_operant(
-    operant: string, line_nr: number, inst_i: number, labels: {[K in string]?: Label},
-    macro_constants: Record<string, string>,
+    get_operant: ()=> undefined|string, line_nr: number, inst_i: number, labels: {[K in string]?: Label},
+    macro_constants: Record<string, string>, data: Word[],
     errors: Warning[], warnings: Warning[]
 ):
     undefined | [type: Operant_Type, value: Word]
 {
+    let operant = get_operant() as string;
+    if (operant === undefined){
+        return undefined;
+    }
     for (let i = 0; i < 10; i++){
         const macro = macro_constants[operant.toUpperCase()];
         if (macro !== undefined){
@@ -355,6 +367,9 @@ function parse_operant(
         }
         case '\'': {
             let char_lit;
+            if (operant.length === 1){
+                operant += " " + get_operant() ?? "";
+            }
             try {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"')) as string;
             } catch (e) {
@@ -362,6 +377,32 @@ function parse_operant(
                 return undefined;
             }
             return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
+        }
+        case '"': {
+            let i = 1;
+            const value = data.length;
+            while (true){
+                i = operant.indexOf('"', 1);
+                if (i > 0 && operant[i-1] !== "\\" || operant[i-2] === "\\"){
+                    let string = "";
+                    try {
+                        string = JSON.parse(operant) as string;
+                    } catch (e) {
+                        errors.push(warn(line_nr, `Invalid string ${operant}\n  ${e}`));
+                        return undefined;
+                    }
+                    for (let i = 0; i < string.length; i++){
+                        data.push(string.codePointAt(i) ?? 0);
+                    }
+                    return [Operant_Type.String, value];
+                }
+                const next = get_operant();
+                if (next === undefined){
+                    errors.push(warn(line_nr, `missing end of string`));
+                    return [Operant_Type.String, value];
+                }
+                operant += " " + next; 
+            }
         }
         case '&': warnings.push(warn(line_nr, `Compiler constants with & are deprecated`));
         case '@': {

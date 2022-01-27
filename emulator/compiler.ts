@@ -42,6 +42,7 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
             case Operant_Type.Reg: return Operant_Prim.Reg;
             case Operant_Type.Imm: return Operant_Prim.Imm;
             case Operant_Type.Label: return Operant_Prim.Imm;
+            case Operant_Type.String: return Operant_Prim.Reg;
             case Operant_Type.Memory: {
                 new_operant_values[i][j] += parsed.data.length;
                 return Operant_Prim.Imm;
