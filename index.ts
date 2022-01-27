@@ -49,7 +49,7 @@ change_clockspeed();
 share_button.onclick = e => {
     const srcurl = `data:,${encodeURIComponent(source_input.value)}`;
     const share = `${location.origin}${location.pathname}?srcurl=${srcurl}`;
-    console.log(share);
+    navigator.clipboard.writeText(share);
 }
 
 let uploaded_storage: undefined | Uint8Array;
