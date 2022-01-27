@@ -55,13 +55,13 @@ export class Storage implements Device {
         this.address = (this.address & ~this.address_mask) | v;
     }
     address_in(): number {
-        return this.address;
+        return Math.min(2**this.bits, this.data.length - (this.address & ~this.address_mask));
     }
     page_out(v: number){
         this.address = (this.address & this.address_mask) | (v << this.bits);
     }
     page_in(): number {
-        return this.address >>> this.bits;
+        return Math.ceil(this.data.length / (2 ** this.bits));
     }
     bus_out(v: number){
         if (this.address > this.data.length){

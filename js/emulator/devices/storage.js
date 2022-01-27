@@ -64,13 +64,13 @@ export class Storage {
         this.address = (this.address & ~this.address_mask) | v;
     }
     address_in() {
-        return this.address;
+        return Math.min(2 ** this.bits, this.data.length - (this.address & ~this.address_mask));
     }
     page_out(v) {
         this.address = (this.address & this.address_mask) | (v << this.bits);
     }
     page_in() {
-        return this.address >>> this.bits;
+        return Math.ceil(this.data.length / (2 ** this.bits));
     }
     bus_out(v) {
         if (this.address > this.data.length) {
