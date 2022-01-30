@@ -19,7 +19,7 @@ export class Console_IO {
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.UINT]: this.numb_out,
         [IO_Port.HEX]: (v) => this.write(v.toString(16).padStart(Math.ceil(this.bits / 4), "0")),
-        [IO_Port.BIN]: (v) => this.write(v.toString(2)),
+        [IO_Port.BIN]: (v) => this.write(v.toString(2).padStart(this.bits, "0")),
         [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString()),
         [IO_Port.INT]: (v) => {
             const sign_bit = 2 ** (this.bits - 1);
