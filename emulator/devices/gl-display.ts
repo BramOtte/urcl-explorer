@@ -38,18 +38,23 @@ export class Gl_Display implements Device {
     uniform sampler2D u_image;
     uniform uint u_color_mode;
 
-    vec4 rgb24(vec4 v){
-        return vec4(v.z, v.y, v.x, 1.);
-    }
-
-    vec4 rgb16(vec4 v){
-        uint c = uint(v.x * 255.) + (uint(v.y * 255.) << 8u);
-        return vec4(float((c >> 11u) & 31u)/31., float((c >> 5u) & 63u)/63., float(c & 31u)/31., 1.);
-    }
-
-    vec4 rgb8(vec4 v){
-        uint c = uint(v.x * 255.);
-        return vec4(float((c >> 5u) & 7u)/7., float((c >> 2u) & 7u)/7., float(c & 3u)/3., 1.);
+    vec4 rgb(vec4 v, uint bits){
+        uint color = uint(v.x * 255.) + (uint(v.y * 255.) << 8u) + (uint(v.z * 255.) << 16u);
+        uint blue_bits = bits / 3u;
+        uint blue_mask = (1u << blue_bits) - 1u;
+        uint red_bits = (bits - blue_bits) / 2u;
+        uint red_mask = (1u << red_bits) - 1u;
+        uint green_bits = bits - blue_bits - red_bits;
+        uint green_mask = (1u << green_bits) - 1u;
+        
+        uint green_offset = blue_bits;
+        uint red_offset = green_offset + green_bits;
+        return vec4(
+            float((color >> red_offset   ) & red_mask) / float(red_mask),
+            float((color >> green_offset ) & green_mask) / float(green_mask),
+            float((color                  ) & blue_mask) / float(blue_mask),
+            1
+        );
     }
     vec4 rgbi(vec4 v){
         uint c = uint(v.x * 255.);
@@ -85,10 +90,12 @@ export class Gl_Display implements Device {
             case ${Color_Mode.Bin}u: color = bin(c); break;
             case ${Color_Mode.Mono}u: color = mono(c); break;
             case ${Color_Mode.PICO8}u: color = pico8(c); break;
-            case ${Color_Mode.RGB}u: color = rgb8(c); break;
-            case ${Color_Mode.RGB8}u: color = rgb8(c); break;
-            case ${Color_Mode.RGB16}u: color = rgb16(c); break;
-            case ${Color_Mode.RGB24}u: color = rgb24(c); break;
+            case ${Color_Mode.RGB}u: color = rgb(c, 8u); break;
+            case ${Color_Mode.RGB6}u: color = rgb(c, 6u); break;
+            case ${Color_Mode.RGB8}u: color = rgb(c, 8u); break;
+            case ${Color_Mode.RGB12}u: color = rgb(c, 12u); break;
+            case ${Color_Mode.RGB16}u: color = rgb(c, 16u); break;
+            case ${Color_Mode.RGB24}u: color = rgb(c, 24u); break;
             case ${Color_Mode.RGBI}u: color = rgbi(c); break;
             default: color = pico8(c); break;
         }

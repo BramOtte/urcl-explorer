@@ -7,8 +7,10 @@ export var Color_Mode;
     Color_Mode[Color_Mode["RGB8"] = 3] = "RGB8";
     Color_Mode[Color_Mode["RGB16"] = 4] = "RGB16";
     Color_Mode[Color_Mode["RGB24"] = 5] = "RGB24";
-    Color_Mode[Color_Mode["PICO8"] = 6] = "PICO8";
-    Color_Mode[Color_Mode["RGBI"] = 7] = "RGBI";
+    Color_Mode[Color_Mode["RGB6"] = 6] = "RGB6";
+    Color_Mode[Color_Mode["RGB12"] = 7] = "RGB12";
+    Color_Mode[Color_Mode["PICO8"] = 8] = "PICO8";
+    Color_Mode[Color_Mode["RGBI"] = 9] = "RGBI";
 })(Color_Mode || (Color_Mode = {}));
 export const pico8 = [
     0x000000, 0x1D2B53, 0x7E2553, 0x008751,
@@ -149,7 +151,9 @@ export class Display {
     short_to_full(short, color_mode = this.color_mode) {
         switch (color_mode) {
             case Color_Mode.RGB: return this.short_to_full_rgb(short);
+            case Color_Mode.RGB6: return this.short_to_full_rgb(short, 6);
             case Color_Mode.RGB8: return this.short_to_full_rgb(short, 8);
+            case Color_Mode.RGB12: return this.short_to_full_rgb(short, 12);
             case Color_Mode.RGB16: return this.short_to_full_rgb(short, 16);
             case Color_Mode.RGB24: return this.short_to_full_rgb(short, 24);
             case Color_Mode.RGBI: {
@@ -191,35 +195,6 @@ export class Display {
             ((short >>> green_offset) & green_mask) * 255 / green_mask,
             ((short) & blue_mask) * 255 / blue_mask,
         ];
-    }
-    full_to_short(r, g, b) {
-        switch (this.color_mode) {
-            case Color_Mode.RGB: return this.full_to_short_rgb(r, g, b);
-            case Color_Mode.RGB8: return this.full_to_short_rgb(r, g, b, 8);
-            case Color_Mode.RGB16: return this.full_to_short_rgb(r, g, b, 16);
-            case Color_Mode.RGB24: return this.full_to_short_rgb(r, g, b, 24);
-            case Color_Mode.Mono: {
-                return 0 | g * ((1 << this.bits) - 1) / ((1 << 24) - 1);
-            }
-            case Color_Mode.Bin: {
-                return g > 0 ? 1 : 0;
-            }
-            default: return 0;
-        }
-    }
-    full_to_short_rgb(r, g, b, bits = this.bits) {
-        bits = Math.min(24, bits);
-        const blue_bits = 0 | bits / 3;
-        const blue_mask = (1 << blue_bits) - 1;
-        const red_bits = 0 | (bits - blue_bits) / 2;
-        const red_mask = (1 << red_bits) - 1;
-        const green_bits = bits - blue_bits - red_bits;
-        const green_mask = (1 << green_bits) - 1;
-        const green_offset = blue_bits;
-        const red_offset = green_offset + green_bits;
-        return (((r * red_mask / 255) & red_mask) << red_offset)
-            | (((g * green_mask / 255) & green_mask) << green_offset)
-            | ((b * blue_mask / 255) & blue_mask);
     }
     get width() {
         return this.ctx.canvas.width;

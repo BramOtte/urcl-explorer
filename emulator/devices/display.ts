@@ -4,6 +4,7 @@ import { Device } from "./device.js";
 export enum Color_Mode {
     RGB, Mono, Bin,
     RGB8, RGB16, RGB24,
+    RGB6, RGB12,
     PICO8, RGBI
 }
 
@@ -143,7 +144,9 @@ export class Display implements Device {
     private short_to_full(short: number, color_mode = this.color_mode): [r: number, g: number, b: number]{
         switch (color_mode){
         case Color_Mode.RGB: return this.short_to_full_rgb(short);
+        case Color_Mode.RGB6: return this.short_to_full_rgb(short, 6);
         case Color_Mode.RGB8: return this.short_to_full_rgb(short, 8);
+        case Color_Mode.RGB12: return this.short_to_full_rgb(short, 12);
         case Color_Mode.RGB16: return this.short_to_full_rgb(short, 16);
         case Color_Mode.RGB24: return this.short_to_full_rgb(short, 24);
         case Color_Mode.RGBI: {
@@ -186,36 +189,6 @@ export class Display implements Device {
             ((short >>> green_offset ) & green_mask) * 255 / green_mask,
             ((short                  ) & blue_mask) * 255 / blue_mask,
         ];
-    }
-    private full_to_short(r: number, g: number, b: number): number {
-        switch (this.color_mode){
-        case Color_Mode.RGB: return this.full_to_short_rgb(r, g, b);
-        case Color_Mode.RGB8: return this.full_to_short_rgb(r, g, b, 8);
-        case Color_Mode.RGB16: return this.full_to_short_rgb(r, g, b, 16);
-        case Color_Mode.RGB24: return this.full_to_short_rgb(r, g, b, 24);
-        case Color_Mode.Mono: {
-            return 0| g * ((1 << this.bits)-1) / ((1 << 24)-1);
-        }
-        case Color_Mode.Bin: {
-            return g > 0 ? 1 : 0;
-        }
-        default: return 0;
-        }
-    }
-    private full_to_short_rgb(r: number, g: number, b: number, bits: number = this.bits){
-        bits = Math.min(24, bits);
-        const blue_bits = 0| bits / 3;
-        const blue_mask = (1 << blue_bits) - 1;
-        const red_bits = 0| (bits - blue_bits) / 2;
-        const red_mask = (1 << red_bits) - 1;
-        const green_bits = bits - blue_bits - red_bits;
-        const green_mask = (1 << green_bits) - 1;
-        
-        const green_offset = blue_bits;
-        const red_offset = green_offset + green_bits;
-        return (((r * red_mask / 255)  & red_mask) << red_offset) 
-            | (((g * green_mask / 255) & green_mask) << green_offset)
-            | ((b * blue_mask / 255) & blue_mask);
     }
 
     get width(){
