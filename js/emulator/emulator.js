@@ -59,7 +59,7 @@ export class Emulator {
         }
         const memory_size = heap + stack + static_data.length;
         if (memory_size > this.max_size) {
-            throw new Error(`Too much memory heap:${heap} + stack:${stack} = ${heap + stack}, must be <= ${this.max_size}`);
+            throw new Error(`Too much memory heap:${heap} + stack:${stack} + dws:${static_data.length} = ${memory_size}, must be <= ${this.max_size}`);
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
