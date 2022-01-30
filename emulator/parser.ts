@@ -113,7 +113,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
             continue
         }
-        if (line.startsWith("DW")){
+        if (line.toUpperCase().startsWith("DW")){
             let [_, ...value_strs] = line.split(" ");
             if (value_strs.length > 1){
                 if (value_strs[0][0] !== "[" || value_strs.at(-1)?.at(-1) !== "]"){
@@ -134,7 +134,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             labeled = Labeled.DW;
             let i = 0;
             while (i < value_strs.length){
-                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
+                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, [], []);
                 if (res?.[0] !== Operant_Type.String){
                     out.data.push(res ? res[1] : -1);
                 }
@@ -149,7 +149,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     }
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
-        if (line.startsWith("DW")){
+        if (line.toUpperCase().startsWith("DW")){
             let [_, ...value_strs] = line.split(" ");
             if (value_strs.length > 1){
                 value_strs[0] = value_strs[0].replace("[", "").trim();
