@@ -1,5 +1,16 @@
 import { IO_Port } from "../instructions.js";
 import { f32_decode } from "../util.js";
+function sepperate(str) {
+    let out = "";
+    const seg_len = 4;
+    for (let i = 0; i < str.length; i += seg_len) {
+        out += "_" + str.substring(i, i + seg_len);
+    }
+    if (out.startsWith("_")) {
+        out = out.substring(1);
+    }
+    return out;
+}
 export class Console_IO {
     input;
     write;
@@ -18,8 +29,8 @@ export class Console_IO {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.UINT]: this.numb_out,
-        [IO_Port.HEX]: (v) => this.write(v.toString(16).padStart(Math.ceil(this.bits / 4), "0")),
-        [IO_Port.BIN]: (v) => this.write(v.toString(2).padStart(this.bits, "0")),
+        [IO_Port.HEX]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
+        [IO_Port.BIN]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
         [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString()),
         [IO_Port.INT]: (v) => {
             const sign_bit = 2 ** (this.bits - 1);
