@@ -21,7 +21,7 @@ export class Console_IO implements Device {
         [IO_Port.TEXT]: this.text_out,
         [IO_Port.NUMB]: this.numb_out,
         [IO_Port.UINT]: this.numb_out,
-        [IO_Port.HEX]: (v: number) => this.write(v.toString(16)), 
+        [IO_Port.HEX]: (v: number) => this.write(v.toString(16).padStart(Math.ceil(this.bits/4), "0")),
         [IO_Port.BIN]: (v: number) => this.write(v.toString(2)),
         [IO_Port.FLOAT]: (v: number) => this.write(f32_decode(v).toString()),
         [IO_Port.INT]: (v: number) => {
