@@ -252,6 +252,7 @@ function frame() {
         }
         catch (e) {
             output_element.innerText += e.message + "\nProgram Halted";
+            update_views();
             throw e;
         }
     }
