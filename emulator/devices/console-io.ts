@@ -1,5 +1,5 @@
 import { IO_Port } from "../instructions.js";
-import { f32_encode, f32_decode, Word } from "../util.js";
+import { f32_encode, f32_decode, Word, f16_decode } from "../util.js";
 import { Device } from "./device.js";
 
 function sepperate(str: string): string {
@@ -35,7 +35,15 @@ export class Console_IO implements Device {
         [IO_Port.UINT]: this.numb_out,
         [IO_Port.HEX]: (v: number) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits/4), "0"))),
         [IO_Port.BIN]: (v: number) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
-        [IO_Port.FLOAT]: (v: number) => this.write(f32_decode(v).toString()),
+        [IO_Port.FLOAT]: (v: number) => {
+            if (this.bits >= 32){
+                this.write(f32_decode(v).toString());
+            } else if (this.bits >= 16){
+                this.write(f16_decode(v).toString());
+            } else {
+                throw new Error(`8 bit floats are not supported`);
+            }
+        },
         [IO_Port.INT]: (v: number) => {
             const sign_bit = 2**(this.bits - 1);
             if (v & sign_bit){

@@ -1,11 +1,19 @@
 import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
-import { enum_count, enum_from_str, enum_strings, f32_encode, is_digit, warn } from "./util.js";
+import { enum_count, enum_from_str, enum_strings, f16_encode, f32_encode, is_digit, warn } from "./util.js";
 function my_parse_int(x) {
     x = x.replace(/\_/g, "");
     if (x.startsWith("0b")) {
         return parseInt(x.slice(2), 2);
     }
     return parseInt(x);
+}
+function my_parse_float(x) {
+    x = x.replace(/\_/g, "");
+    const float = parseFloat(x);
+    if (isNaN(float)) {
+        return undefined;
+    }
+    return float;
 }
 function my_parse_f32(x) {
     x = x.replace(/\_/g, "");
@@ -403,6 +411,14 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
                     return undefined;
                 }
                 return [Operant_Type.Imm, value];
+            }
+            else if (operant.endsWith("f16")) {
+                const value = my_parse_float(operant);
+                if (value === undefined) {
+                    errors.push(warn(line_nr, `Invalid immediate float ${operant}`));
+                    return undefined;
+                }
+                return [Operant_Type.Imm, f16_encode(value)];
             }
             else {
                 const value = my_parse_int(operant);

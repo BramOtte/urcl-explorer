@@ -1,5 +1,5 @@
 import { IO_Port } from "../instructions.js";
-import { f32_decode } from "../util.js";
+import { f32_decode, f16_decode } from "../util.js";
 function sepperate(str) {
     let out = "";
     const seg_len = 4;
@@ -31,7 +31,17 @@ export class Console_IO {
         [IO_Port.UINT]: this.numb_out,
         [IO_Port.HEX]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
         [IO_Port.BIN]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
-        [IO_Port.FLOAT]: (v) => this.write(f32_decode(v).toString()),
+        [IO_Port.FLOAT]: (v) => {
+            if (this.bits >= 32) {
+                this.write(f32_decode(v).toString());
+            }
+            else if (this.bits >= 16) {
+                this.write(f16_decode(v).toString());
+            }
+            else {
+                throw new Error(`8 bit floats are not supported`);
+            }
+        },
         [IO_Port.INT]: (v) => {
             const sign_bit = 2 ** (this.bits - 1);
             if (v & sign_bit) {

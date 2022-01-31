@@ -170,7 +170,22 @@ export function f32_encode(float: number){
     conversion_buffer.setFloat32(0, float, true);
     return conversion_buffer.getInt32(0, true);
 }
+export function f16_decode(int: number){
+    if (int === 0){return 0;}
+    const sign = (int >>> 15) & 1;
+    const exponent = (int >>> 10) & 31;
+    const fraction = int & 1023;
+    const mag = ((fraction/1024) + 1) * 2**(exponent-15);
+    return sign ? -mag : mag;
+}
+export function f16_encode(float: number){
+    const sign = Math.sign(float);
+    float *= sign;
+    const exponent = Math.floor(Math.log2(float));
+    const fraction = (float / 2**exponent) - 1;
 
+    return ((sign < 0 ? 1 : 0) << 15) | (((exponent + 15) & 31) << 10) | ((fraction * 1023) & 1023);
+}
 
 export function read16(buf: ArrayBufferView, little_endian: boolean, size: number): Uint16Array {
     const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
