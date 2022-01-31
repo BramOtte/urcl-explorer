@@ -183,8 +183,7 @@ export function f16_encode(float: number){
     float *= sign;
     const exponent = Math.floor(Math.log2(float));
     const fraction = (float / 2**exponent) - 1;
-
-    return ((sign < 0 ? 1 : 0) << 15) | (((exponent + 15) & 31) << 10) | ((fraction * 1023) & 1023);
+    return ((sign < 0 ? 1 : 0) << 15) | (((exponent + 15) & 31) << 10) | ((fraction * 1024) & 1023);
 }
 
 export function read16(buf: ArrayBufferView, little_endian: boolean, size: number): Uint16Array {
