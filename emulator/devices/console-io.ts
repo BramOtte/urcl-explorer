@@ -1,5 +1,5 @@
 import { IO_Port } from "../instructions.js";
-import { f32_encode, f32_decode, Word, f16_decode } from "../util.js";
+import { f32_encode, f32_decode, Word, f16_decode, f16_encode } from "../util.js";
 import { Device } from "./device.js";
 
 function sepperate(str: string): string {
@@ -28,6 +28,15 @@ export class Console_IO implements Device {
     inputs = {
         [IO_Port.TEXT]: this.text_in,
         [IO_Port.NUMB]: this.numb_in,
+        [IO_Port.FLOAT]: (cb:(n: number)=>void) => {
+            if (this.bits >= 32){
+                this.numb_in(cb, s => f32_encode(Number(s)));
+            } else if (this.bits >= 16){
+                this.numb_in(cb, s => f16_encode(Number(s)));
+            } else {
+                throw new Error(`8 bit floats are not supported`);
+            }
+        }
     }
     outputs = {
         [IO_Port.TEXT]: this.text_out,
@@ -83,16 +92,16 @@ export class Console_IO implements Device {
     text_out(value: Word): void {
         this.write(String.fromCodePoint(value));
     }
-    numb_in(callback: (value: Word) => void): undefined | number {
+    numb_in(callback: (value: Word) => void, parse = parseInt): undefined | number {
         if (this.input.text.length !== 0){
-            const num = parseInt(this.input.text);
-            if (Number.isInteger(num)){
+            const num = parse(this.input.text);
+            if (!Number.isNaN(num)){
                 this.input.text = this.input.text.trimStart().slice(num.toString().length);
                 return num;
             }
         }
         this.input.read(()=>{
-            const num = this.numb_in(callback);
+            const num = this.numb_in(callback, parse);
             if (num !== undefined){
                 callback(num);
             }

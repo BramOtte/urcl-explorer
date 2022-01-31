@@ -4,21 +4,14 @@
 ## URCL Standart
 * Check operant types at compile time
 * multiline commments
-* marcos
 * take into account bit opperants
 
 ## URCL++ Standart
 
 ## Misc
-* add fixed clock speed
 * check if all array access is bounds checked
-* exclude general purpose registers from MINREG
 * v-sync
-* visualize PC in source code
-* sound device
-* string litterals
 * document emulator
-* add something for automated testing either a port or an instruction
 * Option to list examples
 * fix the mess that is index.ts
 * fix size checks on buffers
@@ -30,7 +23,7 @@
 * !memory
 * load attachments
 * output attachments
-
+* handle non normalized for f16
 
 ## Low Priority
 * make diverent compile steps visible to user (URCL++ -> URCL -> URCL bin)
@@ -65,3 +58,10 @@
 * syntax highlighting
 * add line numbers to source code
 * fix BSS (sign 32 bit conversion goes wrong)
+* add fixed clock speed
+* exclude general purpose registers from MINREG
+* string litterals
+* sound device
+* visualize PC in source code
+* add something for automated testing either a port or an instruction
+* marcos
