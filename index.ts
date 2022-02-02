@@ -36,6 +36,10 @@ const storage_msg = document.getElementById("storage-msg") as HTMLInputElement;
 const clock_speed_input = document.getElementById("clock-speed-input") as HTMLInputElement;
 const clock_speed_output = document.getElementById("clock-speed-output") as HTMLInputElement;
 
+const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
+
+memory_update_input.oninput = () => update_views();
+
 const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed
@@ -317,8 +321,10 @@ function process_step_result(result: Step_Result, steps: number){
     update_views();
 }
 function update_views(){
-    const bits = emulator.bits
-    memory_view.innerText = memoryToString(emulator.memory as Arr, 0, emulator.memory.length, bits);
+    const bits = emulator.bits;
+    if (memory_update_input.checked){
+        memory_view.innerText = memoryToString(emulator.memory as Arr, 0, emulator.memory.length, bits);
+    }
     register_view.innerText = 
         registers_to_string(emulator)
     const lines = emulator.debug_info.pc_line_nrs
