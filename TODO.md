@@ -5,6 +5,7 @@
 * Check operant types at compile time
 * multiline commments
 * take into account bit opperants
+* Make == optional
 
 ## URCL++ Standart
 
@@ -12,18 +13,29 @@
 * check if all array access is bounds checked
 * v-sync
 * document emulator
-* Option to list examples
 * fix the mess that is index.ts
 * fix size checks on buffers
-* add !ports
 * check for negative header values
+* handle non normalized for f16
+* Optimize text highlighter.
+* Add endianess toggle
+* Add keymaps for buttons
+* Storage device download on website
+* Add user pallet via image
+* add axis port
+    - add mousex and mousey axis
+
+
+## bot
+* Option to list examples
+* add !ports
 * escape ```
 * !stop
 * !registers
 * !memory
 * load attachments
 * output attachments
-* handle non normalized for f16
+* Upload storage file to bot
 
 ## Low Priority
 * make diverent compile steps visible to user (URCL++ -> URCL -> URCL bin)
@@ -65,3 +77,5 @@
 * visualize PC in source code
 * add something for automated testing either a port or an instruction
 * marcos
+* Rgb6 rgb12
+* Fix to much memory error report

@@ -94,7 +94,7 @@ export enum IO_Port {
     // User defined
     UD1, UD2, UD3, UD4, UD5, UD6, UD7, UD8, UD9, UD10, UD11, UD12, UD13, UD14, UD15, UD16,
 
-    GAMEPAD = IO_Port.UD1
+    GAMEPAD = IO_Port.UD16, AXIS = IO_Port.UD15
 }
 
 export interface Instruction_Ctx {
