@@ -322,8 +322,8 @@ function parse_operant(
         }
     }
 
-    switch (operant){
-        case "R0": case "r0": case "$0": return [Operant_Type.Imm, 0];
+    switch (operant.toUpperCase()){
+        case "R0": case "$0": return [Operant_Type.Imm, 0];
         case "PC": return [Operant_Type.Reg, Register.PC];
         case "SP": return [Operant_Type.Reg, Register.SP];
     }

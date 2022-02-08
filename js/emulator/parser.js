@@ -285,9 +285,8 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
             return undefined;
         }
     }
-    switch (operant) {
+    switch (operant.toUpperCase()) {
         case "R0":
-        case "r0":
         case "$0": return [Operant_Type.Imm, 0];
         case "PC": return [Operant_Type.Reg, Register.PC];
         case "SP": return [Operant_Type.Reg, Register.SP];
