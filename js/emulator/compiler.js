@@ -1,4 +1,4 @@
-import { Constants, Header_Run, Operant_Prim, Operant_Type, URCL_Header } from "./instructions.js";
+import { Constants, Header_Run, Operant_Prim, Operant_Type, register_count, URCL_Header } from "./instructions.js";
 export function compile(parsed) {
     const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines } = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
@@ -21,7 +21,13 @@ export function compile(parsed) {
     const new_operant_values = operant_values.map(vals => vals.slice());
     const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
         switch (t) {
-            case Operant_Type.Reg: return Operant_Prim.Reg;
+            case Operant_Type.Reg: {
+                const num = new_operant_values[i][j] + 1 - register_count;
+                if (num > minreg) {
+                    throw new Error(`register ${num} does not exist, ${num} > minreg:${minreg}`);
+                }
+                return Operant_Prim.Reg;
+            }
             case Operant_Type.Imm: return Operant_Prim.Imm;
             case Operant_Type.Label: return Operant_Prim.Imm;
             case Operant_Type.String: return Operant_Prim.Reg;
