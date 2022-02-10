@@ -109,6 +109,9 @@ export class Display implements Device {
         this.read_buffer[i] = color;
         if (!this.buffer_enabled){
             this.ctx.putImageData(this.image, 0, 0);
+            if (this.save_buffers){
+                this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
+            }
         }
     }
     buffer_in(): number {
