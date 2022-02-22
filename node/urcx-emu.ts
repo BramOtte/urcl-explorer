@@ -23,14 +23,18 @@ const usage = `Usage: urcx-emu [<...options>] <filename>
 
     --text-file <file>
         file to be read into %TEXT
+
+    --little-endian
+        read storage with little endian byte order
 `;
 
 const {args, flags} = parse_argv(process.argv, {
     __storage: "",
     __storage_size: 0,
     __text_file: "",
+    __little_endian: false
 });
-const {__storage, __storage_size, __text_file} = flags;
+const {__storage, __storage_size, __text_file, __little_endian} = flags;
 if (args.length < 1){
     throw new Error("Not enough arguments");
 }
@@ -71,7 +75,7 @@ let storage: undefined | Storage
 if (__storage){
     const file: Uint8Array = (await fs.readFile(__storage));
     let bytes = file;
-    storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false, __storage_size*1024); // TODO: add little endian flag
+    storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size*1024);
     emulator.add_io_device(storage);
 }
 

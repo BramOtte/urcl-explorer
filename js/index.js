@@ -28,6 +28,7 @@ const share_button = document.getElementById("share-button");
 const auto_run_input = document.getElementById("auto-run-input");
 const storage_input = document.getElementById("storage-input");
 const storage_msg = document.getElementById("storage-msg");
+const storage_little = document.getElementById("storage-little");
 const clock_speed_input = document.getElementById("clock-speed-input");
 const clock_speed_output = document.getElementById("clock-speed-output");
 const memory_update_input = document.getElementById("update-mem-input");
@@ -49,27 +50,28 @@ share_button.onclick = e => {
 };
 let uploaded_storage;
 let storage_loads = 0;
-storage_input.oninput = async (e) => {
-    storage_msg.classList.remove("error");
-    const files = storage_input.files;
-    if (files === null || files.length < 1) {
-        storage_msg.classList.add("error");
-        storage_msg.innerText = "No file specified";
-        return;
-    }
-    const file = files[0];
-    try {
-        const data = await file.arrayBuffer();
-        uploaded_storage = new Uint8Array(data);
-        const bytes = uploaded_storage.slice();
-        emulator.add_io_device(new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
-        storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
-    }
-    catch (error) {
-        storage_msg.classList.add("error");
-        storage_msg.innerText = "" + error;
-    }
-};
+storage_little.oninput =
+    storage_input.oninput = async (e) => {
+        storage_msg.classList.remove("error");
+        const files = storage_input.files;
+        if (files === null || files.length < 1) {
+            storage_msg.classList.add("error");
+            storage_msg.innerText = "No file specified";
+            return;
+        }
+        const file = files[0];
+        try {
+            const data = await file.arrayBuffer();
+            uploaded_storage = new Uint8Array(data);
+            const bytes = uploaded_storage.slice();
+            emulator.add_io_device(new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
+            storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+        }
+        catch (error) {
+            storage_msg.classList.add("error");
+            storage_msg.innerText = "" + error;
+        }
+    };
 let input_callback;
 console_input.addEventListener("keydown", e => {
     if (!e.shiftKey && e.key === "Enter" && input_callback) {

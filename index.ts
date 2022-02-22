@@ -33,6 +33,7 @@ const share_button = document.getElementById("share-button") as HTMLButtonElemen
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
 const storage_input = document.getElementById("storage-input") as HTMLInputElement;
 const storage_msg = document.getElementById("storage-msg") as HTMLInputElement;
+const storage_little = document.getElementById("storage-little") as HTMLInputElement;
 const clock_speed_input = document.getElementById("clock-speed-input") as HTMLInputElement;
 const clock_speed_output = document.getElementById("clock-speed-output") as HTMLInputElement;
 
@@ -59,7 +60,7 @@ share_button.onclick = e => {
 
 let uploaded_storage: undefined | Uint8Array;
 let storage_loads = 0;
-
+storage_little.oninput =
 storage_input.oninput = async e => {
     storage_msg.classList.remove("error");
     const files = storage_input.files;
@@ -73,7 +74,7 @@ storage_input.oninput = async e => {
         const data =  await file.arrayBuffer();
         uploaded_storage = new Uint8Array(data);
         const bytes = uploaded_storage.slice();
-        emulator.add_io_device(new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
+        emulator.add_io_device(new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
         storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words`;
     } catch (error: any) {
         storage_msg.classList.add("error");
