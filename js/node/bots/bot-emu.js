@@ -101,17 +101,22 @@ function discord_emu() {
             std_info += `\n\nmemory:\n` + memoryToString(emulator.memory, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator.bits) + "\n\n";
         }
     }
+    function reset() {
+        stdout = "";
+        std_info = "";
+        emulator.reset();
+    }
     function o() {
         const out = stdout;
         const info = std_info;
         const all_screens = display.buffers.slice();
         const screens = all_screens.slice(rendered_count);
-        stdout = "";
         std_info = "";
         rendered_count = all_screens.length;
         return { out, info, screens, all_screens, scale, state, quality, storage: storage?.get_bytes() };
     }
     function start(argv, source) {
+        reset();
         if (busy) {
             std_info += "Emulator is still busy loading the previous program";
             return o();
@@ -123,7 +128,6 @@ function discord_emu() {
     }
     async function _start(argv, source) {
         try {
-            stdout = "";
             argv_res = parse_argv(["", ...argv], {
                 __width: 32,
                 __height: 32,
@@ -136,8 +140,9 @@ function discord_emu() {
                 __storage_size: 0,
                 __mem_start: 0,
                 __mem_end: -1,
+                __little_endian: false,
             });
-            const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size } } = argv_res;
+            const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size, __little_endian } } = argv_res;
             const usage = `Usage:
 start emulator: 
     !urcx-emu [<...options>] [<source url>]
@@ -182,6 +187,9 @@ options:
     
     --storage-size <kibibytes>
         how big the storage file will be
+
+    --little-endian
+        read storage with little endian byte order
 `;
             if (__help) {
                 std_info = usage;
@@ -225,7 +233,7 @@ options:
                 else {
                     bytes = new Uint8Array();
                 }
-                storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, false, __storage_size * 1024); // TODO: add little endian flag
+                storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size * 1024);
                 emulator.add_io_device(storage);
             }
             const canvas = Canvas.createCanvas(__width, __height);
