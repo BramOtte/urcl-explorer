@@ -18,7 +18,6 @@
 * check for negative header values
 * handle non normalized for f16
 * Optimize text highlighter.
-* Add endianess toggle
 * Add keymaps for buttons
 * Storage device download on website
 * Add user pallet via image
@@ -79,3 +78,4 @@
 * marcos
 * Rgb6 rgb12
 * Fix to much memory error report
+* Add endianess toggle
