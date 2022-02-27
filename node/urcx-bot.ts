@@ -6,6 +6,8 @@ import GivEncoder from "gifencoder";
 import Canvas from "canvas";
 import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
+import { preprocess } from "../emulator/preprocessor.js";
+import { Warning } from "../emulator/util.js";
 
 
 console.log("starting...");
@@ -86,11 +88,25 @@ client.on("messageCreate", async (msg) => {
         const res = emu_start(msg.channelId, argv, source);
         reply(res);
     }
+    else if (content.startsWith("!lower")){
+        let source = parse_code_block(content);
+        if (source === undefined){
+            msg.reply("no source specified");
+            return;
+        }
+        const errors: Warning[] = [];
+        const out = preprocess(source, errors);
+        const code = errors.length > 0 ? 1 : 0;
+        const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${errors}\`\`\`` : "");
+        
+        await msg.reply({files: [new MessageAttachment(Buffer.from(out), "output.txt")], content: rep_msg});
+    }
     else if (content.startsWith("!")){
         const reply = `unknown command ${JSON.stringify(content)} try sending one of:\n`
             + `!urcx-emu --help\n`
             + `!urclpp\n`
             + `!urclpp | urcx-emu`
+            + `!lower`;
         msg.reply({content: reply});
     }
     if (content.startsWith("?")){
