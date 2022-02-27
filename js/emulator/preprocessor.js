@@ -31,7 +31,6 @@ export function preprocess(str, errors) {
     const matches = source.match(f32);
     if (matches)
         for (const match of matches) {
-            console.log(match, match.substring(0, -4));
             const float = parseFloat(match.slice(0, -4));
             if (Number.isNaN(float)) {
                 errors.push(warn(-1, `${match} is not a number`));
