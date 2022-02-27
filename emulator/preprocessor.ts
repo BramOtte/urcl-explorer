@@ -13,6 +13,7 @@ export function preprocess(str: string, errors: Warning[]){
             }
             continue;
         }
+        macros[name] = rest.join(" ");
     }
     let last = "";
     while (str !== last){
