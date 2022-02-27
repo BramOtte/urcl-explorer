@@ -32,7 +32,7 @@ export function preprocess(str: string, errors: Warning[]){
     }
     const matches = source.match(f32);
     if (matches) for (const match of matches){
-        const float = parseFloat(match.slice(0, -4));
+        const float = parseFloat(match.substring(0, -3));
         if (Number.isNaN(float)){
             errors.push(warn(-1, `${match} is not a number`));
             continue;
