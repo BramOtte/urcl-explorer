@@ -2,25 +2,32 @@ import { warn, Warning } from "./util.js";
 
 export function preprocess(str: string, errors: Warning[]){
     const macros: Record<string, string> = {};
-    for (const [i, line] of str.replaceAll("\r", "").split("\n").entries()){
+    const lines = str.replaceAll("\r", "").split("\n");
+    let source = "";
+    for (let i = 0; i < lines.length; i++){
+        const line = lines[i].trim();
         const [start, name, ...rest] = line.split(/[ \t]+/);
+        if (start.toLowerCase() !== "@define"){
+            source += line;
+            continue;
+        }
         if (!name){
             errors.push(warn(i, `no name specified for macro`));
+            continue
         }
-        if (start.toLowerCase() === "@define"){
-            if (macros[name]){
-                errors.push(warn(i, `redefinition of macro ${name}`));
-            }
+        if (macros[name]){
+            errors.push(warn(i, `redefinition of macro ${name}`));
             continue;
         }
         macros[name] = rest.join(" ");
     }
     let last = "";
-    while (str !== last){
-        last = str;
+    while (source !== last){
+        last = source;
         for (const [name, macro] of Object.entries(macros)){
-            str = str.replaceAll(name, macro);
+            source = source.replaceAll(name, macro);
         }
     }
-    return str;
+    console.log(source);
+    return source;
 }
