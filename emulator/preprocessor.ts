@@ -1,4 +1,6 @@
-import { warn, Warning } from "./util.js";
+import { f32_encode, warn, Warning } from "./util.js";
+
+const f32 = /\d*\.?\d*f32/g;
 
 export function preprocess(str: string, errors: Warning[]){
     const macros: Record<string, string> = {};
@@ -8,7 +10,7 @@ export function preprocess(str: string, errors: Warning[]){
         const line = lines[i].trim();
         const [start, name, ...rest] = line.split(/[ \t]+/);
         if (start.toLowerCase() !== "@define"){
-            source += line;
+            source += line + "\n";
             continue;
         }
         if (!name){
@@ -28,6 +30,17 @@ export function preprocess(str: string, errors: Warning[]){
             source = source.replaceAll(name, macro);
         }
     }
-    console.log(source);
+    const matches = source.match(f32);
+    if (matches) for (const match of matches){
+        console.log(match, match.substring(0, -4));
+        const float = parseFloat(match.slice(0, -4));
+        if (Number.isNaN(float)){
+            errors.push(warn(-1, `${match} is not a number`));
+            continue;
+        }
+        const int = f32_encode(float);
+        source = source.replace(match, int.toString());
+    }
+
     return source;
 }
