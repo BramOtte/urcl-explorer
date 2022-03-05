@@ -5,6 +5,7 @@ import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
+import { Keyboard } from "./emulator/devices/keyboard.js";
 import { RNG } from "./emulator/devices/rng.js";
 import { Sound } from "./emulator/devices/sound.js";
 import { Storage } from "./emulator/devices/storage.js";
@@ -149,7 +150,8 @@ emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
-emulator.add_io_device(new RNG);
+emulator.add_io_device(new RNG());
+emulator.add_io_device(new Keyboard());
 
 const url = new URL(location.href, location.origin).searchParams.get("srcurl");
 
