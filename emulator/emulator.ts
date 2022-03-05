@@ -194,40 +194,41 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     burst(length: number, max_duration: number): [Step_Result, number]{
         const start_length = length;
         const burst_length = 1024;
-        const end = Date.now() + max_duration;
+        const end = performance.now() + max_duration;
         
         for (;length >= burst_length; length -= burst_length) {
             for (let i = 0; i < burst_length; i++){
                 const res = this.step();
                 if (res !== Step_Result.Continue){
-                    return [res, start_length - length];
+                    return [res, start_length - length + i + 1];
                 }
             }
-            if (Date.now() > end){
-                return [Step_Result.Continue, start_length - length]
+            
+            if (performance.now() > end){
+                return [Step_Result.Continue, start_length - length + burst_length]
             }
         }
         for (let i = 0; i < length; i++){
             const res = this.step();
             if (res !== Step_Result.Continue){
-                return [res, start_length - length];
+                return [res, start_length - length + i + 1];
             }
         }
         return [Step_Result.Continue, start_length];
     }
     run(max_duration: number): [Step_Result, number] {
         const burst_length = 1024;
-        const end = Date.now() + max_duration;
+        const end = performance.now() + max_duration;
         let j = 0;
         do {
             for (let i = 0; i < burst_length; i++){
                 const res = this.step();
                 if (res !== Step_Result.Continue){
-                    return [res, j + i];
+                    return [res, j + i + 1];
                 }
             }
             j += burst_length;
-        } while (Date.now() < end);
+        } while (performance.now() < end);
         return [Step_Result.Continue, j];
     }
     step(): Step_Result {

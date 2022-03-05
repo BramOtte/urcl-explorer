@@ -264,14 +264,13 @@ function frame(){
     if (running){
         try {
         if (clock_speed > 0){
-            const now = performance.now();
-            const dt = now - last_step;
+            const start_time = performance.now();
+            const dt = start_time - last_step;
             const its = Math.min(max_its, 0| dt * clock_speed / 1000);
             const [res, steps] = emulator.burst(its, 16);
-            clock_count += steps;
             process_step_result(res, steps);
             if (its === max_its || (res === Step_Result.Continue && steps !== its)){
-                last_step = now;
+                last_step = start_time;
                 clock_speed_output.value = `${format_int(clock_speed)}Hz slowdown to ${format_int(steps*1000/16)}Hz, executed ${format_int(clock_count)} instructions`;
             } else {
                 last_step += its * 1000 / clock_speed;
