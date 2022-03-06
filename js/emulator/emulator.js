@@ -64,7 +64,12 @@ export class Emulator {
         const buffer_size = (memory_size + registers) * WordArray.BYTES_PER_ELEMENT;
         if (this.buffer.byteLength < buffer_size) {
             console.log(`resizing Arraybuffer to ${buffer_size} bytes`);
-            this.buffer = new ArrayBuffer(buffer_size);
+            try {
+                this.buffer = new ArrayBuffer(buffer_size);
+            }
+            catch (e) {
+                throw new Error(`Unable to allocate enough memory for the emulator because:\n\t${e}`);
+            }
         }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
