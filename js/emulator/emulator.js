@@ -66,7 +66,7 @@ export class Emulator {
             this.warn(`resizing Arraybuffer to ${buffer_size} bytes`);
             const max_size = this.options.max_memory?.();
             if (max_size && buffer_size > max_size) {
-                throw new Error(`Unable to allocate memory for the emulator because\t\n${buffer_size} bytes exceeds the maximum of ${this.options.max_memory}bytes`);
+                throw new Error(`Unable to allocate memory for the emulator because\t\n${buffer_size} bytes exceeds the maximum of ${max_size}bytes`);
             }
             try {
                 this.buffer = new ArrayBuffer(buffer_size);
