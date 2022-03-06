@@ -61,6 +61,11 @@ export class Emulator {
         if (memory_size > this.max_size) {
             throw new Error(`Too much memory heap:${heap} + stack:${stack} + dws:${static_data.length} = ${memory_size}, must be <= ${this.max_size}`);
         }
+        const buffer_size = (memory_size + registers) * WordArray.BYTES_PER_ELEMENT;
+        if (this.buffer.byteLength < buffer_size) {
+            console.log(`resizing Arraybuffer to ${buffer_size} bytes`);
+            this.buffer = new ArrayBuffer(buffer_size);
+        }
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
         for (let i = 0; i < static_data.length; i++) {
@@ -80,7 +85,7 @@ export class Emulator {
             reset();
         }
     }
-    buffer = new ArrayBuffer(1024 * 1024 * 512);
+    buffer = new ArrayBuffer(1024 * 1024);
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
     get pc() {
