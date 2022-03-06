@@ -10,7 +10,6 @@ import { Color_Mode, Display } from "../../emulator/devices/display.js";
 import { URCL_Header } from "../../emulator/instructions.js";
 import { Storage } from "../../emulator/devices/storage.js";
 import { RNG } from "../../emulator/devices/rng.js";
-import os from "os"
 
 
 const emus: Map<any, ReturnType<typeof discord_emu>> = new Map();
@@ -58,7 +57,7 @@ function discord_emu(){
     let text_end = "\n";
     let storage: undefined | Storage;
     let argv_res: any;
-    const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n", max_memory: () => os.freemem() * 0.8});
+    const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n", max_memory: () => 1024 * 1024 * 512});
     emulator.add_io_device(new RNG());
     let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d") as CanvasRenderingContext2D, 8, Color_Mode.PICO8, true)
     
