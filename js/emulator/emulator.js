@@ -63,7 +63,11 @@ export class Emulator {
         }
         const buffer_size = (memory_size + registers) * WordArray.BYTES_PER_ELEMENT;
         if (this.buffer.byteLength < buffer_size) {
-            console.log(`resizing Arraybuffer to ${buffer_size} bytes`);
+            this.warn(`resizing Arraybuffer to ${buffer_size} bytes`);
+            const max_size = this.options.max_memory?.();
+            if (max_size && buffer_size > max_size) {
+                throw new Error(`Unable to allocate memory for the emulator because\t\n${buffer_size} bytes exceeds the maximum of ${this.options.max_memory}bytes`);
+            }
             try {
                 this.buffer = new ArrayBuffer(buffer_size);
             }
@@ -89,6 +93,9 @@ export class Emulator {
         for (const reset of this.device_resets) {
             reset();
         }
+    }
+    shrink_buffer() {
+        this.buffer = new ArrayBuffer(1024 * 1024);
     }
     buffer = new ArrayBuffer(1024 * 1024);
     registers = new Uint8Array(32);
