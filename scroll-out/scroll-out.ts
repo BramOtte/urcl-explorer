@@ -1,6 +1,6 @@
 import { bound } from "../emulator/util.js";
 
-const max_size = 5_000_000;
+const max_size = 1_000_000_000
 export class Scroll_Out extends HTMLElement {
     scroll_div = document.createElement("div");
     content = document.createElement("div");
@@ -76,6 +76,10 @@ export class Scroll_Out extends HTMLElement {
             this.size -= this.lines[i].length;
         }
         this.lines.splice(0, i);
+        if (this.lines.length === 1 && this.lines[0].length > max_size){
+            this.lines[0] = this.lines[0].substring(this.lines[0].length - max_size);
+            this.size = max_size;
+        }
 
         if (!this.resize()){
             this.scrollTop -= this.ch * i;
