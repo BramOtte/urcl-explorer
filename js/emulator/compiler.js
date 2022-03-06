@@ -7,7 +7,7 @@ export function compile(parsed) {
         header_bits <= 16 ? 16 :
             header_bits <= 32 ? 32 : undefined;
     if (bits === undefined) {
-        throw new Error("bits must be below 32");
+        throw new Error("bits can not exceed 32");
     }
     const msb = 1 << (bits - 1);
     const smsb = 1 << (bits - 2);
