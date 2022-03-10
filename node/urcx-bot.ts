@@ -50,7 +50,7 @@ const channels = ["bots", "urcl-bot", "counting", "chains"];
 
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")){
-        msg.reply("🇱🇴🇱")
+        msg.reply(msg.content.replace(/!lol/gi, "🇱🇴🇱"))
         return
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
