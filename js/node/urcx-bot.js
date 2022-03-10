@@ -49,6 +49,10 @@ function code_block(str, max) {
 }
 const channels = ["bots", "urcl-bot", "counting", "chains"];
 client.on("messageCreate", async (msg) => {
+    if (msg.content.toLowerCase().includes("!lol")) {
+        msg.reply(":regional_indicator_i: :regional_indicator_o: :regional_indicator_i:");
+        return;
+    }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))
         return;
     if (!channels.includes(msg.channel.name))
@@ -63,7 +67,7 @@ client.on("messageCreate", async (msg) => {
             }
             const { code, out, errors } = await my_exec("python", "URCLpp-compiler/compiler2.py", `imm:${source}`);
             const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${errors}\`\`\`` : "");
-            await msg.reply({ files: [new MessageAttachment(Buffer.from(out, {}), "output.txt")], content: rep_msg });
+            await msg.reply({ files: [new MessageAttachment(Buffer.from(out, "utf8"), "output.txt")], content: rep_msg });
             const urcx = content.indexOf("emu");
             if (urcx < 0) {
                 return;
@@ -95,7 +99,7 @@ client.on("messageCreate", async (msg) => {
             const out = preprocess(source, errors);
             const code = errors.length > 0 ? 1 : 0;
             const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${expand_warnings(errors, source.replaceAll("\r", "").split("\n"))}\`\`\`` : "");
-            await msg.reply({ files: [new MessageAttachment(Buffer.from(out), "output.txt")], content: rep_msg });
+            await msg.reply({ files: [new MessageAttachment(Buffer.from(out, "utf8"), "output.txt")], content: rep_msg });
         }
         else if (content.startsWith("!")) {
             const reply = `unknown command ${JSON.stringify(content)} try sending one of:\n`
@@ -111,7 +115,7 @@ client.on("messageCreate", async (msg) => {
         }
     }
     catch (e) {
-        const buf = Buffer.from(("" + e).substring(0, 1_000_000));
+        const buf = Buffer.from(("" + e).substring(0, 1_000_000), "utf8");
         msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
     async function reply(res) {
@@ -162,14 +166,14 @@ client.on("messageCreate", async (msg) => {
             }
         }
         if (info.length + 7 > max_info) {
-            const buf = Buffer.from(info);
+            const buf = Buffer.from(info, "utf8");
             files.push(new MessageAttachment(buf, "info.txt"));
         }
         else {
             content += code_block(info, max_info);
         }
         if (out.length + 7 > max_total - content.length) {
-            const buf = Buffer.from(out);
+            const buf = Buffer.from(out, "utf8");
             files.push(new MessageAttachment(buf, "out.txt"));
         }
         else {
