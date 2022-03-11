@@ -131,6 +131,7 @@ export class Editor_Window extends HTMLElement {
         if (src.length > max_source_size){
             this.input.style.color = "White"
             this.colors.style.display = "none"
+            this.call_input_listeners();
             return
         } 
         this.colors.style.height = `${height}px`;
@@ -157,11 +158,14 @@ export class Editor_Window extends HTMLElement {
         }
 
         this.input.style.width = `${this.colors.scrollWidth}px`;
-
+        this.call_input_listeners();
+    }
+    private call_input_listeners(){
         for (const listener of this.input_listeners){
             listener.call(this, new Event("input"));
         }
     }
+
     private input_listeners: ((this: GlobalEventHandlers, event: Event) => void)[] = [];
     set oninput(cb: (this: GlobalEventHandlers, event: Event) => void){
         this.input_listeners.push(cb);
