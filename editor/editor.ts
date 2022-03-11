@@ -110,12 +110,33 @@ export class Editor_Window extends HTMLElement {
         this.input.style.height = "1px";
         const height = this.input.scrollHeight;
         this.input.style.height = `${height}px`;
-        this.colors.style.height = `${height}px`;
-
+        
         const src = this.input.value;
         const lines = line_starts(src);
         const width = (lines.length+"").length
-        this.line_nrs.innerHTML = lines.map((_,i) => `<div>${pad_left(""+(i+1), width)}</div>`).join("");
+        const start_lines = this.line_nrs.children.length
+        const delta_lines = lines.length - start_lines;
+        if (delta_lines > 0){
+            for (let i = 0; i < delta_lines; i++){
+                const div = this.line_nrs.appendChild(document.createElement("div"));
+                div.textContent = pad_left(""+(start_lines+i+1), width);
+            }
+        } else {
+            for (let i = 0; i < -delta_lines; i++){
+                this.line_nrs.lastChild?.remove()
+            }
+        }
+        
+        const max_source_size = 5_000;
+        if (src.length > max_source_size){
+            this.input.style.color = "White"
+            this.colors.style.display = "none"
+            return
+        } 
+        this.colors.style.height = `${height}px`;
+        this.input.style.color = "transparent"
+        this.colors.style.display = ""
+
 
         const tokens: Token[] = [];
         const end = tokenize(src, 0, tokens);
