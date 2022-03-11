@@ -40,6 +40,13 @@ const clock_speed_output = document.getElementById("clock-speed-output") as HTML
 
 const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
 
+const url = new URL(location.href, location.origin)
+const srcurl = url.searchParams.get("srcurl");
+const width = parseInt(url.searchParams.get("width") ?? "");
+const height = parseInt(url.searchParams.get("height") ?? "");
+const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "")
+
+console.log(color)
 memory_update_input.oninput = () => update_views();
 
 const max_clock_speed = 40_000_000;
@@ -56,6 +63,9 @@ share_button.onclick = e => {
     const srcurl = `data:text/plain;base64,${btoa(source_input.value)}`;
     const share = new URL(location.href);
     share.searchParams.set("srcurl", srcurl);
+    share.searchParams.set("width", ""+canvas.width);
+    share.searchParams.set("height", ""+canvas.height);
+    share.searchParams.set("color", Color_Mode[display.color_mode]);
     navigator.clipboard.writeText(share.href);
 }
 
@@ -123,10 +133,11 @@ const gl = canvas.getContext("webgl2");
 if (!gl){
     throw new Error("Unable to get webgl rendering context");
 }
-canvas.width = 32;
-canvas.height = 32;
-const display = new Gl_Display(gl);
+canvas.width = width || 32;
+canvas.height = height || 32;
+const display = new Gl_Display(gl, color);
 const color_mode_input = document.getElementById("color-mode") as HTMLOptionElement;
+if (color !== undefined) color_mode_input.value = Color_Mode[color];
 color_mode_input.addEventListener("change", change_color_mode);
 function change_color_mode(){
     const color_mode = enum_from_str(Color_Mode, color_mode_input.value);
@@ -135,6 +146,8 @@ function change_color_mode(){
 }
 const width_input = document.getElementById("display-width") as HTMLInputElement;
 const height_input = document.getElementById("display-height") as HTMLInputElement;
+width_input.value = ""+canvas.width
+height_input.value = ""+canvas.height
 width_input.addEventListener("input", resize_display);
 height_input.addEventListener("input", resize_display);
 resize_display();
@@ -152,8 +165,6 @@ emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG());
 emulator.add_io_device(new Keyboard());
-
-const url = new URL(location.href, location.origin).searchParams.get("srcurl");
 
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
@@ -338,8 +349,8 @@ change_color_mode();
 
 
 started = true;
-if (url){
-    fetch(url).then(res => res.text()).then((text) => {
+if (srcurl){
+    fetch(srcurl).then(res => res.text()).then((text) => {
         if (source_input.value){
             return;
         }
