@@ -109,6 +109,7 @@ export class Editor_Window extends HTMLElement {
     private input_cb(){
         this.input.style.height = "1px";
         const height = this.input.scrollHeight;
+        this.colors.style.height = `${height}px`;
         this.input.style.height = `${height}px`;
         
         const src = this.input.value;
@@ -134,7 +135,6 @@ export class Editor_Window extends HTMLElement {
             this.call_input_listeners();
             return
         } 
-        this.colors.style.height = `${height}px`;
         this.input.style.color = "transparent"
         this.colors.style.display = ""
 
