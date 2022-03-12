@@ -109,7 +109,7 @@ export class Editor_Window extends HTMLElement {
     private input_cb(){
         this.input.style.height = "1px";
         const height = this.input.scrollHeight;
-        this.colors.style.height = `${height}px`;
+        this.input.style.width = `${this.input.scrollWidth}px`;
         this.input.style.height = `${height}px`;
         
         const src = this.input.value;
@@ -130,15 +130,15 @@ export class Editor_Window extends HTMLElement {
         
         const max_source_size = 5_000;
         if (src.length > max_source_size){
-            this.input.style.color = "White"
-            this.colors.style.display = "none"
+            this.input.style.color = "white"
+            this.colors.style.color = "transparent"
             this.call_input_listeners();
             return
         } 
         this.input.style.color = "transparent"
-        this.colors.style.display = ""
-
-
+        this.colors.style.display = "white"
+        
+        
         const tokens: Token[] = [];
         const end = tokenize(src, 0, tokens);
         let span = this.colors.firstElementChild;
@@ -158,6 +158,7 @@ export class Editor_Window extends HTMLElement {
         }
 
         this.input.style.width = `${this.colors.scrollWidth}px`;
+        this.colors.style.height = `${height}px`;
         this.call_input_listeners();
     }
     private call_input_listeners(){
