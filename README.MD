@@ -40,13 +40,12 @@ node js/node/urcx-emu.js [<...options>] <sourcefile>
 ```
 
 ## Install 🔩
-### Node.js Windows 
+### Node.js Windows / Linux 
 Add the bin folder to your [Path environment variable](https://duckduckgo.com/?q=windows+add+to+path)
 and run the emulator with the urcx-emu command:
 ```
 urcx-emu [<...options>] <sourcefile>
-```
-
+``` 
 
 ## Features
 This feature list is not complete yet.
