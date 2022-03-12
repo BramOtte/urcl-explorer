@@ -171,7 +171,7 @@ auto_run_input.onchange = oninput;
 
 function oninput(){
     if (started){
-        const size = Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 128));
+        const size = 8;// Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 8));
         localStorage.setItem("history-size", ""+size)
         const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % size;
         localStorage.setItem("history-offset", ""+offset);
