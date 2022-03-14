@@ -140,7 +140,7 @@ function resize_display() {
     const height = parseInt(height_input.value) || 16;
     display.resize(width, height);
 }
-const emulator = new Emulator({ on_continue: frame });
+const emulator = new Emulator({ on_continue: frame, warn: (msg) => output_element.innerText += `${msg}\n` });
 emulator.add_io_device(new Sound());
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);

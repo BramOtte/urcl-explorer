@@ -198,7 +198,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     try {
         const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
-            if (this.outs[port]){
+            if (this.outs[port] === undefined){
                 this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=${value}`);
                 this.outs[port] = value
             }
@@ -320,7 +320,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     warn(msg: string): void {
         const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
-        const content = `${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n ${lines[line_nr]}`;
+        const content = `${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n\t${lines[line_nr]}`;
         if (this.options.warn){
             this.options.warn(content);
         } else {
