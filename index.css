@@ -38,9 +38,6 @@ main > * {
   overflow-x: hidden;
   overflow-y: auto;
 }
-#stdout {
-  overflow-y: auto;
-}
 canvas {
   background-color: black;
   image-rendering: crisp-edges;
@@ -64,15 +61,14 @@ textarea {
 
 #stdout {
   height: 200px;
-  max-height: 200px;
   width: 200px;
-  max-width: 200px;
   overflow: scroll;
   background: #000;
   color: #FFF;
   font-family: "unscii";
   display: block;
   white-space: pre;
+  resize: auto;
 }
 
 #stdin {
