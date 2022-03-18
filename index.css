@@ -44,6 +44,9 @@ canvas {
   image-rendering: pixelated;
   border: 0.1rem solid rgb(53, 53, 53);
 }
+canvas:fullscreen {
+  border: none;
+}
 
 
 html {
