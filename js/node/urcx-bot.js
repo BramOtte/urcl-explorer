@@ -22,7 +22,7 @@ function reply_text(msg, text, file = false) {
         return msg;
     }
     if (!file && text.length <= max_msg) {
-        return msg.reply(text);
+        return msg.reply("```" + text.replaceAll("`", "\\`") + "```");
     }
     const buffer = Buffer.from(text, "utf8");
     if (buffer.length <= max_file) {
