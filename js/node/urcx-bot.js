@@ -15,6 +15,26 @@ if (!token) {
     token = env.split("=")[1].replace(/\s/g, '');
 }
 const client = new ds.Client({ intents: ds.Intents.FLAGS.GUILDS | ds.Intents.FLAGS.GUILD_MESSAGES });
+const max_msg = 800;
+const max_file = 8_000_000;
+function reply_text(msg, text, file = false) {
+    if (text.length == 0) {
+        return msg;
+    }
+    if (!file && text.length <= max_msg) {
+        return msg.reply(text);
+    }
+    const buffer = Buffer.from(text, "utf8");
+    if (buffer.length <= max_file) {
+        return msg.reply({ files: [new MessageAttachment(buffer, "text.txt")] });
+    }
+    const from_sides = max_file / 2;
+    const top = buffer.subarray(0, from_sides);
+    const bottom = buffer.subarray(-from_sides);
+    const cut = Buffer.concat([top, Buffer.from("\n...\n", "utf-8"), bottom]);
+    const error_msg = `File to big leaving out the middle part`;
+    return msg.reply({ content: error_msg, files: [new MessageAttachment(cut, "text.txt")] });
+}
 await client.login(token);
 function parse_code_block(str) {
     const quote = str.indexOf("```");
@@ -50,7 +70,7 @@ function code_block(str, max) {
 const channels = ["bots", "urcl-bot", "counting", "chains"];
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")) {
-        msg.reply(msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:"));
+        reply_text(msg, msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:"));
         return;
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))
@@ -67,7 +87,8 @@ client.on("messageCreate", async (msg) => {
             }
             const { code, out, errors } = await my_exec("python", "URCLpp-compiler/compiler2.py", `imm:${source}`);
             const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${errors}\`\`\`` : "");
-            await msg.reply({ files: [new MessageAttachment(Buffer.from(out, "utf8"), "output.txt")], content: rep_msg });
+            msg = await reply_text(msg, rep_msg);
+            msg = await reply_text(msg, out);
             const urcx = content.indexOf("emu");
             if (urcx < 0) {
                 return;
@@ -75,7 +96,7 @@ client.on("messageCreate", async (msg) => {
             const end = content.indexOf(" ", urcx);
             const argv = content.substring(end).split("\n")[0].split(" ");
             const res = emu_start(msg.channelId, argv, out + "\nHLT");
-            reply(res);
+            reply(msg, res);
         }
         else if (content.startsWith("!urcx-emu")) {
             const argv = content.split("\n")[0].split(" ");
@@ -87,7 +108,7 @@ client.on("messageCreate", async (msg) => {
                 }
             }
             const res = emu_start(msg.channelId, argv, source);
-            reply(res);
+            reply(msg, res);
         }
         else if (content.startsWith("!lower")) {
             let source = parse_code_block(content);
@@ -105,22 +126,21 @@ client.on("messageCreate", async (msg) => {
             const reply = `unknown command ${JSON.stringify(content)} try sending one of:\n`
                 + `!urcx-emu --help\n`
                 + `!urclpp\n`
-                + `!urclpp | urcx-emu`
+                + `!urclpp | urcx-emu\n`
                 + `!lower`;
             msg.reply({ content: reply });
         }
         if (content.startsWith("?")) {
             const res = emu_reply(msg.channelId, content.substring(1));
-            reply(res);
+            reply(msg, res);
         }
     }
     catch (e) {
         const buf = Buffer.from(("" + e).substring(0, 1_000_000), "utf8");
         msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
     }
-    async function reply(res) {
+    async function reply(msg, res) {
         let { out, info, screens, all_screens, scale, state, quality, storage } = await res;
-        let content = "";
         let files = [];
         let screen_at;
         const to_draw = state == Step_Result.Halt ? all_screens : screens;
@@ -165,27 +185,17 @@ client.on("messageCreate", async (msg) => {
                 screen_at = new MessageAttachment(buf, "screen.png");
             }
         }
-        if (info.length + 7 > max_info) {
-            const buf = Buffer.from(info, "utf8");
-            files.push(new MessageAttachment(buf, "info.txt"));
-        }
-        else {
-            content += code_block(info, max_info);
-        }
-        if (out.length + 7 > max_total - content.length) {
-            const buf = Buffer.from(out, "utf8");
-            files.push(new MessageAttachment(buf, "out.txt"));
-        }
-        else {
-            content += code_block(out, max_total - content.length);
-        }
+        msg = await reply_text(msg, info);
+        msg = await reply_text(msg, out);
         if (screen_at) {
             files.push(screen_at);
         }
         if (storage) {
             files.push(new MessageAttachment(Buffer.from(storage), "storage.bin"));
         }
-        await msg.reply({ content, files });
+        if (files.length > 0) {
+            return msg.reply({ files });
+        }
     }
 });
 console.log("started");
