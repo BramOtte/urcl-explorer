@@ -15,7 +15,7 @@ if (!token) {
     token = env.split("=")[1].replace(/\s/g, '');
 }
 const client = new ds.Client({ intents: ds.Intents.FLAGS.GUILDS | ds.Intents.FLAGS.GUILD_MESSAGES });
-const max_msg = 800;
+const max_msg = 2000;
 const max_file = 8_000_000;
 function reply_text(msg, text, file = false) {
     if (text.length == 0) {
@@ -70,7 +70,12 @@ function code_block(str, max) {
 const channels = ["bots", "urcl-bot", "counting", "chains"];
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")) {
-        reply_text(msg, msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:"));
+        const text = msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:");
+        if (text.length > max_msg) {
+            msg.reply("Message too large");
+            return;
+        }
+        msg.reply(text);
         return;
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))
