@@ -8,6 +8,7 @@ import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
 import { expand_warnings, Warning } from "../emulator/util.js";
+import https from "https"
 
 
 console.log("starting...");
@@ -213,5 +214,8 @@ client.on("messageCreate", async (msg) => {
         }
     }
 })
+
+const bogus_server = https.createServer();
+bogus_server.listen();
 
 console.log("started");

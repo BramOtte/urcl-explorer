@@ -8,6 +8,7 @@ import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
 import { expand_warnings } from "../emulator/util.js";
+import https from "https";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -203,5 +204,7 @@ client.on("messageCreate", async (msg) => {
         }
     }
 });
+const bogus_server = https.createServer();
+bogus_server.listen();
 console.log("started");
 //# sourceMappingURL=urcx-bot.js.map
