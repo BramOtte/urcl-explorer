@@ -215,15 +215,15 @@ client.on("messageCreate", async (msg) => {
     }
 })
 
-const port = Number(process.env.PORT) || 5000;
+// const port = Number(process.env.PORT) || 5000;
 
-const bogus_server = https.createServer();
-bogus_server.listen(port, undefined, undefined, () => {
-    console.log(`started bogus server at port ${port}`);
-})
+// const bogus_server = https.createServer();
+// bogus_server.listen(port, undefined, undefined, () => {
+//     console.log(`started bogus server at port ${port}`);
+// })
 
-bogus_server.on("error", e => {
-    console.error(e);
-})
+// bogus_server.on("error", e => {
+//     console.error(e);
+// })
 
 console.log("started");

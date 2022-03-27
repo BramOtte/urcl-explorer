@@ -8,7 +8,6 @@ import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
 import { expand_warnings } from "../emulator/util.js";
-import https from "https";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -204,13 +203,13 @@ client.on("messageCreate", async (msg) => {
         }
     }
 });
-const port = Number(process.env.PORT) || 5000;
-const bogus_server = https.createServer();
-bogus_server.listen(port, undefined, undefined, () => {
-    console.log(`started bogus server at port ${port}`);
-});
-bogus_server.on("error", e => {
-    console.error(e);
-});
+// const port = Number(process.env.PORT) || 5000;
+// const bogus_server = https.createServer();
+// bogus_server.listen(port, undefined, undefined, () => {
+//     console.log(`started bogus server at port ${port}`);
+// })
+// bogus_server.on("error", e => {
+//     console.error(e);
+// })
 console.log("started");
 //# sourceMappingURL=urcx-bot.js.map
