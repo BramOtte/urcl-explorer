@@ -30,6 +30,8 @@ const auto_run_input = document.getElementById("auto-run-input");
 const storage_input = document.getElementById("storage-input");
 const storage_msg = document.getElementById("storage-msg");
 const storage_little = document.getElementById("storage-little");
+const storage_update = document.getElementById("storage-update");
+const storage_download = document.getElementById("storage-download");
 const clock_speed_input = document.getElementById("clock-speed-input");
 const clock_speed_output = document.getElementById("clock-speed-output");
 const memory_update_input = document.getElementById("update-mem-input");
@@ -58,7 +60,8 @@ share_button.onclick = e => {
     share.searchParams.set("color", Color_Mode[display.color_mode]);
     navigator.clipboard.writeText(share.href);
 };
-let uploaded_storage;
+let storage_uploaded;
+let storage_device;
 let storage_loads = 0;
 storage_little.oninput =
     storage_input.oninput = async (e) => {
@@ -72,9 +75,9 @@ storage_little.oninput =
         const file = files[0];
         try {
             const data = await file.arrayBuffer();
-            uploaded_storage = new Uint8Array(data);
-            const bytes = uploaded_storage.slice();
-            emulator.add_io_device(new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
+            storage_uploaded = new Uint8Array(data);
+            const bytes = storage_uploaded.slice();
+            emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
             storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
         }
         catch (error) {
@@ -82,6 +85,30 @@ storage_little.oninput =
             storage_msg.innerText = "" + error;
         }
     };
+storage_update.onclick = e => {
+    if (storage_device === undefined) {
+        storage_msg.innerText = `No storage to update`;
+        return;
+    }
+    storage_uploaded = storage_device.get_bytes();
+    storage_msg.innerText = `Updated storage`;
+};
+storage_download.onclick = e => {
+    if (storage_device === undefined && storage_uploaded === undefined) {
+        storage_msg.innerText = `No storage to download`;
+        return;
+    }
+    if (storage_device !== undefined) {
+        storage_uploaded = storage_device.get_bytes();
+    }
+    const url = URL.createObjectURL(new Blob([storage_uploaded]));
+    const a = document.createElement("a");
+    const file_name = storage_input.value.split(/\\|\//).at(-1);
+    a.download = file_name || "storage.bin";
+    a.href = url;
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+};
 let input_callback;
 console_input.addEventListener("keydown", e => {
     if (!e.shiftKey && e.key === "Enter" && input_callback) {
@@ -218,9 +245,9 @@ function compile_and_reset() {
         output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines) + "\n").join("");
         const [program, debug_info] = compile(parsed);
         emulator.load_program(program, debug_info);
-        if (uploaded_storage) {
-            const bytes = uploaded_storage.slice();
-            emulator.add_io_device(new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
+        if (storage_uploaded) {
+            const bytes = storage_uploaded.slice();
+            emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
             storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
         }
         output_element.innerText += `
