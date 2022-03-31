@@ -40,8 +40,8 @@ main > * {
 }
 canvas {
   background-color: black;
-  image-rendering: pixelated;
   image-rendering: crisp-edges;
+  image-rendering: pixelated;
   border: 0.1rem solid rgb(53, 53, 53);
 }
 canvas:fullscreen {
