@@ -264,6 +264,7 @@ options:
     function reply(msg: string) {
     try {
         if (state === Step_Result.Halt){
+            reset();
             std_info += `No Program running`;
             return o();
         }
