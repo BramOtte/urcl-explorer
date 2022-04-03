@@ -111,6 +111,8 @@ function discord_emu(){
         std_info = "";
         emulator.reset();
         emulator.shrink_buffer();
+        storage = undefined;
+        display.buffers.length = 0;
     }
     function o(){
         const out = stdout;
