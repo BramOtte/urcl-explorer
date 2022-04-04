@@ -96,7 +96,7 @@ client.on("messageCreate", async (msg) => {
             return;
         }
 
-        const {code, out, errors} = await my_exec("python", "URCLpp-compiler/compiler2.py", `imm:${source}`);
+        const {code, out, errors} = await my_exec("python3", "URCLpp-compiler/compiler2.py", `imm:${source}`);
         const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${errors}\`\`\`` : "");
         
         msg = await reply_text(msg, rep_msg);
