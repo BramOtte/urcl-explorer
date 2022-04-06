@@ -28,6 +28,7 @@ export class Emulator {
     heap_size = 0;
     load_program(program, debug_info) {
         this.program = program, this.debug_info = debug_info;
+        this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
         const bits = program.headers[URCL_Header.BITS].value;
         const static_data = program.data;
         const heap = program.headers[URCL_Header.MINHEAP].value;
@@ -100,6 +101,7 @@ export class Emulator {
     buffer = new ArrayBuffer(1024 * 1024);
     registers = new Uint8Array(32);
     memory = new Uint8Array(256);
+    pc_counters = [];
     get pc() {
         return this.registers[Register.PC];
     }
@@ -244,6 +246,7 @@ export class Emulator {
         if (pc >= this.program.opcodes.length) {
             return Step_Result.Halt;
         }
+        this.pc_counters[pc]++;
         const opcode = this.program.opcodes[pc];
         if (opcode === Opcode.HLT) {
             this.pc--;

@@ -247,7 +247,7 @@ function compile_and_reset() {
         emulator.load_program(program, debug_info);
         if (storage_uploaded) {
             const bytes = storage_uploaded.slice();
-            emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, false, bytes.length)); // TODO: add little endian option
+            emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, storage_little.checked, bytes.length)); // TODO: add little endian option
             storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
         }
         output_element.innerText += `
@@ -356,6 +356,7 @@ function update_views() {
     const lines = emulator.debug_info.pc_line_nrs;
     const line = lines[Math.min(emulator.pc, lines.length - 1)];
     source_input.set_pc_line(line);
+    source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v]));
     console_output.flush();
 }
 change_color_mode();

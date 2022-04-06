@@ -6,6 +6,9 @@ export class Editor_Window extends HTMLElement {
     private code = document.createElement("div");
     private input = document.createElement("textarea");
     private colors = document.createElement("pre");
+    private profile_check = document.createElement("input");
+    private profiled: boolean[] = [];
+    private profile_present: boolean = false;
     tab_width = 4
     constructor(){
         super();
@@ -20,7 +23,11 @@ export class Editor_Window extends HTMLElement {
         this.input.spellcheck = false;
 
         this.input.addEventListener("keydown", this.keydown_cb.bind(this));
-
+        this.profile_check.type = "checkbox";
+        const profile_text = document.createElement("span");
+        this.parentElement?.insertBefore(this.profile_check, this);
+        profile_text.textContent = `Show line-profile`;
+        this.parentElement?.insertBefore(profile_text, this);
     }
     get value(){
         return this.input.value;
@@ -41,6 +48,28 @@ export class Editor_Window extends HTMLElement {
             child.classList.add("pc-line");
         }
         this.pc_line = line;
+    }
+    public set_line_profile(counts: [number, number][]){
+        if (!this.profile_check.checked){
+            if (!this.profile_present){
+                return;
+            }
+            this.profile_present = false;
+        } 
+        const children = this.line_nrs.children;
+        let last = 0;
+        for (const [line_nr, executed] of counts){
+            for (; last < line_nr; last++){
+                if (this.profiled[last]){
+                    const child = children[line_nr];
+                    child.textContent = `${last+1}`;
+                }
+            }
+            if (this.profile_check.checked){
+                const child = children[line_nr];
+                child.textContent = `${executed} ${line_nr+1}`;
+            }
+        }
     }
     private keydown_cb(event: KeyboardEvent){
         if (event.key === "Tab"){

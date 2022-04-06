@@ -39,6 +39,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     private heap_size = 0;
     load_program(program: Program, debug_info: Debug_Info){
         this.program = program, this.debug_info = debug_info;
+        this.pc_counters = Array.from({length: program.opcodes.length}, () => 0);
         const bits = program.headers[URCL_Header.BITS].value;
         const static_data = program.data;
         const heap = program.headers[URCL_Header.MINHEAP].value;
@@ -109,6 +110,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     buffer = new ArrayBuffer(1024*1024);
     registers: WordArray = new Uint8Array(32);
     memory: WordArray = new Uint8Array(256);
+    pc_counters: number[] = [];
     get pc(){
         return this.registers[Register.PC];
     }
@@ -249,29 +251,30 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         } while (performance.now() < end);
         return [Step_Result.Continue, j];
     }
-    step(): Step_Result {
-        const pc = this.pc++;
-        if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
-        const opcode = this.program.opcodes[pc];
-        if (opcode === Opcode.HLT){
-            this.pc--;
-            return Step_Result.Halt;
-        }
-        const func = inst_fns[opcode];
-        if (func === undefined){this.error(`unkown opcode ${opcode}`);}
-
-        const op_types = this.program.operant_prims[pc];
-        const op_values = this.program.operant_values[pc];
-        const length = op_values.length;
-        if (length >= 1)this.a = this.read(op_types[0], op_values[0]);
-        if (length >= 2)this.b = this.read(op_types[1], op_values[1]);
-        if (length >= 3)this.c = this.read(op_types[2], op_values[2]);
-        if (func(this)) {
-            return Step_Result.Input;
-        }
-        if (length >= 1)this.write(op_types[0], op_values[0], this.a);
-        return Step_Result.Continue;
+step(): Step_Result {
+    const pc = this.pc++;
+    if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
+    this.pc_counters[pc]++;
+    const opcode = this.program.opcodes[pc];
+    if (opcode === Opcode.HLT){
+        this.pc--;
+        return Step_Result.Halt;
     }
+    const func = inst_fns[opcode];
+    if (func === undefined){this.error(`unkown opcode ${opcode}`);}
+
+    const op_types = this.program.operant_prims[pc];
+    const op_values = this.program.operant_values[pc];
+    const length = op_values.length;
+    if (length >= 1)this.a = this.read(op_types[0], op_values[0]);
+    if (length >= 2)this.b = this.read(op_types[1], op_values[1]);
+    if (length >= 3)this.c = this.read(op_types[2], op_values[2]);
+    if (func(this)) {
+        return Step_Result.Input;
+    }
+    if (length >= 1)this.write(op_types[0], op_values[0], this.a);
+    return Step_Result.Continue;
+}
 
     m_set(addr: number, value: number){
         if (addr >= this.memory.length){
