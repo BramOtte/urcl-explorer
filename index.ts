@@ -319,8 +319,9 @@ function frame(){
             const start_time = performance.now();
             const [res, steps] = emulator.run(16);
             const end_time = performance.now();
+            const dt = Math.max(0.1, end_time - start_time);
             process_step_result(res, steps);
-            clock_speed_output.value = `${format_int(steps*1000/(end_time-start_time))}Hz, executed ${format_int(clock_count)} instructions`;
+            clock_speed_output.value = `${format_int(steps*1000/(dt))}Hz, executed ${format_int(clock_count)} instructions`;
         }
         } catch (e){
             output_element.innerText += (e as Error).message + "\nProgram Halted";
