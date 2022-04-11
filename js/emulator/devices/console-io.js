@@ -34,6 +34,9 @@ export class Console_IO {
             else {
                 throw new Error(`8 bit floats are not supported`);
             }
+        },
+        [IO_Port.FIXED]: (cb) => {
+            this.numb_in(cb, s => Math.floor(Number(s) * (2 ** (this.bits / 2 + 1))));
         }
     };
     outputs = {
@@ -52,6 +55,9 @@ export class Console_IO {
             else {
                 throw new Error(`8 bit floats are not supported`);
             }
+        },
+        [IO_Port.FIXED]: (v) => {
+            this.write((v / (2 ** (this.bits / 2 + 1))).toString());
         },
         [IO_Port.INT]: (v) => {
             const sign_bit = 2 ** (this.bits - 1);
