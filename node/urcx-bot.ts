@@ -28,7 +28,7 @@ function reply_text(msg: ds.Message, text: string, file = false) {
         return msg;
     }
     if (!file && text.length <= max_msg){
-        return msg.reply("```"+text.replaceAll("`", "\\`")+"```");
+        return msg.reply("```\n"+text.replaceAll("`", "\\`")+"```");
     }
     const buffer = Buffer.from(text, "utf8")
     if (buffer.length <= max_file){
