@@ -164,7 +164,7 @@ export class Editor_Window extends HTMLElement {
                 this.line_nrs.lastChild?.remove();
             }
         }
-        const max_source_size = 15_000;
+        const max_source_size = 20_000;
         if (src.length > max_source_size) {
             this.input.style.color = "white";
             this.colors.style.color = "transparent";
