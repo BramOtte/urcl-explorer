@@ -61,10 +61,10 @@ export class Parser_output implements Label_Out, Instruction_Out {
     readonly operant_types     : Operant_Type[][] = [];
     readonly operant_values    : i53[][] = [];
 
-    readonly register_breaks   : Record<number, BreakFlag> = [];
-    readonly data_breaks       : Record<number, BreakFlag> = [];
-    readonly heap_breaks     : Record<number, BreakFlag> = [];
-    readonly program_breaks    : Record<number, BreakFlag> = [];
+    readonly register_breaks   : Record<number, BreakFlag> = {};
+    readonly data_breaks       : Record<number, BreakFlag> = {};
+    readonly heap_breaks     : Record<number, BreakFlag> = {};
+    readonly program_breaks    : Record<number, BreakFlag> = {};
 }
 interface Label_Out {
     readonly labels            : Record<string, Label>;

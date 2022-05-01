@@ -46,10 +46,10 @@ export class Parser_output {
     operant_strings = [];
     operant_types = [];
     operant_values = [];
-    register_breaks = [];
-    data_breaks = [];
-    heap_breaks = [];
-    program_breaks = [];
+    register_breaks = {};
+    data_breaks = {};
+    heap_breaks = {};
+    program_breaks = {};
 }
 var Labeled;
 (function (Labeled) {
