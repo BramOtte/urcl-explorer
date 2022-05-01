@@ -120,12 +120,12 @@ enum Token_Type {
 }
 
 function tok_comment_multi(src: string, i: number, tokens: Token[]): number {
-    if (src.substr(i, 2) !== "/*"){
+    if (src.substring(i, 2) !== "/*"){
         return i;
     }
     const start = i;
     for (i += 2; i < src.length; i++){
-        if (src.substr(i, 2) === "*/"){
+        if (src.substring(i, 2) === "*/"){
             break;
         }
     }
