@@ -274,13 +274,13 @@ step(): Step_Result {
         this.pc--;
         return Step_Result.Halt;
     }
-    const func = inst_fns[opcode];
+    const [[op], func] = Opcodes_operants[opcode];
     if (func === undefined){this.error(`unkown opcode ${opcode}`);}
 
     const op_types = this.program.operant_prims[pc];
     const op_values = this.program.operant_values[pc];
     const length = op_values.length;
-    if (length >= 1)this.a = this.read(op_types[0], op_values[0]);
+    if (length >= 1 && op === Operant_Operation.GET)this.a = this.read(op_types[0], op_values[0]);
     if (length >= 2)this.b = this.read(op_types[1], op_values[1]);
     if (length >= 3)this.c = this.read(op_types[2], op_values[2]);
     if (func(this)) {
@@ -379,7 +379,7 @@ step(): Step_Result {
         }
     }
     debug(msg: string): void {
-        this._debug_message = this.format_message(`debug - ${msg}`) + "\n";  
+        this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";  
     }
 
     decode_memory(start: number, end: number, reverse: boolean): string {

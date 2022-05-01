@@ -1,5 +1,5 @@
 import { registers_to_string, indent, hex, pad_center, pad_left } from "./util.js";
-import { Opcode, Operant_Prim, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns } from "./instructions.js";
+import { Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, URCL_Header, IO_Port, Register, Header_Run, register_count } from "./instructions.js";
 import { Break } from "./breaks.js";
 export var Step_Result;
 (function (Step_Result) {
@@ -265,14 +265,14 @@ export class Emulator {
             this.pc--;
             return Step_Result.Halt;
         }
-        const func = inst_fns[opcode];
+        const [[op], func] = Opcodes_operants[opcode];
         if (func === undefined) {
             this.error(`unkown opcode ${opcode}`);
         }
         const op_types = this.program.operant_prims[pc];
         const op_values = this.program.operant_values[pc];
         const length = op_values.length;
-        if (length >= 1)
+        if (length >= 1 && op === Operant_Operation.GET)
             this.a = this.read(op_types[0], op_values[0]);
         if (length >= 2)
             this.b = this.read(op_types[1], op_values[1]);
@@ -375,7 +375,7 @@ export class Emulator {
         }
     }
     debug(msg) {
-        this._debug_message = this.format_message(`debug - ${msg}`) + "\n";
+        this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";
     }
     decode_memory(start, end, reverse) {
         const w = 8;
