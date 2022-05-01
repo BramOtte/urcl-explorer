@@ -8,6 +8,7 @@ export class Editor_Window extends HTMLElement {
     profile_check = document.createElement("input");
     profiled = [];
     profile_present = false;
+    old_lines = [];
     tab_width = 4;
     constructor() {
         super();
@@ -149,22 +150,26 @@ export class Editor_Window extends HTMLElement {
         this.input.style.width = `${this.input.scrollWidth}px`;
         this.input.style.height = `${height}px`;
         const src = this.input.value;
-        const lines = line_starts(src);
-        const width = (lines.length + "").length;
-        const start_lines = this.line_nrs.children.length;
-        const delta_lines = lines.length - start_lines;
-        if (delta_lines > 0) {
-            for (let i = 0; i < delta_lines; i++) {
-                const div = this.line_nrs.appendChild(document.createElement("div"));
-                div.textContent = pad_left("" + (start_lines + i + 1), width);
+        const old_lines = this.old_lines;
+        const lines = src.split("\n");
+        this.old_lines = lines;
+        {
+            const width = (lines.length + "").length;
+            const start_lines = this.line_nrs.children.length;
+            const delta_lines = lines.length - start_lines;
+            if (delta_lines > 0) {
+                for (let i = 0; i < delta_lines; i++) {
+                    const div = this.line_nrs.appendChild(document.createElement("div"));
+                    div.textContent = pad_left("" + (start_lines + i + 1), width);
+                }
+            }
+            else {
+                for (let i = 0; i < -delta_lines; i++) {
+                    this.line_nrs.lastChild?.remove();
+                }
             }
         }
-        else {
-            for (let i = 0; i < -delta_lines; i++) {
-                this.line_nrs.lastChild?.remove();
-            }
-        }
-        const max_source_size = 20_000;
+        const max_source_size = 100_000;
         if (src.length > max_source_size) {
             this.input.style.color = "white";
             this.colors.style.color = "transparent";
@@ -173,22 +178,54 @@ export class Editor_Window extends HTMLElement {
         }
         this.input.style.color = "transparent";
         this.colors.style.display = "white";
-        const tokens = [];
-        const end = tokenize(src, 0, tokens);
-        let span = this.colors.firstElementChild;
-        for (const { type, start, end } of tokens) {
-            if (!span) {
-                span ??= document.createElement("span");
-                this.colors.appendChild(span);
+        const min = Math.min(lines.length, old_lines.length);
+        let start = 0;
+        for (; start < min && lines[start] === old_lines[start]; start++)
+            ;
+        let end_i = 0;
+        for (; end_i < min - start && lines.at(-end_i - 1) === old_lines.at(-end_i - 1); end_i++)
+            ;
+        const end = lines.length - end_i;
+        const at_end = this.colors.children.item(old_lines.length - end_i);
+        while (this.colors.children.length < lines.length) {
+            const elem = document.createElement("div");
+            if (at_end) {
+                this.colors.insertBefore(elem, at_end);
             }
-            span.textContent = src.substring(start, end);
-            span.className = type;
-            span = span.nextElementSibling;
+            else {
+                this.colors.appendChild(elem);
+            }
         }
-        while (span) {
-            const next = span.nextElementSibling;
-            this.colors.removeChild(span);
-            span = next;
+        while (this.colors.children.length > lines.length) {
+            const child = this.colors.children[old_lines.length - end_i - 1];
+            if (child) {
+                this.colors.removeChild(child);
+            }
+        }
+        for (let i = start; i < end; i++) {
+            const line = lines[i];
+            const element = this.colors.children[i];
+            const tokens = [];
+            tokenize(line, 0, tokens);
+            if (tokens.length === 0) {
+                element.innerHTML = "<span>\n</span>";
+                continue;
+            }
+            let span = element.firstElementChild;
+            for (const { type, start, end } of tokens) {
+                if (!span) {
+                    span = document.createElement("span");
+                    element.appendChild(span);
+                }
+                span.textContent = line.substring(start, end);
+                span.className = type;
+                span = span.nextElementSibling;
+            }
+            while (span) {
+                const next = span.nextElementSibling;
+                element.removeChild(span);
+                span = next;
+            }
         }
         this.input.style.width = `${this.colors.scrollWidth}px`;
         this.colors.style.height = `${height}px`;
