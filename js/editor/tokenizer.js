@@ -126,6 +126,7 @@ const tok_string_quote = bind(regex, Token_Type.Quote_String, /^"/);
 const tok_relative = bind(regex, Token_Type.Relative, /^~-?(0x[0-9a-fA-F_]+|0b[01_]+|[0-9_]+)/);
 const tok_label = bind(and, [
     bind(regex, Token_Type.Label, /^\.\w+/),
+    bind(opt, bind(regex, Token_Type.Number, /\+\d+/)),
     bind(list, bind(or, [
         tok_comment, tok_white_inline
     ]))
@@ -161,7 +162,9 @@ export const tokenize = bind(list, bind(or, [
     tok_label,
     tok_relative,
     tok_comment,
-    tok_comment_multi,
+    // tok_comment_multi,
+    bind(regex, Token_Type.Square_Open, /\[/),
+    bind(regex, Token_Type.Square_Close, /\]/),
     bind(regex, Token_Type.Macro, /^@[a-zA-Z_][a-zA-Z_0-9]*/),
     bind(regex, Token_Type.Name, /^[a-zA-Z_][a-zA-Z_0-9]*/),
     bind(regex, Token_Type.Unknown, /^\S+/),

@@ -91,3 +91,7 @@ editor-window .colors {
 .label, .relative {
     color: #dcdcaa
 }
+
+.square-open, .square-close {
+    color: white;
+}
