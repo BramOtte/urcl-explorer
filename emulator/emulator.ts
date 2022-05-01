@@ -227,7 +227,12 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             return;
         }
         if (this.debug_info.port_breaks[port] & Break.ONWRITE){
-            this.debug(`Written to port ${port} (${IO_Port[port]}) value=${value}`);
+            let char_str = "";
+            try {
+                const char = JSON.stringify(String.fromCodePoint(value));
+                char_str = `'${char.substring(1, char.length-1)}'`;
+            } catch {}
+            this.debug(`Written to port ${port} (${IO_Port[port]}) value=${value} ${char_str}`);
         }
         device(value);
     } catch (e){
@@ -293,13 +298,13 @@ step(): Step_Result {
     const op_types = this.program.operant_prims[pc];
     const op_values = this.program.operant_values[pc];
     const length = op_values.length;
-    if (length >= 1 && op === Operant_Operation.GET)this.a = this.read(op_types[0], op_values[0]);
+    if (length >= 1 && op !== Operant_Operation.SET)this.a = this.read(op_types[0], op_values[0]);
     if (length >= 2)this.b = this.read(op_types[1], op_values[1]);
     if (length >= 3)this.c = this.read(op_types[2], op_values[2]);
     if (func(this)) {
         return Step_Result.Input;
     }
-    if (length >= 1)this.write(op_types[0], op_values[0], this.a);
+    if (length >= 1 && op === Operant_Operation.SET)this.write(op_types[0], op_values[0], this.a);
 
     if (this._debug_message !== undefined){
         return Step_Result.Debug;
@@ -313,7 +318,7 @@ step(): Step_Result {
             this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
         if (this.debug_info.memory_breaks[addr] & Break.ONWRITE){
-            this.debug(`Written #${addr} which was ${this.memory[addr]} to ${value}`);
+            this.debug(`Written memory[${addr}] which was ${this.memory[addr]} to ${value}`);
 
         }
         this.memory[addr] = value;
@@ -323,7 +328,7 @@ step(): Step_Result {
             this.error(`Heap overflow on load: #${addr} >= ${this.memory.length}`);
         }
         if (this.debug_info.memory_breaks[addr] & Break.ONREAD){
-            this.debug(`Read #${addr} = ${this.memory[addr]}`);
+            this.debug(`Read memory[${addr}] = ${this.memory[addr]}`);
         }
         return this.memory[addr];
     }
@@ -339,7 +344,7 @@ step(): Step_Result {
         switch (target){
             case Operant_Prim.Reg: {
                 if (this.debug_info.register_breaks[index] & Break.ONWRITE){
-                    this.debug(`Written r${index} which was ${this.registers[index]} to ${value}`);
+                    this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to ${value}`);
                 }
                 this.registers[index] = value;
             } return;
@@ -352,7 +357,7 @@ step(): Step_Result {
             case Operant_Prim.Imm: return index;
             case Operant_Prim.Reg: {
                 if (this.debug_info.register_breaks[index] & Break.ONREAD){
-                    this.debug(`Read r${index} = ${this.registers[index]}`);
+                    this.debug(`Read r${index - register_count + 1} = ${this.registers[index]}`);
                 }
                 return this.registers[index];
             }

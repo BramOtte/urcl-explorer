@@ -245,7 +245,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                     } break;
                     case '.': {
                         const [label_str, add_str] = target.split("+");
-                        const label = out.labels[target];
+                        const label = out.labels[label_str];
                         if (label === undefined){
                             out.errors.push(warn(line_nr, `Undefined label ${label_str}`));
                             continue;
