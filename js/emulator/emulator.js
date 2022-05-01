@@ -375,7 +375,7 @@ export class Emulator {
         }
     }
     debug(msg) {
-        this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";
+        this._debug_message = this.format_message(`debug - ${msg}`) + "\n";
     }
     decode_memory(start, end, reverse) {
         const w = 8;
