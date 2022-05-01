@@ -24,6 +24,7 @@ let clock_count = 0;
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
+const debug_output_element = document.getElementById("debug-output") as HTMLElement;
 const memory_view = document.getElementById("memory-view") as HTMLElement;
 const register_view = document.getElementById("register-view") as HTMLElement;
 
@@ -364,7 +365,7 @@ function process_step_result(result: Step_Result, steps: number){
             }
             const msg = emulator.get_debug_message();
             if (msg !== undefined){
-                output_element.innerText += "\n" + msg;
+                debug_output_element.innerText = msg;
             } else {
                 throw new Error("Debug not handled");
             }
