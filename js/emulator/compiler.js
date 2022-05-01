@@ -1,6 +1,6 @@
 import { Constants, Header_Run, Operant_Prim, Operant_Type, register_count, URCL_Header } from "./instructions.js";
 export function compile(parsed) {
-    const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks } = parsed;
+    const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks } = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
     const header_bits = parsed.headers[URCL_Header.BITS].value;
     const bits = header_bits <= 8 ? 8 :
@@ -84,7 +84,7 @@ export function compile(parsed) {
     }
     return [
         { headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data },
-        { pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks }
+        { pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks, port_breaks }
     ];
 }
 function program_to_bytecode(parsed, inst_sizeof = (opcode) => 5) {

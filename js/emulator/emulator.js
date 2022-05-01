@@ -182,13 +182,22 @@ export class Emulator {
                 this.ins[port] = 1;
                 return false;
             }
-            const res = device(this.finish_step_in.bind(this));
+            if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+                this.debug(`Reading from Port ${port} (${IO_Port[port]})`);
+            }
+            const res = device(this.finish_step_in.bind(this, port));
             if (res === undefined) {
+                if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+                    this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                }
                 this.pc--;
                 return true;
             }
             else {
                 this.a = res;
+                if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+                    this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                }
                 return false;
             }
         }
@@ -205,6 +214,9 @@ export class Emulator {
                     this.outs[port] = value;
                 }
                 return;
+            }
+            if (this.debug_info.port_breaks[port] & Break.ONWRITE) {
+                this.debug(`Written to port ${port} (${IO_Port[port]}) value=${value}`);
             }
             device(value);
         }
@@ -307,7 +319,7 @@ export class Emulator {
         return this.memory[addr];
     }
     // this method only needs to be called for the IN instruction
-    finish_step_in(result) {
+    finish_step_in(port, result) {
         const pc = this.pc++;
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];

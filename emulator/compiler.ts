@@ -17,11 +17,12 @@ export interface Debug_Info {
     program_breaks: Record<number, BreakFlag>;
     memory_breaks: Record<number, BreakFlag>;
     register_breaks: Record<number, BreakFlag>;
+    port_breaks: Record<number, BreakFlag>;
 }
 
 export function compile(parsed: Parser_output): [Program, Debug_Info]
 {
-    const {headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks} = parsed;
+    const {headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks} = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
     const header_bits = parsed.headers[URCL_Header.BITS].value;
     const bits = header_bits <= 8 ? 8 :
@@ -88,7 +89,7 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
 
     return [
         {headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data},
-        {pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks}
+        {pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks, port_breaks}
     ];
 }
 

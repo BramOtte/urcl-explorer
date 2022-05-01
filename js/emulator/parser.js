@@ -3,7 +3,7 @@ import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_
 import { enum_count, enum_from_str, enum_strings, f16_encode, f32_encode, is_digit, warn } from "./util.js";
 function try_parse_int(x) {
     const int = my_parse_int(x);
-    return int == (0 | int) ? int : undefined;
+    return Number.isInteger(int) ? int : undefined;
 }
 function my_parse_int(x) {
     x = x.replace(/\_/g, "");
@@ -50,6 +50,7 @@ export class Parser_output {
     data_breaks = {};
     heap_breaks = {};
     program_breaks = {};
+    port_breaks = {};
 }
 var Labeled;
 (function (Labeled) {
@@ -259,6 +260,15 @@ export function parse(source, options = {}) {
                             }
                         }
                         break;
+                    case '%':
+                        {
+                            const port = resolve_port(target, line_nr, out.errors);
+                            if (port === undefined) {
+                                continue;
+                            }
+                            out.port_breaks[port] = flags;
+                        }
+                        break;
                     default:
                         {
                             if (target.toUpperCase() === "PC") {
@@ -399,6 +409,24 @@ function resolve_macro(operant, macro_constants, line_nr, errors) {
     }
     return operant;
 }
+function resolve_port(operant, line_nr, errors) {
+    let port;
+    if (is_digit(operant, 1)) {
+        port = try_parse_int(operant.slice(1));
+        if (port === undefined) {
+            errors.push(warn(line_nr, `Invalid port number ${operant}`));
+            return undefined;
+        }
+    }
+    else {
+        port = enum_from_str(IO_Port, operant.slice(1).toUpperCase());
+        if (port === undefined) {
+            errors.push(warn(line_nr, `Unkown port ${operant}`));
+            return undefined;
+        }
+    }
+    return port;
+}
 function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, data, errors, warnings) {
     let operant = get_operant();
     if (operant === undefined) {
@@ -467,21 +495,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
             return [Operant_Type.Memory, value];
         }
         case '%': {
-            let port;
-            if (is_digit(operant, 1)) {
-                port = my_parse_int(operant.slice(1));
-                if (!Number.isInteger(port)) {
-                    errors.push(warn(line_nr, `Invalid port number ${operant}`));
-                    return undefined;
-                }
-            }
-            else {
-                port = enum_from_str(IO_Port, operant.slice(1).toUpperCase());
-                if (port === undefined) {
-                    errors.push(warn(line_nr, `Unkown port ${operant}`));
-                    return undefined;
-                }
-            }
+            const port = resolve_port(operant, line_nr, errors) ?? NaN;
             return [Operant_Type.Imm, port];
         }
         case '\'': {
