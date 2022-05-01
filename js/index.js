@@ -314,6 +314,7 @@ function process_step_result(result, steps) {
     clock_count += steps;
     animation_frame = undefined;
     input = false;
+    debug_output_element.innerText = "";
     switch (result) {
         case Step_Result.Continue:
             {
