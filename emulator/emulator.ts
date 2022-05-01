@@ -2,9 +2,10 @@ import { Word, registers_to_string, indent, hex, pad_center, pad_left } from "./
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns, Opcodes_operant_lengths} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
+import { Break } from "./breaks.js"; 
 
 export enum Step_Result {
-    Continue, Halt, Input
+    Continue, Halt, Input, Debug
 }
 type WordArray = Uint8Array | Uint16Array | Uint32Array;
 
@@ -33,11 +34,20 @@ export class Emulator implements Instruction_Ctx, Device_Host {
 
     public program!: Program;
     public debug_info!: Debug_Info;
+    private _debug_message: undefined | string = undefined;
+
+    public get_debug_message(){
+        const msg = this._debug_message;
+        this._debug_message = undefined;
+        return msg;
+    }
+
     constructor(public options: Emu_Options){
 
     }
     private heap_size = 0;
     load_program(program: Program, debug_info: Debug_Info){
+        this._debug_message = undefined;
         this.program = program, this.debug_info = debug_info;
         this.pc_counters = Array.from({length: program.opcodes.length}, () => 0);
         const bits = program.headers[URCL_Header.BITS].value;
@@ -253,6 +263,10 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
 step(): Step_Result {
     const pc = this.pc++;
+    if (this.debug_info.program_breaks[pc]){
+        this.debug(`Reached @DEBUG Before:`);
+        return Step_Result.Debug;
+    }
     if (pc >= this.program.opcodes.length){return Step_Result.Halt;}
     this.pc_counters[pc]++;
     const opcode = this.program.opcodes[pc];
@@ -273,6 +287,11 @@ step(): Step_Result {
         return Step_Result.Input;
     }
     if (length >= 1)this.write(op_types[0], op_values[0], this.a);
+
+    if (this._debug_message !== undefined){
+        return Step_Result.Debug;
+    }
+
     return Step_Result.Continue;
 }
 
@@ -280,11 +299,18 @@ step(): Step_Result {
         if (addr >= this.memory.length){
             this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
+        if (this.debug_info.memory_breaks[addr] & Break.ONWRITE){
+            this.debug(`Written #${addr} which was ${this.memory[addr]} to ${value}`);
+
+        }
         this.memory[addr] = value;
     }
     m_get(addr: number){
         if (addr >= this.memory.length){
-            this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on load: #${addr} >= ${this.memory.length}`);
+        }
+        if (this.debug_info.memory_breaks[addr] & Break.ONREAD){
+            this.debug(`Read #${addr} = ${this.memory[addr]}`);
         }
         return this.memory[addr];
     }
@@ -298,15 +324,25 @@ step(): Step_Result {
     }
     write(target: Operant_Prim, index: Word, value: Word){
         switch (target){
-            case Operant_Prim.Reg: this.registers[index] = value;return;
+            case Operant_Prim.Reg: {
+                if (this.debug_info.register_breaks[index] & Break.ONWRITE){
+                    this.debug(`Written r${index} which was ${this.registers[index]} to ${value}`);
+                }
+                this.registers[index] = value;
+            } return;
             case Operant_Prim.Imm: return; // do nothing
             default: this.error(`Unknown operant target ${target}`);
         }
     }
-    read(source: Operant_Prim, value: Word){
+    read(source: Operant_Prim, index: Word){
         switch (source){
-            case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return this.registers[value];
+            case Operant_Prim.Imm: return index;
+            case Operant_Prim.Reg: {
+                if (this.debug_info.register_breaks[index] & Break.ONREAD){
+                    this.debug(`Read r${index} = ${this.registers[index]}`);
+                }
+                return this.registers[index];
+            }
             default: this.error(`Unknown operant source ${source}`); 
         }
     }
@@ -320,15 +356,30 @@ step(): Step_Result {
         }
         throw Error(content);
     }
+    get_line_nr(pc = this.pc): number {
+        return this.debug_info.pc_line_nrs[pc-1] || -2;
+    }
+    get_line(pc = this.pc): string {
+        const line = this.debug_info.lines[this.get_line_nr(pc)];
+        if (line == undefined){return "";}
+        return `\n\t${line}`;
+    }
+    format_message(msg: string, pc = this.pc): string {
+        const {lines, file_name} = this.debug_info;
+        const line_nr = this.get_line_nr(pc)
+        return `${file_name??"eval"}:${line_nr + 1} - ${msg}\n\t${lines[line_nr] ?? ""}`;
+    }
+
     warn(msg: string): void {
-        const {pc_line_nrs, lines, file_name} = this.debug_info;
-        const line_nr = pc_line_nrs[this.pc-1];
-        const content = `${file_name??"eval"}:${line_nr + 1} - warning - ${msg}\n\t${lines[line_nr]}`;
+        const content =  this.format_message(`warning - ${msg}`);
         if (this.options.warn){
             this.options.warn(content);
         } else {
             console.warn(content);
         }
+    }
+    debug(msg: string): void {
+        this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";  
     }
 
     decode_memory(start: number, end: number, reverse: boolean): string {

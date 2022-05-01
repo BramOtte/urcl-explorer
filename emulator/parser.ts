@@ -1,5 +1,11 @@
+import { Break, BreakFlag, break_flag } from "./breaks.js";
 import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Prim, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
 import { enum_count, enum_from_str, enum_strings, f16_encode, f32_encode, i53, is_digit, warn, Warning, Word } from "./util.js";
+
+function try_parse_int(x: string){
+    const int = my_parse_int(x);
+    return int == (0|int) ? int : undefined;
+}
 
 function my_parse_int(x: string){
     x = x.replace(/\_/g, "");
@@ -54,6 +60,11 @@ export class Parser_output implements Label_Out, Instruction_Out {
     readonly operant_strings   : string[][] = [];
     readonly operant_types     : Operant_Type[][] = [];
     readonly operant_values    : i53[][] = [];
+
+    readonly register_breaks   : Record<number, BreakFlag> = [];
+    readonly data_breaks       : Record<number, BreakFlag> = [];
+    readonly heap_breaks     : Record<number, BreakFlag> = [];
+    readonly program_breaks    : Record<number, BreakFlag> = [];
 }
 interface Label_Out {
     readonly labels            : Record<string, Label>;
@@ -91,7 +102,9 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     let label: undefined | Label;
     let last_label: undefined | Label;
     let labeled = Labeled.None as Labeled;
+    const inst_is: number[] = [];
     for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
+        inst_is.push(inst_i);
         const line = out.lines[line_nr];
         if (line === ""){continue;};
         last_label = label;
@@ -117,6 +130,9 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                 }
                 out.constants[name.toUpperCase()] = value;
                 continue
+            }
+            if (macro.toLowerCase() === "@debug") {
+                continue;
             }
             out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
             continue
@@ -155,21 +171,111 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++){
         parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
     }
-    for (let line_nr = 0, inst_i = 0; line_nr < out.lines.length; line_nr++){
+    for (let line_nr = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
-        if (line.toUpperCase().startsWith("DW")){
-            let [_, ...value_strs] = line.split(" ");
-            if (value_strs.length > 1){
-                value_strs[0] = value_strs[0].replace("[", "").trim();
-                if (value_strs[0].length === 0){value_strs.shift();}
-                value_strs[value_strs.length-1] = value_strs.at(-1)?.replaceAll("]", "").trim() ?? "";
-                if (value_strs.at(-1)?.length === 0){value_strs.pop();}
+        const [start, ...parts] = line.split(" "); 
+        if (start.toUpperCase() === "DW"){
+            if (parts.length > 1){
+                parts[0] = parts[0].replace("[", "").trim();
+                if (parts[0].length === 0){parts.shift();}
+                parts[parts.length-1] = parts.at(-1)?.replaceAll("]", "").trim() ?? "";
+                if (parts.at(-1)?.length === 0){parts.pop();}
             }
             let i = 0;
-            while (i < value_strs.length){
-                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
+            while (i < parts.length){
+                const res = parse_operant(()=>parts[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
                 if (res?.[0] !== Operant_Type.String){
                     out.data.push(res ? res[1] : -1);
+                }
+            }
+        }
+        if (start.toUpperCase() === "@DEBUG"){
+            const inst_i = inst_is[line_nr];
+            const flag_arr: Break[] = [];
+            const targets: string[] = [];
+            for (const part of parts){
+                const flag = enum_from_str(Break, part);
+                if (flag !== undefined){
+                    flag_arr.push(flag);
+                } else {
+                    targets.push(part);
+                }
+            }
+            if (targets.length == 0){
+                flag_arr.push(Break.ONREAD);
+                out.program_breaks[inst_i] = break_flag(flag_arr);
+                continue;
+            }
+            if (flag_arr.length == 0){
+                flag_arr.push(Break.ONREAD, Break.ONWRITE);
+            }
+            const flags = break_flag(flag_arr);
+            for (let i = 0; i < targets.length; i++){
+                const target = resolve_macro(targets[i], out.constants, line_nr, out.errors);
+                if (target == undefined){
+                    continue;
+                }
+                switch (target[0]){
+                    case 'r': case 'R': case '$': {
+                        const n = try_parse_int(target.slice(1));
+                        if (n === undefined){
+                            out.errors.push(warn(line_nr, `${target} is not a valid register`));
+                            continue;
+                        }
+                        out.register_breaks[my_parse_int(target.slice(1)) + register_count - 1] = flags;
+                    } break;
+                    case 'm': case 'M': case '#': {
+                        const [base_str, add_str] = target.slice(1).split("+");
+                        let index = try_parse_int(base_str);
+                        if (index === undefined){
+                            out.errors.push(warn(line_nr, `${base_str} is not a valid integer`));
+                            continue;
+                        }
+                        if (add_str){
+                            const add = try_parse_int(add_str);
+                            if (add === undefined){
+                                out.errors.push(warn(line_nr, `${add_str} is not a valid integer`));
+                                continue;
+                            }
+                            index += add;
+                        }
+
+                        out.heap_breaks[index] = flags;
+                    } break;
+                    case '.': {
+                        const [label_str, add_str] = target.split("+");
+                        const label = out.labels[target];
+                        if (label === undefined){
+                            out.errors.push(warn(line_nr, `Undefined label ${label_str}`));
+                            continue;
+                        }
+                        let index = label.index;
+                        if (add_str){
+                            const add = try_parse_int(add_str);
+                            if (add === undefined){
+                                out.errors.push(warn(line_nr, `${add_str} is not a valid integer`));
+                                continue;
+                            }
+                            index += add;
+                        }
+                        if (label.type === Label_Type.DW){
+                            out.data_breaks[index] = flags;
+                        } else { // label.type === Label_Type.Inst
+                            out.program_breaks[index] = flags;
+                        }
+                    } break;
+                    default: {
+                        if (target.toUpperCase() === "PC"){
+                            out.register_breaks[Register.PC] = flags;
+                            continue;
+                        }
+                        if (target.toUpperCase() === "SP"){
+                            out.register_breaks[Register.SP] = flags;
+                            continue;
+                        }
+
+                        out.warnings.push(warn(line_nr, `Unknown debug target/flag, expected register, heap location or label or one of [${enum_strings(Break)}]`));
+                    } break;
                 }
             }
         }
@@ -296,6 +402,22 @@ function parse_instructions(line_nr: number, inst_i: number, out: Parser_output,
         
     }
     return 0;
+}
+
+function resolve_macro(operant: string, macro_constants: Record<string, string>, line_nr: number, errors: Warning[]): string | undefined{
+    for (let i = 0; i < 10; i++){
+        const macro: undefined | string = macro_constants[operant.toUpperCase()];
+        if (macro !== undefined){
+            operant = macro;
+        } else {
+            break;
+        }
+        if (i >= 9){
+            errors.push(warn(line_nr, `Recursive macro (${operant} -> ${macro})`));
+            return undefined;
+        }
+    }
+    return operant;
 }
 
 function parse_operant(

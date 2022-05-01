@@ -340,6 +340,20 @@ function process_step_result(result, steps) {
                 running = false;
             }
             break;
+        case Step_Result.Debug:
+            {
+                if (running) {
+                    pause();
+                }
+                const msg = emulator.get_debug_message();
+                if (msg !== undefined) {
+                    output_element.innerText += "\n" + msg;
+                }
+                else {
+                    throw new Error("Debug not handled");
+                }
+            }
+            break;
         default: {
             console.warn("unkown step result");
         }

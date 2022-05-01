@@ -1,6 +1,6 @@
 import { Constants, Header_Run, Operant_Prim, Operant_Type, register_count, URCL_Header } from "./instructions.js";
 export function compile(parsed) {
-    const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines } = parsed;
+    const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks } = parsed;
     const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
     const header_bits = parsed.headers[URCL_Header.BITS].value;
     const bits = header_bits <= 8 ? 8 :
@@ -18,6 +18,7 @@ export function compile(parsed) {
     const minreg = headers[URCL_Header.MINREG].value;
     const minheap = headers[URCL_Header.MINHEAP].value;
     const minstack = headers[URCL_Header.MINSTACK].value;
+    const heap_offset = parsed.data.length;
     const new_operant_values = operant_values.map(vals => vals.slice());
     const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
         switch (t) {
@@ -32,7 +33,7 @@ export function compile(parsed) {
             case Operant_Type.Label: return Operant_Prim.Imm;
             case Operant_Type.String: return Operant_Prim.Reg;
             case Operant_Type.Memory: {
-                new_operant_values[i][j] += parsed.data.length;
+                new_operant_values[i][j] += heap_offset;
                 return Operant_Prim.Imm;
             }
             case Operant_Type.Data_Label: return Operant_Prim.Imm;
@@ -77,9 +78,13 @@ export function compile(parsed) {
             default: throw new Error(`Unkown opperant type ${t} ${Operant_Type[t]}`);
         }
     }));
+    const memory_breaks = { ...data_breaks };
+    for (const [key, value] of Object.entries(heap_breaks)) {
+        memory_breaks[Number(key) + heap_offset] = value;
+    }
     return [
         { headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data },
-        { pc_line_nrs: instr_line_nrs, lines }
+        { pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks }
     ];
 }
 function program_to_bytecode(parsed, inst_sizeof = (opcode) => 5) {

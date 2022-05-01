@@ -1,10 +1,12 @@
 import { registers_to_string, indent, hex, pad_center, pad_left } from "./util.js";
 import { Opcode, Operant_Prim, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns } from "./instructions.js";
+import { Break } from "./breaks.js";
 export var Step_Result;
 (function (Step_Result) {
     Step_Result[Step_Result["Continue"] = 0] = "Continue";
     Step_Result[Step_Result["Halt"] = 1] = "Halt";
     Step_Result[Step_Result["Input"] = 2] = "Input";
+    Step_Result[Step_Result["Debug"] = 3] = "Debug";
 })(Step_Result || (Step_Result = {}));
 export class Emulator {
     options;
@@ -22,11 +24,18 @@ export class Emulator {
     set sc(v) { this.c = v; }
     program;
     debug_info;
+    _debug_message = undefined;
+    get_debug_message() {
+        const msg = this._debug_message;
+        this._debug_message = undefined;
+        return msg;
+    }
     constructor(options) {
         this.options = options;
     }
     heap_size = 0;
     load_program(program, debug_info) {
+        this._debug_message = undefined;
         this.program = program, this.debug_info = debug_info;
         this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
         const bits = program.headers[URCL_Header.BITS].value;
@@ -243,6 +252,10 @@ export class Emulator {
     }
     step() {
         const pc = this.pc++;
+        if (this.debug_info.program_breaks[pc]) {
+            this.debug(`Reached @DEBUG Before:`);
+            return Step_Result.Debug;
+        }
         if (pc >= this.program.opcodes.length) {
             return Step_Result.Halt;
         }
@@ -270,17 +283,26 @@ export class Emulator {
         }
         if (length >= 1)
             this.write(op_types[0], op_values[0], this.a);
+        if (this._debug_message !== undefined) {
+            return Step_Result.Debug;
+        }
         return Step_Result.Continue;
     }
     m_set(addr, value) {
         if (addr >= this.memory.length) {
             this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
         }
+        if (this.debug_info.memory_breaks[addr] & Break.ONWRITE) {
+            this.debug(`Written #${addr} which was ${this.memory[addr]} to ${value}`);
+        }
         this.memory[addr] = value;
     }
     m_get(addr) {
         if (addr >= this.memory.length) {
-            this.error(`Heap overflow on load: ${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on load: #${addr} >= ${this.memory.length}`);
+        }
+        if (this.debug_info.memory_breaks[addr] & Break.ONREAD) {
+            this.debug(`Read #${addr} = ${this.memory[addr]}`);
         }
         return this.memory[addr];
     }
@@ -295,16 +317,26 @@ export class Emulator {
     write(target, index, value) {
         switch (target) {
             case Operant_Prim.Reg:
-                this.registers[index] = value;
+                {
+                    if (this.debug_info.register_breaks[index] & Break.ONWRITE) {
+                        this.debug(`Written r${index} which was ${this.registers[index]} to ${value}`);
+                    }
+                    this.registers[index] = value;
+                }
                 return;
             case Operant_Prim.Imm: return; // do nothing
             default: this.error(`Unknown operant target ${target}`);
         }
     }
-    read(source, value) {
+    read(source, index) {
         switch (source) {
-            case Operant_Prim.Imm: return value;
-            case Operant_Prim.Reg: return this.registers[value];
+            case Operant_Prim.Imm: return index;
+            case Operant_Prim.Reg: {
+                if (this.debug_info.register_breaks[index] & Break.ONREAD) {
+                    this.debug(`Read r${index} = ${this.registers[index]}`);
+                }
+                return this.registers[index];
+            }
             default: this.error(`Unknown operant source ${source}`);
         }
     }
@@ -318,16 +350,32 @@ export class Emulator {
         }
         throw Error(content);
     }
+    get_line_nr(pc = this.pc) {
+        return this.debug_info.pc_line_nrs[pc - 1] || -2;
+    }
+    get_line(pc = this.pc) {
+        const line = this.debug_info.lines[this.get_line_nr(pc)];
+        if (line == undefined) {
+            return "";
+        }
+        return `\n\t${line}`;
+    }
+    format_message(msg, pc = this.pc) {
+        const { lines, file_name } = this.debug_info;
+        const line_nr = this.get_line_nr(pc);
+        return `${file_name ?? "eval"}:${line_nr + 1} - ${msg}\n\t${lines[line_nr] ?? ""}`;
+    }
     warn(msg) {
-        const { pc_line_nrs, lines, file_name } = this.debug_info;
-        const line_nr = pc_line_nrs[this.pc - 1];
-        const content = `${file_name ?? "eval"}:${line_nr + 1} - warning - ${msg}\n\t${lines[line_nr]}`;
+        const content = this.format_message(`warning - ${msg}`);
         if (this.options.warn) {
             this.options.warn(content);
         }
         else {
             console.warn(content);
         }
+    }
+    debug(msg) {
+        this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";
     }
     decode_memory(start, end, reverse) {
         const w = 8;
