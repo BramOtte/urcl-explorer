@@ -190,11 +190,18 @@ export class Editor_Window extends HTMLElement {
             }
         }
         while (this.colors.children.length > lines.length){
-            const child = this.colors.children[old_lines.length - end_i - 1];
-            if (child){
-                this.colors.removeChild(child);
+            const child = this.colors.children[Math.min(this.colors.children.length, old_lines.length) - end_i - 1];
+            if (!child){
+                console.error("This should never happen");
+                this.input.style.color = "white";
+                this.colors.style.color = "transparent";
+                break;
             }
+            this.colors.removeChild(child);
         }
+
+        
+
         for (let i = start; i < end; i++){
             const line = lines[i];
             const element = this.colors.children[i];
