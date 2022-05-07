@@ -68,7 +68,7 @@ textarea {
   overflow: scroll;
   background: #000;
   color: #FFF;
-  font-family: "unscii";
+  font-family: monospace;
   display: block;
   white-space: pre;
   resize: auto;
