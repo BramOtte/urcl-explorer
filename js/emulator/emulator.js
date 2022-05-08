@@ -45,6 +45,7 @@ export class Emulator {
         const registers = program.headers[URCL_Header.MINREG].value + register_count;
         const run = program.headers[URCL_Header.RUN].value;
         this.heap_size = heap;
+        this.debug_reached = false;
         if (run === Header_Run.RAM) {
             throw new Error("emulator currently doesn't support running in ram");
         }
@@ -268,12 +269,16 @@ export class Emulator {
         } while (performance.now() < end);
         return [Step_Result.Continue, j];
     }
+    debug_reached = false;
     step() {
         const pc = this.pc++;
-        if (this.debug_info.program_breaks[pc]) {
+        if (this.debug_info.program_breaks[pc] && !this.debug_reached) {
+            this.debug_reached = true;
             this.debug(`Reached @DEBUG Before:`);
+            this.pc--;
             return Step_Result.Debug;
         }
+        this.debug_reached = false;
         if (pc >= this.program.opcodes.length) {
             return Step_Result.Halt;
         }
