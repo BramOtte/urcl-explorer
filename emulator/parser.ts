@@ -304,7 +304,7 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
         return false;
     }
     const header_def = urcl_headers[header];
-    if (header_def.def_operant !== undefined){
+    if (header_def.def_operant !== undefined && val_str){
         if (opOrVal_str === undefined){
             errors.push(warn(line_nr,
                 `Missing operant for header ${header_str}, must be ${enum_strings(Header_Operant)}`
