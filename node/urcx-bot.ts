@@ -1,6 +1,6 @@
 // https://github.com/benjaminadk/gif-encoder-2
 import fsp from "fs/promises";
-import ds, { MessageAttachment } from "discord.js";
+import ds, { Message, MessageAttachment } from "discord.js";
 import {emu_reply, emu_start} from "./bots/bot-emu.js";
 import GivEncoder from "gifencoder";
 import Canvas from "canvas";
@@ -11,6 +11,10 @@ import { expand_warnings, Warning } from "../emulator/util.js";
 import https from "https"
 import { Token, tokenize } from "../editor/tokenizer.js";
 import { token_to_ansi } from "../editor/ansi.js";
+
+process.on('unhandledRejection', error => {
+    console.error(`unhandledRejection! are you missing an await?\n${error}`);
+});
 
 
 console.log("starting...");
@@ -77,49 +81,85 @@ function code_block(str: string, max: number){
 
 const channels = ["bots", "urcl-bot", "counting", "chains"];
 const urcl_start = "```urcx\n";
-const urcl_end = "```";
+const ansi_start = "```ansi\n";
+const code_block_end = "```";
+
+function errorMessage(error: unknown){
+    if (error instanceof Error){
+        return error.message;
+    } else {
+        return "" + error;
+    }
+}
 
 client.on("messageCreate", async (msg) => {
+    try {
+        await onmessage(msg);
+    } catch (error1) {
+        const err_msg = errorMessage(error1);
+        await msg.reply({"content": err_msg.substring(0, max_total)});
+    }
+}); 
+
+async function onmessage (msg: Message) {
     if (msg.content.toLowerCase().includes("!lol")){
         const text =  msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:")
         if (text.length > max_msg){
-            msg.reply("Message too large");
+            await msg.reply("Message too large");
             return;
         }
-        msg.reply(text);
+        await msg.reply(text);
         return;
     }
     if (msg.content.includes(urcl_start)) {
-        let result = "```ansi\n";
+        let result = "";
         let i = 0;
         while (i >= 0 && i < msg.content.length){
             const start = msg.content.indexOf(urcl_start, i);
             if (i == -1){break;}
             result += msg.content.substring(i, start);
             i = start + urcl_start.length;
-            const end = msg.content.indexOf(urcl_end, i);
+            const end = msg.content.indexOf(code_block_end, i);
             if (end == -1){break;}
             const tokens: Token[] = [];
-            const source = msg.content.substring(i, end)
+            const source = msg.content.substring(i, end);
             tokenize(source, 0, tokens);
-            i = end + urcl_end.length;
+            i = end + code_block_end.length;
             for (const {type, start, end} of tokens){
                 const ansi = token_to_ansi[type];
                 const text = source.substring(start, end);
                 result += `${ansi}${text}`;
             }
         }
-        result += msg.content.substring(i) + "```";
-        msg.reply({content: result});
+        result += msg.content.substring(i);
+        const lines = result.split("\n");
+        let lex = "";
+        for (const line of lines){
+            if (line.length + 1 + ansi_start.length+code_block_end.length > max_total){
+                if (lex.length > 0){
+                    msg = await msg.reply({content: `${ansi_start}${lex}${code_block_end}`});
+                }
+                lex = "";
+                msg = await msg.reply({content: `Line too long starting with: ${line.substring(0, 20)}`});
+                continue;
+            }
+            if (lex.length + line.length + 1 + ansi_start.length+code_block_end.length > max_total ){
+                msg = await msg.reply({content: `${ansi_start}${lex}${code_block_end}`});
+                lex = "";
+            }
+            lex += line + "\n";
+        }
+        if (lex.length > 0){
+            msg = await msg.reply({content: `${ansi_start}${lex}${code_block_end}`});
+        }
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
     if (!channels.includes(msg.channel.name)) return;
-    try {
     const {content} = msg;
     if (content.startsWith("!urclpp")){
         let source = parse_code_block(content);
         if (source === undefined){
-            msg.reply("no source specified");
+            await msg.reply("no source specified");
             return;
         }
 
@@ -136,7 +176,7 @@ client.on("messageCreate", async (msg) => {
         const end = content.indexOf(" ", urcx);
         const argv = content.substring(end).split("\n")[0].split(" ");
         const res = emu_start(msg.channelId, argv, out + "\nHLT");
-        reply(msg, res);
+        await reply(msg, res);
     } else
     if (content.startsWith("!urcx-emu")){
         const argv = content.split("\n")[0].split(" ");
@@ -150,12 +190,12 @@ client.on("messageCreate", async (msg) => {
 
 
         const res = emu_start(msg.channelId, argv, source);
-        reply(msg, res);
+        await reply(msg, res);
     }
     else if (content.startsWith("!lower")){
         let source = parse_code_block(content);
         if (source === undefined){
-            msg.reply("no source specified");
+            await msg.reply("no source specified");
             return;
         }
         const errors: Warning[] = [];
@@ -171,15 +211,11 @@ client.on("messageCreate", async (msg) => {
             + `!urclpp\n`
             + `!urclpp | urcx-emu\n`
             + `!lower`;
-        msg.reply({content: reply});
+        await msg.reply({content: reply});
     }
     if (content.startsWith("?")){
         const res = emu_reply(msg.channelId, content.substring(1));
-        reply(msg, res);
-    }
-    } catch (e) {
-        const buf = Buffer.from(("" + e).substring(0, 1_000_000), "utf8");
-        msg.reply(`${new MessageAttachment(buf, "error.txt")}`);
+        await reply(msg, res);
     }
 
     async function reply(msg: ds.Message, res: ReturnType<typeof emu_start>){
@@ -240,7 +276,7 @@ client.on("messageCreate", async (msg) => {
             return msg.reply({files});
         }
     }
-})
+}
 
 // const port = Number(process.env.PORT) || 5000;
 
