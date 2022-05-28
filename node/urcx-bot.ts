@@ -89,7 +89,7 @@ client.on("messageCreate", async (msg) => {
         msg.reply(text);
         return;
     }
-    if (msg.content.includes("```urcl")) {
+    if (msg.content.includes("```urcx")) {
         let result = "```ansi\n";
         let i = 0;
         while (i >= 0 && i < msg.content.length){
