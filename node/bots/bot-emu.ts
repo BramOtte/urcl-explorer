@@ -250,7 +250,7 @@ options:
         
         const canvas = Canvas.createCanvas(__width, __height);
         const ctx = canvas.getContext("2d", {alpha: false});
-        display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
+        display = new Display(ctx as CanvasRenderingContext2D, program.headers[URCL_Header.BITS].value, __color.val, true);
         emulator.add_io_device(display);
 
         state = Step_Result.Continue;

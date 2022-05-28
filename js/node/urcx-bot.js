@@ -8,6 +8,8 @@ import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
 import { expand_warnings } from "../emulator/util.js";
+import { tokenize } from "../editor/tokenizer.js";
+import { token_to_ansi } from "../editor/ansi.js";
 console.log("starting...");
 let token = process.env.DISCORD_TOKEN;
 if (!token) {
@@ -68,6 +70,8 @@ function code_block(str, max) {
     return "```\n" + str + "```";
 }
 const channels = ["bots", "urcl-bot", "counting", "chains"];
+const urcl_start = "```urcl\n";
+const urcl_end = "```";
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")) {
         const text = msg.content.replace(/!lol/gi, ":regional_indicator_l::regional_indicator_o::regional_indicator_l:");
@@ -76,6 +80,34 @@ client.on("messageCreate", async (msg) => {
             return;
         }
         msg.reply(text);
+        return;
+    }
+    if (msg.content.includes("```urcl")) {
+        let result = "```ansi\n";
+        let i = 0;
+        while (i >= 0 && i < msg.content.length) {
+            const start = msg.content.indexOf(urcl_start, i);
+            if (i == -1) {
+                break;
+            }
+            result += msg.content.substring(i, start);
+            i = start + urcl_start.length;
+            const end = msg.content.indexOf(urcl_end, i);
+            if (end == -1) {
+                break;
+            }
+            const tokens = [];
+            const source = msg.content.substring(i, end);
+            tokenize(source, 0, tokens);
+            i = end + urcl_end.length;
+            for (const { type, start, end } of tokens) {
+                const ansi = token_to_ansi[type];
+                const text = source.substring(start, end);
+                result += `${ansi}${text}`;
+            }
+        }
+        result += msg.content.substring(i) + "```";
+        msg.reply({ content: result });
         return;
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))

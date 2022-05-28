@@ -93,7 +93,7 @@ function regex(type: Token_Type, regex: RegExp, src: string, i: number, tokens: 
     return end;
 }
 
-enum Token_Type {
+export enum Token_Type {
     Unknown = "unknown",
     Comment = "comment",
     Comment_Multi = "comment-multi",

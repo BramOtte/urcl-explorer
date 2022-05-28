@@ -73,7 +73,7 @@ function regex(type, regex, src, i, tokens) {
     tokens.push({ type, start: i, end });
     return end;
 }
-var Token_Type;
+export var Token_Type;
 (function (Token_Type) {
     Token_Type["Unknown"] = "unknown";
     Token_Type["Comment"] = "comment";

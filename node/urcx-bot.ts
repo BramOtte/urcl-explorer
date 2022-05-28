@@ -9,6 +9,8 @@ import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
 import { expand_warnings, Warning } from "../emulator/util.js";
 import https from "https"
+import { Token, tokenize } from "../editor/tokenizer.js";
+import { token_to_ansi } from "../editor/ansi.js";
 
 
 console.log("starting...");
@@ -74,6 +76,8 @@ function code_block(str: string, max: number){
 }
 
 const channels = ["bots", "urcl-bot", "counting", "chains"];
+const urcl_start = "```urcl\n";
+const urcl_end = "```";
 
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")){
@@ -83,6 +87,30 @@ client.on("messageCreate", async (msg) => {
             return;
         }
         msg.reply(text);
+        return;
+    }
+    if (msg.content.includes("```urcl")) {
+        let result = "```ansi\n";
+        let i = 0;
+        while (i >= 0 && i < msg.content.length){
+            const start = msg.content.indexOf(urcl_start, i);
+            if (i == -1){break;}
+            result += msg.content.substring(i, start);
+            i = start + urcl_start.length;
+            const end = msg.content.indexOf(urcl_end, i);
+            if (end == -1){break;}
+            const tokens: Token[] = [];
+            const source = msg.content.substring(i, end)
+            tokenize(source, 0, tokens);
+            i = end + urcl_end.length;
+            for (const {type, start, end} of tokens){
+                const ansi = token_to_ansi[type];
+                const text = source.substring(start, end);
+                result += `${ansi}${text}`;
+            }
+        }
+        result += msg.content.substring(i) + "```";
+        msg.reply({content: result});
         return;
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
@@ -187,7 +215,7 @@ client.on("messageCreate", async (msg) => {
                     ctx.fillRect(0, 0, width, height);
                     ctx.putImageData(screen, 0, 0);
                     ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
-                    encoder.addFrame(ctx);
+                    encoder.addFrame(ctx as CanvasRenderingContext2D);
                 }
                 encoder.finish();
                 const buf = encoder.out.getData();
