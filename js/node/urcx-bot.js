@@ -70,7 +70,7 @@ function code_block(str, max) {
     return "```\n" + str + "```";
 }
 const channels = ["bots", "urcl-bot", "counting", "chains"];
-const urcl_start = "```urcl\n";
+const urcl_start = "```urcx\n";
 const urcl_end = "```";
 client.on("messageCreate", async (msg) => {
     if (msg.content.toLowerCase().includes("!lol")) {
@@ -82,7 +82,7 @@ client.on("messageCreate", async (msg) => {
         msg.reply(text);
         return;
     }
-    if (msg.content.includes("```urcx")) {
+    if (msg.content.includes(urcl_start)) {
         let result = "```ansi\n";
         let i = 0;
         while (i >= 0 && i < msg.content.length) {
