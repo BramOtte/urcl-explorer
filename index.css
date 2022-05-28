@@ -1,3 +1,10 @@
+#uncaught-errors {
+  background-color: black;
+  color: white;
+  z-index: 999999999;
+}
+
+
 @font-face {
   font-family: "unscii";
   src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");

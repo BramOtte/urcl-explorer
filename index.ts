@@ -1,3 +1,15 @@
+const uncaught_errors = document.getElementById("uncaught-errors") as HTMLDivElement;
+if (uncaught_errors == null){
+    console.error("Missing uncaught-errors elements");
+}
+onerror = (e, s, l, c, error) => {
+    if (error instanceof Error){
+        uncaught_errors.innerText += error.stack;
+    } else {
+        uncaught_errors.innerText += error;
+    }
+}
+
 import { Editor_Window } from "./editor/editor.js";
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
@@ -246,7 +258,9 @@ function pause(){
 }
 
 function compile_and_run(){
-    compile_and_reset();
+    if (!compile_and_reset()) {
+        return;
+    }
     pause_button.textContent = "Pause";
     pause_button.disabled = false;
     if (!running){
@@ -255,7 +269,7 @@ function compile_and_run(){
         frame();
     }
 }
-function compile_and_reset(){
+function compile_and_reset(): boolean {
     clock_count = 0;
     output_element.innerText = "";
 try {
@@ -267,7 +281,7 @@ try {
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines)+"\n").join("");
         output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines)+"\n").join("");
-        return;
+        return false;
     }
     output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines)+"\n").join("");
     const [program, debug_info] = compile(parsed);
@@ -275,7 +289,7 @@ try {
 
     if (storage_uploaded){
         const bytes = storage_uploaded.slice();
-        emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, storage_little.checked, bytes.length)); // TODO: add little endian option
+        emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
         storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 
@@ -294,6 +308,7 @@ memory-size: ${emulator.memory.length}
     step_button.disabled = false;
     running = false;
     update_views();
+    return true;
 } catch (e){
     output_element.innerText += (e as Error).message;
     throw e;
