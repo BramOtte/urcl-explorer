@@ -108,7 +108,6 @@ client.on("messageCreate", async (msg) => {
         }
         result += msg.content.substring(i) + "```";
         msg.reply({ content: result });
-        return;
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel))
         return;
