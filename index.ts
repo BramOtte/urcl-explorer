@@ -2,11 +2,11 @@ const uncaught_errors = document.getElementById("uncaught-errors") as HTMLDivEle
 if (uncaught_errors == null){
     console.error("Missing uncaught-errors elements");
 }
-onerror = (e, s, l, c, error) => {
+onerror = (message, s, l, c, error) => {
     if (error instanceof Error){
-        uncaught_errors.innerText += error.stack;
+        uncaught_errors.innerText +=  message + "\n" + error.stack;
     } else {
-        uncaught_errors.innerText += error;
+        uncaught_errors.innerText += message + "\n" + error;
     }
 }
 

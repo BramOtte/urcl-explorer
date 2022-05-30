@@ -299,7 +299,7 @@ function parse_header(line: string, line_nr: number, headers: Header_Obj, errors
     if (header_str === undefined){
         return false;
     }
-    const header: URCL_Header | undefined = URCL_Header[header_str.toUpperCase() as any] as any;
+    const header = enum_from_str(URCL_Header, header_str.toUpperCase());
     if (header === undefined){
         return false;
     }

@@ -294,7 +294,7 @@ function parse_header(line, line_nr, headers, errors) {
     if (header_str === undefined) {
         return false;
     }
-    const header = URCL_Header[header_str.toUpperCase()];
+    const header = enum_from_str(URCL_Header, header_str.toUpperCase());
     if (header === undefined) {
         return false;
     }

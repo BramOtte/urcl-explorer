@@ -115,6 +115,7 @@ export interface Instruction_Ctx {
     pop(): number;
     in(port: number): boolean;
     out(port: number, value: number): void;
+    warn(msg: string): void;
 }
 
 type Instruction_Callback = (ctx: Instruction_Ctx) => void | boolean;
@@ -255,10 +256,10 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.OUT ]: [[GET, GET], (s) => {s.out(s.a, s.b)}],
 
     //----- Assert Instructions
-    [Opcode.__ASSERT]: [[GET], (s) => {if (!s.a) fail_assert(s) }],
-    [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s) }],
-    [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s)}],
-    [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s)}],
+    [Opcode.__ASSERT]: [[GET], (s) => {if (!s.a) fail_assert(s, `value = ${s.a}`) }],
+    [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s, `value = ${s.a}`) }],
+    [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
+    [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 
@@ -274,9 +275,7 @@ export const Opcodes_operant_lengths: Record<Opcode, number>
     }, []);
 
 
-function fail_assert(ctx: {out(port: number, value: number):void, pc: number}){
-    const message = `Assertion failed at pc=${ctx.pc}\n`;
-    for (let i = 0; i < message.length; i++){
-        ctx.out(IO_Port.TEXT, message.charCodeAt(i));
-    }
+function fail_assert(ctx: Instruction_Ctx, msg: string){
+    const message = `Assertion failed: ${msg}`;
+    ctx.warn(message);
 }

@@ -367,13 +367,13 @@ export const Opcodes_operants = {
     [Opcode.OUT]: [[GET, GET], (s) => { s.out(s.a, s.b); }],
     //----- Assert Instructions
     [Opcode.__ASSERT]: [[GET], (s) => { if (!s.a)
-            fail_assert(s); }],
+            fail_assert(s, `value = ${s.a}`); }],
     [Opcode.__ASSERT0]: [[GET], (s) => { if (s.a)
-            fail_assert(s); }],
+            fail_assert(s, `value = ${s.a}`); }],
     [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => { if (s.a !== s.b)
-            fail_assert(s); }],
+            fail_assert(s, `left = ${s.a}, right = ${s.b}`); }],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => { if (s.a === s.b)
-            fail_assert(s); }],
+            fail_assert(s, `left = ${s.a}, right = ${s.b}`); }],
 };
 export const inst_fns = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
@@ -387,10 +387,8 @@ export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value)
     }
     return [key, value[0].length];
 }, []);
-function fail_assert(ctx) {
-    const message = `Assertion failed at pc=${ctx.pc}\n`;
-    for (let i = 0; i < message.length; i++) {
-        ctx.out(IO_Port.TEXT, message.charCodeAt(i));
-    }
+function fail_assert(ctx, msg) {
+    const message = `Assertion failed: ${msg}`;
+    ctx.warn(message);
 }
 //# sourceMappingURL=instructions.js.map
