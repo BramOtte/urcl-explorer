@@ -1,7 +1,11 @@
 #uncaught-errors {
+  display: none;
   background-color: black;
   color: white;
-  z-index: 999999999;
+  overflow: auto;
+}
+input:checked ~ .hide {
+    display: block !important;
 }
 
 
