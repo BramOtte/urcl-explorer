@@ -1,14 +1,3 @@
-#uncaught-errors {
-  display: none;
-  background-color: black;
-  color: white;
-  overflow: auto;
-}
-input:checked ~ .hide {
-    display: block !important;
-}
-
-
 @font-face {
   font-family: "unscii";
   src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");

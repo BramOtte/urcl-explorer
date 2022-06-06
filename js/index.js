@@ -1,15 +1,3 @@
-const uncaught_errors = document.getElementById("uncaught-errors");
-if (uncaught_errors == null) {
-    console.error("Missing uncaught-errors elements");
-}
-onerror = (message, s, l, c, error) => {
-    if (error instanceof Error) {
-        uncaught_errors.innerText += message + "\n" + error.stack;
-    }
-    else {
-        uncaught_errors.innerText += message + "\n" + error;
-    }
-};
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
