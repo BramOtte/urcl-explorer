@@ -53,7 +53,7 @@ export enum URCL_Header {
 
 export enum Constants {
     BITS, MSB, SMSB, MAX, SMAX, UHALF, LHALF,
-    MINREG, MINHEAP, MINSTACK
+    MINREG, MINHEAP, HEAP, MINSTACK
 }
 
 

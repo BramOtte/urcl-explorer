@@ -74,6 +74,7 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
                     case Constants.LHALF: vals[j] = lhalf; break
                     case Constants.MINREG: vals[j] = minreg; break
                     case Constants.MINHEAP: vals[j] = minheap; break
+                    case Constants.HEAP: vals[j] = minheap; break
                     case Constants.MINSTACK: vals[j] = minstack; break
                     default: throw new Error(`Unsupported constant ${constant} ${Constants[constant]}`);
                 }

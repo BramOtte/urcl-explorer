@@ -129,7 +129,8 @@ export var Constants;
     Constants[Constants["LHALF"] = 6] = "LHALF";
     Constants[Constants["MINREG"] = 7] = "MINREG";
     Constants[Constants["MINHEAP"] = 8] = "MINHEAP";
-    Constants[Constants["MINSTACK"] = 9] = "MINSTACK";
+    Constants[Constants["HEAP"] = 9] = "HEAP";
+    Constants[Constants["MINSTACK"] = 10] = "MINSTACK";
 })(Constants || (Constants = {}));
 export var Header_Operant;
 (function (Header_Operant) {

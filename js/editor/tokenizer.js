@@ -151,7 +151,7 @@ export const tokenize = bind(list, bind(or, [
     tok_white,
     tok_white_inline,
     bind(regex, Token_Type.Comparator, /^<=|>=|==/),
-    bind(regex, Token_Type.Macro, /^BITS|MINREG|MINHEAP|MINSTACK|RUN/i),
+    bind(regex, Token_Type.Macro, /^BITS|MINREG|MINHEAP|MINSTACK|RUN|HEAP/i),
     bind(regex, Token_Type.Text, /^RAM|ROM/i),
     tok_number,
     tok_char,

@@ -68,6 +68,9 @@ export function compile(parsed) {
                     case Constants.MINHEAP:
                         vals[j] = minheap;
                         break;
+                    case Constants.HEAP:
+                        vals[j] = minheap;
+                        break;
                     case Constants.MINSTACK:
                         vals[j] = minstack;
                         break;
