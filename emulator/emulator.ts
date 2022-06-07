@@ -189,6 +189,10 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     try {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
+            if (port === IO_Port.SUPPORTED){
+                this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === IO_Port.SUPPORTED ? 1 : 0;
+                return false;
+            }
             if (this.ins[port] === undefined){
                 this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
             }
@@ -207,7 +211,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             this.pc--;
             return true;
         } else {
-            this.a = res as number;
+            this.a = res;
             if (this.debug_info.port_breaks[port] & Break.ONREAD){
                 this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
             }
@@ -217,10 +221,15 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         this.error(""+e);
     }
     }
+    supported = 0;
     out(port: Word, value: Word): void{
     try {
         const device = this.device_outputs[port as IO_Port];
         if (device === undefined){
+            if (port === IO_Port.SUPPORTED){
+                this.supported = value;
+                return;
+            }
             if (this.outs[port] === undefined){
                 this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=${value}`);
                 this.outs[port] = value
