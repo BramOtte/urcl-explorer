@@ -45,6 +45,12 @@ CAL .push
 
 OUT %BUFFER 2
 .loop
+    OUT %GAMEPAD 1
+    IN r4 %GAMEPAD_INFO
+    BNZ .skip_fallback r4 // If no gamepad is present revert back to keyboard
+        OUT %GAMEPAD 0
+    .skip_fallback
+
     MOV last key
     IN key %GAMEPAD
     XOR r1 key last

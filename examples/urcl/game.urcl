@@ -16,6 +16,12 @@ MINREG 16
 
 OUT %BUFFER 1
 .loop
+OUT %GAMEPAD 1
+IN r4 %GAMEPAD_INFO
+BNZ .skip_fallback r4 // If no gamepad is present revert back to keyboard
+    OUT %GAMEPAD 0
+.skip_fallback
+
 MOV last key
 IN key %GAMEPAD
 XOR down key last
