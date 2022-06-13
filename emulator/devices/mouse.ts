@@ -45,6 +45,8 @@ export class Mouse implements Device {
         removeEventListener("mousemove", this.onmove);
         removeEventListener("mouseup", this.onup);
         removeEventListener("mousedown", this.ondown);
+        removeEventListener("contextmenu", this.oncontext);
+
     }
     inputs = {
         [IO_Port.MOUSE_X]: () => this.x,
@@ -62,6 +64,6 @@ export class Mouse implements Device {
         [IO_Port.MOUSE_BUTTONS]: () => this.buttons,
     }
     outputs = {
-
+        
     }
 }
