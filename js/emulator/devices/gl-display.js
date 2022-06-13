@@ -171,9 +171,6 @@ export class Gl_Display {
         gl.vertexAttribPointer(attr_uv, 2, gl.FLOAT, false, 4 * 4, 4 * 2);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 2, 1, 0, 2, 3]), gl.STATIC_DRAW);
         this.init_buffers(width, height);
-        this.gl.canvas.onclick = () => {
-            this.gl.canvas.requestFullscreen();
-        };
     }
     resize(width, height) {
         const buffer = new Uint32Array(width * height);

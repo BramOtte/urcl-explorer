@@ -56,6 +56,7 @@ This feature list is not complete yet.
 
 #### Display
 This device is operated via the [%X, %Y, %COLOR, and %BUFFER ports](https://docs.google.com/spreadsheets/d/1_ztRKWEm2LjHLb3Bxw0JOyZjJ9Drsj-hyOE-TFpwtS4/edit#gid=0&range=B11:B18)
+You can save the display as an image by holding ctrl and right-clicking the display to bring up the browser conext menu.
 ##### Color modes
 The color mode defines how the colors being outputted via the %COLOR port should be displayed.
 Mode    | Description

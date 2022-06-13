@@ -6,6 +6,7 @@ import { Color_Mode, Display } from "./emulator/devices/display.js";
 import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Keyboard } from "./emulator/devices/keyboard.js";
+import { Mouse } from "./emulator/devices/mouse.js";
 import { RNG } from "./emulator/devices/rng.js";
 import { Sound } from "./emulator/devices/sound.js";
 import { Storage } from "./emulator/devices/storage.js";
@@ -175,6 +176,12 @@ function change_color_mode(){
 }
 const width_input = document.getElementById("display-width") as HTMLInputElement;
 const height_input = document.getElementById("display-height") as HTMLInputElement;
+const fullscreen_button = document.getElementById("display-fullscreen") as HTMLButtonElement;
+fullscreen_button.onclick = () => {
+    canvas.requestPointerLock();
+    canvas.requestFullscreen();
+}
+
 width_input.value = ""+canvas.width
 height_input.value = ""+canvas.height
 width_input.addEventListener("input", resize_display);
@@ -194,6 +201,7 @@ emulator.add_io_device(new Clock());
 emulator.add_io_device(new Pad());
 emulator.add_io_device(new RNG());
 emulator.add_io_device(new Keyboard());
+emulator.add_io_device(new Mouse(canvas));
 
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;

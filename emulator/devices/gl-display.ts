@@ -187,11 +187,6 @@ export class Gl_Display implements Device {
 
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 2, 1, 0, 2, 3]), gl.STATIC_DRAW);
         this.init_buffers(width, height);
-
-
-        this.gl.canvas.onclick = () => {
-            this.gl.canvas.requestFullscreen();
-        }
     }
     resize(width: number, height: number){
         const buffer = new Uint32Array(width * height);

@@ -216,6 +216,12 @@ export var IO_Port;
     IO_Port[IO_Port["GAMEPAD"] = 63] = "GAMEPAD";
     IO_Port[IO_Port["AXIS"] = 62] = "AXIS";
     IO_Port[IO_Port["KEY"] = 61] = "KEY";
+    IO_Port[IO_Port["MOUSE_X"] = 62] = "MOUSE_X";
+    IO_Port[IO_Port["MOUSE_Y"] = 63] = "MOUSE_Y";
+    IO_Port[IO_Port["MOUSE_DX"] = 64] = "MOUSE_DX";
+    IO_Port[IO_Port["MOUSE_DY"] = 65] = "MOUSE_DY";
+    IO_Port[IO_Port["MOUSE_DWHEEL"] = 66] = "MOUSE_DWHEEL";
+    IO_Port[IO_Port["MOUSE_BUTTONS"] = 67] = "MOUSE_BUTTONS";
 })(IO_Port || (IO_Port = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {

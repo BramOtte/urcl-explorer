@@ -12,5 +12,6 @@ export interface Device {
     inputs?: {[K in IO_Port]?: Device_Input},
     outputs?: {[K in IO_Port]?: Device_Output},
     bits?: number,
-    reset?: Device_Reset
+    reset?: Device_Reset,
+    cleanup?: ()=>void
 }
