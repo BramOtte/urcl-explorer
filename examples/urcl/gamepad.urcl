@@ -5,7 +5,14 @@
 
 
 .loop
-MOV last key 
+
+OUT %GAMEPAD 1
+IN r4 %GAMEPAD_INFO
+BNZ .skip_fallback r4 // If no gamepad is present revert back to keyboard
+    OUT %GAMEPAD 0
+.skip_fallback
+
+MOV last key
 IN key %GAMEPAD
 XOR down key last
 AND down down key
@@ -54,7 +61,38 @@ AND r1 down @SELECT // V
 BRZ .select r1
     OUT %TEXT '?'
 .select
+OUT %BUFFER 2
+
+OUT %AXIS @LEFT_X
+IN r1 %AXIS
+ADD r1 r1 127
+BSR r1 r1 3
+OUT %X r1
+
+OUT %AXIS @LEFT_Y
+IN r1 %AXIS
+ADD r1 r1 127
+BSR r1 r1 3
+OUT %Y r1
+
+OUT %COLOR 254
+
+OUT %AXIS @RIGHT_X
+IN r1 %AXIS
+ADD r1 r1 127
+BSR r1 r1 3
+OUT %X r1
+
+OUT %AXIS @RIGHT_Y
+IN r1 %AXIS
+ADD r1 r1 127
+BSR r1 r1 3
+OUT %Y r1
+
+OUT %COLOR 255
+
 
 OUT %WAIT 16
-IN r1 %WAIT
+IN r0 %WAIT
+OUT %BUFFER 0
 JMP .loop

@@ -1,56 +1,71 @@
 import { IO_Port } from "../instructions.js";
 import { Device } from "./device.js";
+import { ControlPad } from "./controlpad.js";
 
-
-interface Game_Key {
-    pad: number,
-    key: Gamepad_Key
-}
-
-export interface Gamepad_Options {
-    keymap?: Record<string, Game_Key>
+export interface PadI {
+    readonly buttons: number;
+    info(index: number): number;
+    axis?: (index: number) => undefined | number;
+    cleanup?: () => void;
 }
 
 export enum Gamepad_Key {
     A, B, SELECT, START, LEFT, RIGHT, UP, DOWN
 }
-const {A, B, SELECT, START, LEFT, RIGHT, UP, DOWN} = Gamepad_Key;
 
-function k(key: number, pad = 0): Game_Key{
-    return {key, pad}; 
+export enum Gamepad_Exes {
+    LEFT_X, LEFT_Y, RIGHT_X, RIGHT_Y, 
 }
 
 export class Pad implements Device {
-    keymap: Record<string, Game_Key>;
-    pads = [0]
-    selected = 0
-    constructor (options: Gamepad_Options = {}){
-        this.keymap = options.keymap ?? {
-            keyk: k(A), keyj: k(B), keyn: k(START), keyv: k(SELECT), keya: k(LEFT), keyd: k(RIGHT), keyw: k(UP), keys: k(DOWN),
-        };
-        addEventListener("keydown", this.onkeydown.bind(this));
-        addEventListener("keyup", this.onkeyup.bind(this));
-    }
-    inputs = {
-        [IO_Port.GAMEPAD]: () => this.pads[this.selected] ?? 0
-    }
-    outputs = {
-        [IO_Port.GAMEPAD]: (i: number) => this.selected = i
+    pads: (undefined | PadI)[] = [];
+    gamepads = new Map<Gamepad, PadI>();
+    selected = 0;
+    axis_index = 0;
+    info_index = 0;
+    constructor (){
+        addEventListener("gamepadconnected", this.connect);
+        addEventListener("gamepaddisconnected", this.disconnect);
     }
 
-    private key(e: KeyboardEvent): Game_Key | undefined {
-        return this.keymap[e.code.toLowerCase()]
+    cleanup(){
+        for (const pad of this.pads){
+            pad?.cleanup?.();
+        }
+        removeEventListener("gamepadconnected", this.connect);
+        removeEventListener("gamepaddisconnected", this.disconnect);
     }
-    private onkeydown(e: KeyboardEvent){
-        const k = this.key(e);
-        if (k !== undefined){
-            this.pads[k.pad] |= 1 << k.key;
+
+    private connect = (e: GamepadEvent) => {
+        const pad = new ControlPad(e.gamepad);
+        console.log(pad);
+        this.gamepads.set(e.gamepad, pad);
+        this.add_pad(pad);
+    }
+    private disconnect = (e: GamepadEvent) => {
+        const pad = this.gamepads.get(e.gamepad);
+        if (pad !== undefined){
+            this.remove_pad(pad);
+            this.gamepads.delete(e.gamepad);
         }
     }
-    private onkeyup(e: KeyboardEvent){
-        const k = this.key(e);
-        if (k !== undefined){
-            this.pads[k.pad] &= ~(1 << k.key);
-        }
+
+    add_pad(pad: PadI){
+        this.pads.push(pad);
+    }
+    remove_pad(pad: PadI){
+        const index = this.pads.indexOf(pad);
+        if (index < 0){return;}
+        this.pads[index] = undefined;
+    }
+
+    inputs = {
+        [IO_Port.GAMEPAD]: () => this.pads[this.selected]?.buttons ?? 0,
+        [IO_Port.AXIS]: () => this.pads[this.selected]?.axis?.(this.axis_index) ?? 0,
+        [IO_Port.GAMEPAD_INFO]: () => this.pads[this.selected]?.info(this.info_index) ?? 0
+    }
+    outputs = {
+        [IO_Port.GAMEPAD]: (i: number) => this.selected = i,
+        [IO_Port.AXIS]: (i: number) => this.axis_index = i,
     }
 }

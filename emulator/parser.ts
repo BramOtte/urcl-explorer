@@ -65,7 +65,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
     readonly data_breaks       : Record<number, BreakFlag> = {};
     readonly heap_breaks     : Record<number, BreakFlag> = {};
     readonly program_breaks    : Record<number, BreakFlag> = {};
-    readonly port_breaks       : Record<IO_Port, BreakFlag> = {};
+    readonly port_breaks       : Record<number, BreakFlag> = {};
 }
 interface Label_Out {
     readonly labels            : Record<string, Label>;
@@ -270,7 +270,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                         if (port === undefined) {
                             continue;
                         }
-                        out.port_breaks[port] = flags;
+                        out.port_breaks[port as IO_Port] = flags;
                     } break;
                     default: {
                         if (target.toUpperCase() === "PC"){

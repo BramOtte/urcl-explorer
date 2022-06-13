@@ -190,7 +190,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const device = this.device_inputs[port as IO_Port];
         if (device === undefined){
             if (port === IO_Port.SUPPORTED){
-                this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === IO_Port.SUPPORTED ? 1 : 0;
+                this.a = this.device_inputs[this.supported as IO_Port] || this.device_outputs[this.supported as IO_Port] || this.supported === IO_Port.SUPPORTED ? 1 : 0;
                 return false;
             }
             if (this.ins[port] === undefined){

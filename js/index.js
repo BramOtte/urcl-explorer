@@ -2,9 +2,10 @@ import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode } from "./emulator/devices/display.js";
-import { Gamepad_Key, Pad } from "./emulator/devices/gamepad.js";
+import { Gamepad_Key, Gamepad_Exes, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Keyboard } from "./emulator/devices/keyboard.js";
+import { KeyboardPad } from "./emulator/devices/keyboardpad.js";
 import { Mouse } from "./emulator/devices/mouse.js";
 import { RNG } from "./emulator/devices/rng.js";
 import { Sound } from "./emulator/devices/sound.js";
@@ -179,7 +180,9 @@ emulator.add_io_device(new Sound());
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
 emulator.add_io_device(new Clock());
-emulator.add_io_device(new Pad());
+const gamepad = new Pad();
+gamepad.add_pad(new KeyboardPad());
+emulator.add_io_device(gamepad);
 emulator.add_io_device(new RNG());
 emulator.add_io_device(new Keyboard());
 emulator.add_io_device(new Mouse(canvas));
@@ -245,7 +248,10 @@ function compile_and_reset() {
     try {
         const source = source_input.value;
         const parsed = parse(source, {
-            constants: Object.fromEntries(enum_strings(Gamepad_Key).map(key => ["@" + key, "" + (1 << Gamepad_Key[key])])),
+            constants: Object.fromEntries([
+                ...enum_strings(Gamepad_Key).map(key => [`@${key}`, `${1 << Gamepad_Key[key]}`]),
+                ...enum_strings(Gamepad_Exes).map(key => [`@${key}`, `${Gamepad_Exes[key]}`])
+            ]),
         });
         if (parsed.errors.length > 0) {
             output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines) + "\n").join("");
