@@ -23,7 +23,14 @@ export class ControlPad {
         }
     }
     cleanup;
+    chrome_fix() {
+        const gamepad = navigator.getGamepads()[this.gamepad.index];
+        if (gamepad !== null) {
+            this.gamepad = gamepad;
+        }
+    }
     get buttons() {
+        this.chrome_fix();
         let value = 0;
         this.gamepad.buttons.forEach((button, i) => {
             if (button.pressed) {
@@ -33,6 +40,7 @@ export class ControlPad {
         return value;
     }
     axis(index) {
+        this.chrome_fix();
         const a = this.gamepad.axes[index];
         return a * 127;
     }

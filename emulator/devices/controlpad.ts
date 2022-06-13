@@ -24,7 +24,14 @@ export class ControlPad implements PadI {
         }
     }
     cleanup?: (() => void) | undefined;
+    private chrome_fix(){
+        const gamepad = navigator.getGamepads()[this.gamepad.index];
+        if (gamepad !== null){
+            this.gamepad = gamepad;
+        }
+    }
     get buttons(): number {
+        this.chrome_fix();
         let value = 0;
         this.gamepad.buttons.forEach((button, i) => {if (button.pressed) {
             value += this.xbox_mapping[i] ?? 0;
@@ -32,6 +39,7 @@ export class ControlPad implements PadI {
         return value;
     }
     axis(index: number){
+        this.chrome_fix();
         const a = this.gamepad.axes[index];
         return a * 127;
     }
