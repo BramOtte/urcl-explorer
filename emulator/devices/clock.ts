@@ -2,7 +2,7 @@ import { IO_Port } from "../instructions.js";
 import { Device } from "./device.js";
 
 export class Clock implements Device {
-    wait_end = 0
+    wait_end = 0;
     time_out?: any;
     inputs = {
         [IO_Port.WAIT]: this.wait_in,
@@ -11,10 +11,18 @@ export class Clock implements Device {
         [IO_Port.WAIT]: this.wait_out,
     }
     wait_out(time: number){
-        this.wait_end = Date.now() + time;
+        if (time === 0){
+            this.wait_end = -1;
+        } else {
+            this.wait_end = Date.now() + time;
+        }
     }
     wait_in(callback: (value: number)=>void) {
-        this.time_out = setTimeout(()=>callback(1), this.wait_end - Date.now());
+        if (this.wait_end == -1){
+            requestAnimationFrame((dt) => callback(dt));
+        } else {
+            this.time_out = setTimeout(()=>callback(1), this.wait_end - Date.now());
+        }
     }
 
     reset(){

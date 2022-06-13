@@ -9,10 +9,20 @@ export class Clock {
         [IO_Port.WAIT]: this.wait_out,
     };
     wait_out(time) {
-        this.wait_end = Date.now() + time;
+        if (time === 0) {
+            this.wait_end = -1;
+        }
+        else {
+            this.wait_end = Date.now() + time;
+        }
     }
     wait_in(callback) {
-        this.time_out = setTimeout(() => callback(1), this.wait_end - Date.now());
+        if (this.wait_end == -1) {
+            requestAnimationFrame((dt) => callback(dt));
+        }
+        else {
+            this.time_out = setTimeout(() => callback(1), this.wait_end - Date.now());
+        }
     }
     reset() {
         this.wait_end = 0;
