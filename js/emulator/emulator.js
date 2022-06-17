@@ -11,6 +11,9 @@ export var Step_Result;
 export class Emulator {
     options;
     signed(v) {
+        if (this.bits === 32) {
+            return 0 | v;
+        }
         return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this.bits);
     }
     a = 0;

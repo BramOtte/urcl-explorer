@@ -18,6 +18,9 @@ interface Emu_Options {
 
 export class Emulator implements Instruction_Ctx, Device_Host {
     private signed(v: number){
+        if (this.bits === 32){
+            return 0| v;
+        }
         return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this.bits);
     }
     a = 0;
