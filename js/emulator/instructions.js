@@ -387,7 +387,7 @@ export const inst_fns = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {
         throw new Error("instruction definition undefined");
     }
-    return [key, value?.[1]];
+    return [key, value === null || value === void 0 ? void 0 : value[1]];
 }, []);
 export const Opcodes_operant_lengths = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {

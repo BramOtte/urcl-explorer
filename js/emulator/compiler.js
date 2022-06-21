@@ -1,7 +1,8 @@
 import { Constants, Header_Run, Operant_Prim, Operant_Type, register_count, URCL_Header } from "./instructions.js";
 export function compile(parsed) {
+    var _a;
     const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks } = parsed;
-    const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
+    const in_ram = ((_a = parsed.headers[URCL_Header.RUN]) === null || _a === void 0 ? void 0 : _a.value) === Header_Run.RAM;
     const header_bits = parsed.headers[URCL_Header.BITS].value;
     const bits = header_bits <= 8 ? 8 :
         header_bits <= 16 ? 16 :
@@ -11,7 +12,7 @@ export function compile(parsed) {
     }
     const msb = 1 << (bits - 1);
     const smsb = 1 << (bits - 2);
-    const max = 0xFF_FF_FF_FF >>> (32 - bits);
+    const max = 4294967295 >>> (32 - bits);
     const smax = max >>> 1;
     const uhalf = max & (max << (bits / 2));
     const lhalf = max - uhalf;
@@ -81,7 +82,7 @@ export function compile(parsed) {
             default: throw new Error(`Unkown opperant type ${t} ${Operant_Type[t]}`);
         }
     }));
-    const memory_breaks = { ...data_breaks };
+    const memory_breaks = Object.assign({}, data_breaks);
     for (const [key, value] of Object.entries(heap_breaks)) {
         memory_breaks[Number(key) + heap_offset] = value;
     }

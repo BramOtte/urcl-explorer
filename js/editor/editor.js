@@ -1,17 +1,20 @@
 import { pad_left } from "../emulator/util.js";
 import { regex_end, tokenize } from "./tokenizer.js";
 export class Editor_Window extends HTMLElement {
-    line_nrs = document.createElement("div");
-    code = document.createElement("div");
-    input = document.createElement("textarea");
-    colors = document.createElement("pre");
-    profile_check = document.createElement("input");
-    profiled = [];
-    profile_present = false;
-    old_lines = [];
-    tab_width = 4;
     constructor() {
+        var _a, _b;
         super();
+        this.line_nrs = document.createElement("div");
+        this.code = document.createElement("div");
+        this.input = document.createElement("textarea");
+        this.colors = document.createElement("pre");
+        this.profile_check = document.createElement("input");
+        this.profiled = [];
+        this.profile_present = false;
+        this.old_lines = [];
+        this.tab_width = 4;
+        this.pc_line = 0;
+        this.input_listeners = [];
         this.append(this.line_nrs, this.code);
         this.code.append(this.input, this.colors);
         this.code.style.position = "relative";
@@ -23,9 +26,9 @@ export class Editor_Window extends HTMLElement {
         this.input.addEventListener("keydown", this.keydown_cb.bind(this));
         this.profile_check.type = "checkbox";
         const profile_text = document.createElement("span");
-        this.parentElement?.insertBefore(this.profile_check, this);
+        (_a = this.parentElement) === null || _a === void 0 ? void 0 : _a.insertBefore(this.profile_check, this);
         profile_text.textContent = `Show line-profile`;
-        this.parentElement?.insertBefore(profile_text, this);
+        (_b = this.parentElement) === null || _b === void 0 ? void 0 : _b.insertBefore(profile_text, this);
     }
     get value() {
         return this.input.value;
@@ -34,7 +37,6 @@ export class Editor_Window extends HTMLElement {
         this.input.value = value;
         this.input_cb();
     }
-    pc_line = 0;
     set_pc_line(line) {
         const old = this.line_nrs.children[this.pc_line];
         if (old) {
@@ -84,7 +86,8 @@ export class Editor_Window extends HTMLElement {
                 let src = this.input.value;
                 if (event.shiftKey) {
                     foreach_line_selected(src, start, end, (i) => {
-                        const white_width = (regex_end(src, i, /^\s*/) ?? i) - i;
+                        var _a;
+                        const white_width = ((_a = regex_end(src, i, /^\s*/)) !== null && _a !== void 0 ? _a : i) - i;
                         const delete_count = white_width === 0 ? 0 : white_width % this.tab_width || this.tab_width;
                         if (i < start) {
                             start -= delete_count;
@@ -99,7 +102,8 @@ export class Editor_Window extends HTMLElement {
                 }
                 else {
                     foreach_line_selected(src, start, end, (i) => {
-                        const white_width = (regex_end(src, i, /^\s*/) ?? i) - i;
+                        var _a;
+                        const white_width = ((_a = regex_end(src, i, /^\s*/)) !== null && _a !== void 0 ? _a : i) - i;
                         const add_count = this.tab_width - (white_width % this.tab_width) || this.tab_width;
                         if (i < start) {
                             start += add_count;
@@ -120,7 +124,8 @@ export class Editor_Window extends HTMLElement {
             let end = this.input.selectionEnd;
             let src = this.input.value;
             foreach_line_selected(src, start, end, (i) => {
-                const white_end = regex_end(src, i, /^\s*/) ?? i;
+                var _a;
+                const white_end = (_a = regex_end(src, i, /^\s*/)) !== null && _a !== void 0 ? _a : i;
                 if (regex_end(src, white_end, /^\/\//) === undefined) {
                     src = str_splice(src, white_end, 0, "// ");
                     if (i < start) {
@@ -145,6 +150,7 @@ export class Editor_Window extends HTMLElement {
         }
     }
     input_cb() {
+        var _a;
         this.input.style.height = "1px";
         const height = this.input.scrollHeight;
         this.input.style.width = `${this.input.scrollWidth}px`;
@@ -165,11 +171,11 @@ export class Editor_Window extends HTMLElement {
             }
             else {
                 for (let i = 0; i < -delta_lines; i++) {
-                    this.line_nrs.lastChild?.remove();
+                    (_a = this.line_nrs.lastChild) === null || _a === void 0 ? void 0 : _a.remove();
                 }
             }
         }
-        const max_source_size = 100_000;
+        const max_source_size = 100000;
         if (src.length > max_source_size) {
             this.input.style.color = "white";
             this.colors.style.color = "transparent";
@@ -240,7 +246,6 @@ export class Editor_Window extends HTMLElement {
             listener.call(this, new Event("input"));
         }
     }
-    input_listeners = [];
     set oninput(cb) {
         this.input_listeners.push(cb);
     }

@@ -12,69 +12,66 @@ function sepperate(str) {
     return out;
 }
 export class Console_IO {
-    input;
-    write;
-    _reset;
-    bits = 32;
     constructor(input, write, _reset) {
         this.input = input;
         this.write = write;
         this._reset = _reset;
+        this.bits = 32;
+        this.inputs = {
+            [IO_Port.TEXT]: this.text_in,
+            [IO_Port.NUMB]: this.numb_in,
+            [IO_Port.FLOAT]: (cb) => {
+                if (this.bits >= 32) {
+                    this.numb_in(cb, s => f32_encode(Number(s)));
+                }
+                else if (this.bits >= 16) {
+                    this.numb_in(cb, s => f16_encode(Number(s)));
+                }
+                else {
+                    throw new Error(`8 bit floats are not supported`);
+                }
+            },
+            [IO_Port.FIXED]: (cb) => {
+                this.numb_in(cb, s => Math.floor(Number(s) * (Math.pow(2, (this.bits / 2)))));
+            }
+        };
+        this.outputs = {
+            [IO_Port.TEXT]: this.text_out,
+            [IO_Port.NUMB]: this.numb_out,
+            [IO_Port.UINT]: this.numb_out,
+            [IO_Port.HEX]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
+            [IO_Port.BIN]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
+            [IO_Port.FLOAT]: (v) => {
+                if (this.bits >= 32) {
+                    this.write(f32_decode(v).toString());
+                }
+                else if (this.bits >= 16) {
+                    this.write(f16_decode(v).toString());
+                }
+                else {
+                    throw new Error(`8 bit floats are not supported`);
+                }
+            },
+            [IO_Port.FIXED]: (v) => {
+                this.write((v / (Math.pow(2, (this.bits / 2)))).toString());
+            },
+            [IO_Port.INT]: (v) => {
+                const sign_bit = Math.pow(2, (this.bits - 1));
+                if (v & sign_bit) {
+                    v = (v & (sign_bit - 1)) - sign_bit;
+                }
+                this.write(v.toString());
+            },
+            // TODO: make specific implementations for these
+            [IO_Port.ASCII]: this.text_out,
+            [IO_Port.CHAR5]: this.text_out,
+            [IO_Port.CHAR6]: this.text_out,
+            [IO_Port.ASCII]: this.text_out,
+            [IO_Port.UTF8]: this.text_out,
+            [IO_Port.UTF16]: this.text_out,
+            [IO_Port.UTF32]: this.text_out,
+        };
     }
-    inputs = {
-        [IO_Port.TEXT]: this.text_in,
-        [IO_Port.NUMB]: this.numb_in,
-        [IO_Port.FLOAT]: (cb) => {
-            if (this.bits >= 32) {
-                this.numb_in(cb, s => f32_encode(Number(s)));
-            }
-            else if (this.bits >= 16) {
-                this.numb_in(cb, s => f16_encode(Number(s)));
-            }
-            else {
-                throw new Error(`8 bit floats are not supported`);
-            }
-        },
-        [IO_Port.FIXED]: (cb) => {
-            this.numb_in(cb, s => Math.floor(Number(s) * (2 ** (this.bits / 2))));
-        }
-    };
-    outputs = {
-        [IO_Port.TEXT]: this.text_out,
-        [IO_Port.NUMB]: this.numb_out,
-        [IO_Port.UINT]: this.numb_out,
-        [IO_Port.HEX]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
-        [IO_Port.BIN]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
-        [IO_Port.FLOAT]: (v) => {
-            if (this.bits >= 32) {
-                this.write(f32_decode(v).toString());
-            }
-            else if (this.bits >= 16) {
-                this.write(f16_decode(v).toString());
-            }
-            else {
-                throw new Error(`8 bit floats are not supported`);
-            }
-        },
-        [IO_Port.FIXED]: (v) => {
-            this.write((v / (2 ** (this.bits / 2))).toString());
-        },
-        [IO_Port.INT]: (v) => {
-            const sign_bit = 2 ** (this.bits - 1);
-            if (v & sign_bit) {
-                v = (v & (sign_bit - 1)) - sign_bit;
-            }
-            this.write(v.toString());
-        },
-        // TODO: make specific implementations for these
-        [IO_Port.ASCII]: this.text_out,
-        [IO_Port.CHAR5]: this.text_out,
-        [IO_Port.CHAR6]: this.text_out,
-        [IO_Port.ASCII]: this.text_out,
-        [IO_Port.UTF8]: this.text_out,
-        [IO_Port.UTF16]: this.text_out,
-        [IO_Port.UTF32]: this.text_out,
-    };
     set_text(text) {
         this.input.text = text;
     }
@@ -85,7 +82,8 @@ export class Console_IO {
     text_in(callback) {
         if (this.input.text.length === 0) {
             this.input.read(() => {
-                const char_code = this.input.text.codePointAt(0) ?? this.input.text.charCodeAt(0);
+                var _a;
+                const char_code = (_a = this.input.text.codePointAt(0)) !== null && _a !== void 0 ? _a : this.input.text.charCodeAt(0);
                 this.input.text = this.input.text.slice(1);
                 callback(char_code);
             });

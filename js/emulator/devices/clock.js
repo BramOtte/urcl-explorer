@@ -1,13 +1,14 @@
 import { IO_Port } from "../instructions.js";
 export class Clock {
-    wait_end = 0;
-    time_out;
-    inputs = {
-        [IO_Port.WAIT]: this.wait_in,
-    };
-    outputs = {
-        [IO_Port.WAIT]: this.wait_out,
-    };
+    constructor() {
+        this.wait_end = 0;
+        this.inputs = {
+            [IO_Port.WAIT]: this.wait_in,
+        };
+        this.outputs = {
+            [IO_Port.WAIT]: this.wait_out,
+        };
+    }
     wait_out(time) {
         if (time === 0) {
             this.wait_end = -1;

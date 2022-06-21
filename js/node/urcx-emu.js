@@ -1,3 +1,12 @@
+var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
+    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
+    return new (P || (P = Promise))(function (resolve, reject) {
+        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
+        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
+        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
+        step((generator = generator.apply(thisArg, _arguments || [])).next());
+    });
+};
 import fs from "fs/promises";
 import { exit, stdin, stdout } from "process";
 import { Console_IO } from "../emulator/devices/console-io.js";
@@ -73,36 +82,40 @@ if (__text_file) {
     console_io.set_text(text);
 }
 setTimeout(on_continue, 1);
-async function on_continue() {
-    try {
-        const [res, its] = emulator.run(2000);
-        switch (res) {
-            case Step_Result.Continue:
-                {
-                    emulator.warn("Long running program");
-                    setTimeout(on_continue, 1);
+function on_continue() {
+    return __awaiter(this, void 0, void 0, function* () {
+        try {
+            const [res, its] = emulator.run(2000);
+            switch (res) {
+                case Step_Result.Continue:
+                    {
+                        emulator.warn("Long running program");
+                        setTimeout(on_continue, 1);
+                    }
+                    break;
+                case Step_Result.Input: break;
+                case Step_Result.Halt:
+                    {
+                        yield on_halt();
+                        exit(0);
+                    }
+                    break;
+                default: {
+                    console.error("\nunknown step result");
                 }
-                break;
-            case Step_Result.Input: break;
-            case Step_Result.Halt:
-                {
-                    await on_halt();
-                    exit(0);
-                }
-                break;
-            default: {
-                console.error("\nunknown step result");
             }
         }
-    }
-    catch (e) {
-        console.error(e.message);
-        exit(1);
-    }
+        catch (e) {
+            console.error(e.message);
+            exit(1);
+        }
+    });
 }
-async function on_halt() {
-    if (__storage && storage) {
-        await fs.writeFile(__storage, storage.get_bytes());
-    }
+function on_halt() {
+    return __awaiter(this, void 0, void 0, function* () {
+        if (__storage && storage) {
+            yield fs.writeFile(__storage, storage.get_bytes());
+        }
+    });
 }
 //# sourceMappingURL=urcx-emu.js.map

@@ -7,7 +7,7 @@ export function expand_warnings(warnings, lines, file_name) {
 }
 export function expand_warning(warning, lines, file_name) {
     const { message, line_nr } = warning;
-    return `${file_name ?? "urcl"}:${line_nr + 1} - ${message}\n   ${lines[line_nr]}`;
+    return `${file_name !== null && file_name !== void 0 ? file_name : "urcl"}:${line_nr + 1} - ${message}\n   ${lines[line_nr]}`;
 }
 export function pad_left(str, size, char = " ") {
     const pad = Math.max(0, size - str.length);
@@ -116,7 +116,7 @@ export function enum_from_str(enum_obj, str) {
     return value;
 }
 export function with_defaults(defaults, options) {
-    const with_defaults = { ...defaults };
+    const with_defaults = Object.assign({}, defaults);
     for (const name in options) {
         if (options[name] !== undefined) {
             with_defaults[name] = options[name];
@@ -140,14 +140,14 @@ export function f16_decode(int) {
     const sign = (int >>> 15) & 1;
     const exponent = (int >>> 10) & 31;
     const fraction = int & 1023;
-    const mag = ((fraction / 1024) + 1) * 2 ** (exponent - 15);
+    const mag = ((fraction / 1024) + 1) * Math.pow(2, (exponent - 15));
     return sign ? -mag : mag;
 }
 export function f16_encode(float) {
     const sign = Math.sign(float);
     float *= sign;
     const exponent = Math.floor(Math.log2(float));
-    const fraction = (float / 2 ** exponent) - 1;
+    const fraction = (float / Math.pow(2, exponent)) - 1;
     return ((sign < 0 ? 1 : 0) << 15) | (((exponent + 15) & 31) << 10) | ((fraction * 1024) & 1023);
 }
 export function read16(buf, little_endian, size) {

@@ -1,18 +1,17 @@
 import { Gamepad_Key } from "./gamepad.js";
 export class ControlPad {
-    gamepad;
-    xbox_mapping = {
-        0: 1 << Gamepad_Key.A,
-        1: 1 << Gamepad_Key.B,
-        8: 1 << Gamepad_Key.SELECT,
-        9: 1 << Gamepad_Key.START,
-        12: 1 << Gamepad_Key.UP,
-        13: 1 << Gamepad_Key.DOWN,
-        14: 1 << Gamepad_Key.LEFT,
-        15: 1 << Gamepad_Key.RIGHT,
-    };
     constructor(gamepad) {
         this.gamepad = gamepad;
+        this.xbox_mapping = {
+            0: 1 << Gamepad_Key.A,
+            1: 1 << Gamepad_Key.B,
+            8: 1 << Gamepad_Key.SELECT,
+            9: 1 << Gamepad_Key.START,
+            12: 1 << Gamepad_Key.UP,
+            13: 1 << Gamepad_Key.DOWN,
+            14: 1 << Gamepad_Key.LEFT,
+            15: 1 << Gamepad_Key.RIGHT,
+        };
     }
     info(index) {
         if (index == 0) {
@@ -22,7 +21,6 @@ export class ControlPad {
             return 0;
         }
     }
-    cleanup;
     chrome_fix() {
         const gamepad = navigator.getGamepads()[this.gamepad.index];
         if (gamepad !== null) {
@@ -33,8 +31,9 @@ export class ControlPad {
         this.chrome_fix();
         let value = 0;
         this.gamepad.buttons.forEach((button, i) => {
+            var _a;
             if (button.pressed) {
-                value += this.xbox_mapping[i] ?? 0;
+                value += (_a = this.xbox_mapping[i]) !== null && _a !== void 0 ? _a : 0;
             }
         });
         return value;
