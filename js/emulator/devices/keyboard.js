@@ -1,20 +1,20 @@
 import { IO_Port } from "../instructions.js";
 export class Keyboard {
+    bits = 8;
+    down = new Uint8Array(256);
+    keymap = usb;
+    offset = 0;
     constructor() {
-        this.bits = 8;
-        this.down = new Uint8Array(256);
-        this.keymap = usb;
-        this.offset = 0;
-        this.inputs = {
-            [IO_Port.KEY]: () => this.down.slice(this.offset, this.offset + this.bits)
-                .reduceRight((acc, v) => (acc << 1) + v, 0),
-        };
-        this.outputs = {
-            [IO_Port.KEY]: (i) => this.offset = i,
-        };
         addEventListener("keydown", this.onkeydown.bind(this));
         addEventListener("keyup", this.onkeyup.bind(this));
     }
+    inputs = {
+        [IO_Port.KEY]: () => this.down.slice(this.offset, this.offset + this.bits)
+            .reduceRight((acc, v) => (acc << 1) + v, 0),
+    };
+    outputs = {
+        [IO_Port.KEY]: (i) => this.offset = i,
+    };
     key(k) {
         return this.keymap[k];
     }

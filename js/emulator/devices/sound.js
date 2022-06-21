@@ -3,6 +3,9 @@ const base_frequency = 92.499;
 const ramp_up = 0.005;
 const ramp_down = 0.01;
 class NoteBlock {
+    ctx;
+    oscillator;
+    gain;
     constructor(ctx) {
         this.ctx = ctx;
         this.oscillator = this.ctx.createOscillator();
@@ -17,7 +20,7 @@ class NoteBlock {
         if (this.ctx.state === "suspended") {
             this.ctx.resume();
         }
-        this.oscillator.frequency.value = base_frequency * Math.pow(2, (note / 12));
+        this.oscillator.frequency.value = base_frequency * 2 ** (note / 12);
         this.gain.gain.setTargetAtTime(0.1, this.ctx.currentTime, ramp_up);
         this.gain.gain.setTargetAtTime(0, this.ctx.currentTime + length * 0.001, ramp_down);
         setTimeout(() => {
@@ -26,15 +29,9 @@ class NoteBlock {
     }
 }
 export class Sound {
-    constructor() {
-        this.ctx = new AudioContext();
-        this.blocks = [];
-        this.note = 0;
-        this.outputs = {
-            [IO_Port.NOTE]: (v) => { this.note = v; },
-            [IO_Port.NLEG]: (v) => { this.play(this.note, v); }
-        };
-    }
+    ctx = new AudioContext();
+    blocks = [];
+    note = 0;
     play(note, length) {
         console.log(this.blocks.length, note, length);
         let block = this.blocks.pop();
@@ -43,5 +40,11 @@ export class Sound {
         }
         block.play(note, length, () => this.blocks.push(block));
     }
+    constructor() {
+    }
+    outputs = {
+        [IO_Port.NOTE]: (v) => { this.note = v; },
+        [IO_Port.NLEG]: (v) => { this.play(this.note, v); }
+    };
 }
 //# sourceMappingURL=sound.js.map

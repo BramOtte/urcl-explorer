@@ -19,34 +19,31 @@ export const pico8 = [
     0x29ADFF, 0x83769C, 0xFF77A8, 0xFFCCAA,
 ].map(v => [(v >>> 16) & 255, (v >>> 8) & 255, v & 255]);
 export class Display {
-    constructor(ctx, bits, color_mode = Color_Mode.Bin, save_buffers = false) {
-        this.bits = bits;
-        this.color_mode = color_mode;
-        this.save_buffers = save_buffers;
-        this.buffers = [];
-        this.buffer_enabled = 0;
-        this.x = 0;
-        this.y = 0;
-        this.inputs = {
-            [IO_Port.COLOR]: this.color_in,
-            [IO_Port.X]: this.x_in,
-            [IO_Port.Y]: this.y_in,
-            [IO_Port.BUFFER]: this.buffer_in,
-        };
-        this.outputs = {
-            [IO_Port.COLOR]: this.color_out,
-            [IO_Port.X]: this.x_out,
-            [IO_Port.Y]: this.y_out,
-            [IO_Port.BUFFER]: this.buffer_out,
-        };
-        const { width, height } = ctx.canvas;
-        this.ctx = ctx;
-        this.image = ctx.createImageData(width, height);
-        this.read_buffer = new Uint32Array(width * height);
-    }
+    bits;
+    color_mode;
+    save_buffers;
+    ctx;
+    buffers = [];
+    image;
+    read_buffer;
     get data() {
         return this.image.data;
     }
+    buffer_enabled = 0;
+    x = 0;
+    y = 0;
+    inputs = {
+        [IO_Port.COLOR]: this.color_in,
+        [IO_Port.X]: this.x_in,
+        [IO_Port.Y]: this.y_in,
+        [IO_Port.BUFFER]: this.buffer_in,
+    };
+    outputs = {
+        [IO_Port.COLOR]: this.color_out,
+        [IO_Port.X]: this.x_out,
+        [IO_Port.Y]: this.y_out,
+        [IO_Port.BUFFER]: this.buffer_out,
+    };
     reset() {
         this.x = 0;
         this.y = 0;
@@ -54,6 +51,15 @@ export class Display {
         this.ctx.putImageData(this.image, 0, 0);
         this.buffer_enabled = 0;
         this.buffers.length = 0;
+    }
+    constructor(ctx, bits, color_mode = Color_Mode.Bin, save_buffers = false) {
+        this.bits = bits;
+        this.color_mode = color_mode;
+        this.save_buffers = save_buffers;
+        const { width, height } = ctx.canvas;
+        this.ctx = ctx;
+        this.image = ctx.createImageData(width, height);
+        this.read_buffer = new Uint32Array(width * height);
     }
     resize(width, height) {
         const ow = this.width, oh = this.height;

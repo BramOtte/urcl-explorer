@@ -1,17 +1,15 @@
 import { bound } from "../emulator/util.js";
-const max_size = 1000000000;
+const max_size = 1_000_000_000;
 export class Scroll_Out extends HTMLElement {
+    scroll_div = document.createElement("div");
+    content = document.createElement("div");
+    char = document.createElement("div");
+    cw = 8;
+    ch = 8;
+    lines = [""];
+    size = 0;
     constructor() {
         super();
-        this.scroll_div = document.createElement("div");
-        this.content = document.createElement("div");
-        this.char = document.createElement("div");
-        this.cw = 8;
-        this.ch = 8;
-        this.lines = [""];
-        this.size = 0;
-        this.buf = "";
-        this.text_width = 0;
         this.appendChild(this.scroll_div);
         this.scroll_div.appendChild(this.content);
         this.onscroll = () => this.update();
@@ -42,6 +40,8 @@ export class Scroll_Out extends HTMLElement {
         }
         return scroll;
     }
+    buf = "";
+    text_width = 0;
     clear() {
         this.buf = "";
         this.text_width = 0;

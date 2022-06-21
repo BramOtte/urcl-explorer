@@ -15,7 +15,7 @@ export function my_exec(command, ...args) {
             res({ code: 1, out, errors });
         });
         py.on("close", (code, signal) => {
-            code || (code = 0);
+            code ||= 0;
             res({ code, out, errors });
         });
     });

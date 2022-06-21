@@ -1,12 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
 import fetch from "node-fetch";
 import { compile } from "../../emulator/compiler.js";
 import { Console_IO } from "../../emulator/devices/console-io.js";
@@ -125,7 +116,7 @@ function discord_emu() {
         const screens = all_screens.slice(rendered_count);
         std_info = "";
         rendered_count = all_screens.length;
-        return { out, info, screens, all_screens, scale, state, quality, storage: storage === null || storage === void 0 ? void 0 : storage.get_bytes() };
+        return { out, info, screens, all_screens, scale, state, quality, storage: storage?.get_bytes() };
     }
     function start(argv, source) {
         reset();
@@ -138,25 +129,24 @@ function discord_emu() {
         res.then(() => busy = false).catch(() => busy = false);
         return res;
     }
-    function _start(argv, source) {
-        return __awaiter(this, void 0, void 0, function* () {
-            try {
-                argv_res = parse_argv(["", ...argv], {
-                    __width: 32,
-                    __height: 32,
-                    __color: { val: Color_Mode.PICO8, in: Color_Mode },
-                    __scale: 1,
-                    __quality: 10,
-                    __help: false,
-                    __text_end: { val: TextEnd.LF, in: TextEnd },
-                    __storage: "",
-                    __storage_size: 0,
-                    __mem_start: 0,
-                    __mem_end: -1,
-                    __little_endian: false,
-                });
-                const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size, __little_endian } } = argv_res;
-                const usage = `Usage:
+    async function _start(argv, source) {
+        try {
+            argv_res = parse_argv(["", ...argv], {
+                __width: 32,
+                __height: 32,
+                __color: { val: Color_Mode.PICO8, in: Color_Mode },
+                __scale: 1,
+                __quality: 10,
+                __help: false,
+                __text_end: { val: TextEnd.LF, in: TextEnd },
+                __storage: "",
+                __storage_size: 0,
+                __mem_start: 0,
+                __mem_end: -1,
+                __little_endian: false,
+            });
+            const { args, flags: { __width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size, __little_endian } } = argv_res;
+            const usage = `Usage:
 start emulator: 
     !urcx-emu [<...options>] [<source url>]
     [\`\`\`
@@ -204,64 +194,63 @@ options:
     --little-endian
         read storage with little endian byte order
 `;
-                if (__help) {
-                    std_info = usage;
-                    return o();
-                }
-                text_end = __text_end.val === TextEnd.LF ? "\n" : (__text_end.val === TextEnd.Null ? "\0" : "");
-                scale = __scale;
-                quality = __quality;
-                const file_name = args[0];
-                let s_name;
-                if (!(source === null || source === void 0 ? void 0 : source.length)) {
-                    if (file_name === undefined) {
-                        std_info += `ERROR: no source specified`;
-                        return o();
-                    }
-                    source = yield (yield fetch(file_name)).text();
-                    s_name = file_name.split("/").at(-1);
-                }
-                const code = parse(source);
-                if (code.errors.length > 0) {
-                    std_info += "ERRORS:\n"
-                        + expand_warnings(code.errors, code.lines, s_name)
-                        + "\n------------------------------\n";
-                }
-                if (code.warnings.length > 0) {
-                    std_info += "warnings:\n"
-                        + expand_warnings(code.warnings, code.lines, s_name);
-                    +"\n------------------------------\n";
-                }
-                if (code.errors.length > 0) {
-                    return o();
-                }
-                const [program, debug_info] = compile(code);
-                emulator.load_program(program, debug_info);
-                if (__storage || __storage_size) {
-                    let bytes;
-                    if (__storage) {
-                        const buf = yield (yield fetch(__storage)).arrayBuffer();
-                        bytes = new Uint8Array(buf);
-                    }
-                    else {
-                        bytes = new Uint8Array();
-                    }
-                    storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size * 1024);
-                    emulator.add_io_device(storage);
-                }
-                const canvas = Canvas.createCanvas(__width, __height);
-                const ctx = canvas.getContext("2d", { alpha: false });
-                display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
-                emulator.add_io_device(display);
-                state = Step_Result.Continue;
-                on_continue();
+            if (__help) {
+                std_info = usage;
                 return o();
             }
-            catch (e) {
-                std_info += `\nERROR: ${e}`;
+            text_end = __text_end.val === TextEnd.LF ? "\n" : (__text_end.val === TextEnd.Null ? "\0" : "");
+            scale = __scale;
+            quality = __quality;
+            const file_name = args[0];
+            let s_name;
+            if (!(source?.length)) {
+                if (file_name === undefined) {
+                    std_info += `ERROR: no source specified`;
+                    return o();
+                }
+                source = await (await fetch(file_name)).text();
+                s_name = file_name.split("/").at(-1);
+            }
+            const code = parse(source);
+            if (code.errors.length > 0) {
+                std_info += "ERRORS:\n"
+                    + expand_warnings(code.errors, code.lines, s_name)
+                    + "\n------------------------------\n";
+            }
+            if (code.warnings.length > 0) {
+                std_info += "warnings:\n"
+                    + expand_warnings(code.warnings, code.lines, s_name);
+                +"\n------------------------------\n";
+            }
+            if (code.errors.length > 0) {
                 return o();
             }
-        });
+            const [program, debug_info] = compile(code);
+            emulator.load_program(program, debug_info);
+            if (__storage || __storage_size) {
+                let bytes;
+                if (__storage) {
+                    const buf = await (await fetch(__storage)).arrayBuffer();
+                    bytes = new Uint8Array(buf);
+                }
+                else {
+                    bytes = new Uint8Array();
+                }
+                storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size * 1024);
+                emulator.add_io_device(storage);
+            }
+            const canvas = Canvas.createCanvas(__width, __height);
+            const ctx = canvas.getContext("2d", { alpha: false });
+            display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
+            emulator.add_io_device(display);
+            state = Step_Result.Continue;
+            on_continue();
+            return o();
+        }
+        catch (e) {
+            std_info += `\nERROR: ${e}`;
+            return o();
+        }
     }
     function reply(msg) {
         try {

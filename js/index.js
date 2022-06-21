@@ -1,13 +1,3 @@
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var _a, _b, _c, _d;
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
@@ -50,12 +40,12 @@ const clock_speed_output = document.getElementById("clock-speed-output");
 const memory_update_input = document.getElementById("update-mem-input");
 const url = new URL(location.href, location.origin);
 const srcurl = url.searchParams.get("srcurl");
-const width = parseInt((_a = url.searchParams.get("width")) !== null && _a !== void 0 ? _a : "");
-const height = parseInt((_b = url.searchParams.get("height")) !== null && _b !== void 0 ? _b : "");
-const color = enum_from_str(Color_Mode, (_c = url.searchParams.get("color")) !== null && _c !== void 0 ? _c : "");
+const width = parseInt(url.searchParams.get("width") ?? "");
+const height = parseInt(url.searchParams.get("height") ?? "");
+const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
 console.log(color);
 memory_update_input.oninput = () => update_views();
-const max_clock_speed = 40000000;
+const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed;
 function change_clockspeed() {
@@ -77,7 +67,7 @@ let storage_uploaded;
 let storage_device;
 let storage_loads = 0;
 storage_little.oninput =
-    storage_input.oninput = (e) => __awaiter(void 0, void 0, void 0, function* () {
+    storage_input.oninput = async (e) => {
         storage_msg.classList.remove("error");
         const files = storage_input.files;
         if (files === null || files.length < 1) {
@@ -87,7 +77,7 @@ storage_little.oninput =
         }
         const file = files[0];
         try {
-            const data = yield file.arrayBuffer();
+            const data = await file.arrayBuffer();
             storage_uploaded = new Uint8Array(data);
             const bytes = storage_uploaded.slice();
             emulator.add_io_device(storage_device = new Storage(emulator.bits, bytes, storage_little.checked, bytes.length));
@@ -97,7 +87,7 @@ storage_little.oninput =
             storage_msg.classList.add("error");
             storage_msg.innerText = "" + error;
         }
-    });
+    };
 storage_update.onclick = e => {
     if (storage_device === undefined) {
         storage_msg.innerText = `No storage to update`;
@@ -165,7 +155,7 @@ if (color !== undefined)
 color_mode_input.addEventListener("change", change_color_mode);
 function change_color_mode() {
     const color_mode = enum_from_str(Color_Mode, color_mode_input.value);
-    display.color_mode = color_mode !== null && color_mode !== void 0 ? color_mode : display.color_mode;
+    display.color_mode = color_mode ?? display.color_mode;
     display.update_display();
 }
 const width_input = document.getElementById("display-width");
@@ -418,6 +408,6 @@ else
         if (!Number.isInteger(offset)) {
             break autofill;
         }
-        source_input.value = (_d = localStorage.getItem(`history-${offset}`)) !== null && _d !== void 0 ? _d : "";
+        source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
     }
 //# sourceMappingURL=index.js.map

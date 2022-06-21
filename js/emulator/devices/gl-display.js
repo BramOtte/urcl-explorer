@@ -2,15 +2,21 @@ import { createProgram } from "../../webgl/shader.js";
 import { IO_Port } from "../instructions.js";
 import { Color_Mode, pico8 } from "./display.js";
 export class Gl_Display {
-    constructor(gl, color_mode = Color_Mode.PICO8) {
-        var _a, _b;
-        this.color_mode = color_mode;
-        this.buffer_enabled = 0;
-        this.x = 0;
-        this.y = 0;
-        this.pref_display = (_b = (_a = globalThis === null || globalThis === void 0 ? void 0 : globalThis.document) === null || _a === void 0 ? void 0 : _a.getElementById) === null || _b === void 0 ? void 0 : _b.call(_a, "pref-display");
-        this.bits = 8;
-        this.vert_src = `#version 300 es
+    color_mode;
+    gl;
+    gl_vertices;
+    gl_indices;
+    gl_texture;
+    uni_mode;
+    // private gl_program: WebGLProgram;
+    buffer;
+    bytes;
+    buffer_enabled = 0;
+    x = 0;
+    y = 0;
+    pref_display = globalThis?.document?.getElementById?.("pref-display");
+    bits = 8;
+    vert_src = /*vert*/ `#version 300 es
     precision mediump float;
     in vec2 a_uv;
     in vec2 a_pos;
@@ -22,7 +28,7 @@ export class Gl_Display {
         v_uv = a_uv;
     }
     `;
-        this.frag_src = `#version 300 es
+    frag_src = /*frag*/ `#version 300 es
     precision mediump float;
     in vec2 v_uv;
     out vec4 color;
@@ -94,19 +100,26 @@ export class Gl_Display {
     }
     
     `;
-        this.inputs = {
-            [IO_Port.COLOR]: this.color_in,
-            [IO_Port.X]: this.x_in,
-            [IO_Port.Y]: this.y_in,
-            [IO_Port.BUFFER]: this.buffer_in,
-        };
-        this.outputs = {
-            [IO_Port.COLOR]: this.color_out,
-            [IO_Port.X]: this.x_out,
-            [IO_Port.Y]: this.y_out,
-            [IO_Port.BUFFER]: this.buffer_out,
-        };
-        this.start_t = 0;
+    inputs = {
+        [IO_Port.COLOR]: this.color_in,
+        [IO_Port.X]: this.x_in,
+        [IO_Port.Y]: this.y_in,
+        [IO_Port.BUFFER]: this.buffer_in,
+    };
+    outputs = {
+        [IO_Port.COLOR]: this.color_out,
+        [IO_Port.X]: this.x_out,
+        [IO_Port.Y]: this.y_out,
+        [IO_Port.BUFFER]: this.buffer_out,
+    };
+    reset() {
+        this.x = 0;
+        this.y = 0;
+        this.clear();
+        this.buffer_enabled = 0;
+    }
+    constructor(gl, color_mode = Color_Mode.PICO8) {
+        this.color_mode = color_mode;
         this.gl = gl;
         const { drawingBufferWidth: width, drawingBufferHeight: height } = gl;
         this.buffer = new Uint32Array(width * height);
@@ -158,12 +171,6 @@ export class Gl_Display {
         gl.vertexAttribPointer(attr_uv, 2, gl.FLOAT, false, 4 * 4, 4 * 2);
         gl.bufferData(gl.ELEMENT_ARRAY_BUFFER, new Uint16Array([0, 2, 1, 0, 2, 3]), gl.STATIC_DRAW);
         this.init_buffers(width, height);
-    }
-    reset() {
-        this.x = 0;
-        this.y = 0;
-        this.clear();
-        this.buffer_enabled = 0;
     }
     resize(width, height) {
         const buffer = new Uint32Array(width * height);
@@ -218,6 +225,7 @@ export class Gl_Display {
     buffer_in() {
         return this.buffer_enabled;
     }
+    start_t = 0;
     buffer_out(value) {
         switch (value) {
             case 0:

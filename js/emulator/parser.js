@@ -34,25 +34,23 @@ var Label_Type;
     Label_Type[Label_Type["DW"] = 1] = "DW";
 })(Label_Type || (Label_Type = {}));
 export class Parser_output {
-    constructor() {
-        this.errors = [];
-        this.warnings = [];
-        this.data = [];
-        this.lines = [];
-        this.headers = {};
-        this.constants = {};
-        this.labels = {};
-        this.instr_line_nrs = [];
-        this.opcodes = [];
-        this.operant_strings = [];
-        this.operant_types = [];
-        this.operant_values = [];
-        this.register_breaks = {};
-        this.data_breaks = {};
-        this.heap_breaks = {};
-        this.program_breaks = {};
-        this.port_breaks = {};
-    }
+    errors = [];
+    warnings = [];
+    data = [];
+    lines = [];
+    headers = {};
+    constants = {};
+    labels = {};
+    instr_line_nrs = [];
+    opcodes = [];
+    operant_strings = [];
+    operant_types = [];
+    operant_values = [];
+    register_breaks = {};
+    data_breaks = {};
+    heap_breaks = {};
+    program_breaks = {};
+    port_breaks = {};
 }
 var Labeled;
 (function (Labeled) {
@@ -62,9 +60,8 @@ var Labeled;
     Labeled[Labeled["Label"] = 3] = "Label";
 })(Labeled || (Labeled = {}));
 export function parse(source, options = {}) {
-    var _a, _b, _c, _d, _e, _f, _g, _h;
     const out = new Parser_output();
-    Object.assign(out.constants, (_a = options.constants) !== null && _a !== void 0 ? _a : {});
+    Object.assign(out.constants, options.constants ?? {});
     out.lines = source.split('\n').map(line => line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim());
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++) {
@@ -120,15 +117,15 @@ export function parse(source, options = {}) {
         if (line.toUpperCase().startsWith("DW")) {
             let [_, ...value_strs] = line.split(" ");
             if (value_strs.length > 1) {
-                if (value_strs[0][0] !== "[" || ((_b = value_strs.at(-1)) === null || _b === void 0 ? void 0 : _b.at(-1)) !== "]") {
+                if (value_strs[0][0] !== "[" || value_strs.at(-1)?.at(-1) !== "]") {
                     out.warnings.push(warn(line_nr, `Omitting square brackets around a value list is not standard`));
                 }
                 value_strs[0] = value_strs[0].replace("[", "").trim();
                 if (value_strs[0].length === 0) {
                     value_strs.shift();
                 }
-                value_strs[value_strs.length - 1] = (_d = (_c = value_strs.at(-1)) === null || _c === void 0 ? void 0 : _c.replaceAll("]", "").trim()) !== null && _d !== void 0 ? _d : "";
-                if (((_e = value_strs.at(-1)) === null || _e === void 0 ? void 0 : _e.length) === 0) {
+                value_strs[value_strs.length - 1] = value_strs.at(-1)?.replaceAll("]", "").trim() ?? "";
+                if (value_strs.at(-1)?.length === 0) {
                     value_strs.pop();
                 }
             }
@@ -143,7 +140,7 @@ export function parse(source, options = {}) {
             let i = 0;
             while (i < value_strs.length) {
                 const res = parse_operant(() => value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, [], []);
-                if ((res === null || res === void 0 ? void 0 : res[0]) !== Operant_Type.String) {
+                if (res?.[0] !== Operant_Type.String) {
                     out.data.push(res ? res[1] : -1);
                 }
             }
@@ -164,15 +161,15 @@ export function parse(source, options = {}) {
                 if (parts[0].length === 0) {
                     parts.shift();
                 }
-                parts[parts.length - 1] = (_g = (_f = parts.at(-1)) === null || _f === void 0 ? void 0 : _f.replaceAll("]", "").trim()) !== null && _g !== void 0 ? _g : "";
-                if (((_h = parts.at(-1)) === null || _h === void 0 ? void 0 : _h.length) === 0) {
+                parts[parts.length - 1] = parts.at(-1)?.replaceAll("]", "").trim() ?? "";
+                if (parts.at(-1)?.length === 0) {
                     parts.pop();
                 }
             }
             let i = 0;
             while (i < parts.length) {
                 const res = parse_operant(() => parts[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
-                if ((res === null || res === void 0 ? void 0 : res[0]) !== Operant_Type.String) {
+                if (res?.[0] !== Operant_Type.String) {
                     out.data.push(res ? res[1] : -1);
                 }
             }
@@ -380,13 +377,12 @@ function split_instruction(line, line_nr, inst_i, out, errors) {
     return true;
 }
 function parse_instructions(line_nr, inst_i, out, errors, warnings) {
-    var _a;
     const types = out.operant_types[inst_i] = [];
     const values = out.operant_values[inst_i] = [];
     let i = 0;
     const strings = out.operant_strings[inst_i];
     while (i < strings.length) {
-        const [type, value] = (_a = parse_operant(() => strings[i++], line_nr, inst_i, out.labels, out.constants, out.data, errors, warnings)) !== null && _a !== void 0 ? _a : [];
+        const [type, value] = parse_operant(() => strings[i++], line_nr, inst_i, out.labels, out.constants, out.data, errors, warnings) ?? [];
         if (type === Operant_Type.String) {
             errors.push(warn(line_nr, "Strings are not allowed in instructions"));
         }
@@ -432,7 +428,6 @@ function resolve_port(operant, line_nr, errors) {
     return port;
 }
 function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, data, errors, warnings) {
-    var _a, _b, _c, _d;
     let operant = get_operant();
     if (operant === undefined) {
         return undefined;
@@ -500,13 +495,13 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
             return [Operant_Type.Memory, value];
         }
         case '%': {
-            const port = (_a = resolve_port(operant, line_nr, errors)) !== null && _a !== void 0 ? _a : NaN;
+            const port = resolve_port(operant, line_nr, errors) ?? NaN;
             return [Operant_Type.Imm, port];
         }
         case '\'': {
             let char_lit;
             if (operant.length === 1) {
-                operant += (_b = " " + get_operant()) !== null && _b !== void 0 ? _b : "";
+                operant += " " + get_operant() ?? "";
             }
             try {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"'));
@@ -515,7 +510,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
                 errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
             }
-            return [Operant_Type.Imm, (_c = char_lit.codePointAt(0)) !== null && _c !== void 0 ? _c : char_lit.charCodeAt(0)];
+            return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
         }
         case '"': {
             let i = 1;
@@ -532,7 +527,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
                         return undefined;
                     }
                     for (let i = 0; i < string.length; i++) {
-                        data.push((_d = string.codePointAt(i)) !== null && _d !== void 0 ? _d : 0);
+                        data.push(string.codePointAt(i) ?? 0);
                     }
                     return [Operant_Type.String, value];
                 }

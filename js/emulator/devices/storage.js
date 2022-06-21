@@ -1,19 +1,10 @@
 import { IO_Port } from "../instructions.js";
 import { read16, read32, write16, write32 } from "../util.js";
 export class Storage {
+    bits;
+    little_endian;
     constructor(bits, data, little_endian, size) {
         this.bits = bits;
-        this.inputs = {
-            [IO_Port.ADDR]: this.address_in,
-            [IO_Port.PAGE]: this.page_in,
-            [IO_Port.BUS]: this.bus_in,
-        };
-        this.outputs = {
-            [IO_Port.ADDR]: this.address_out,
-            [IO_Port.PAGE]: this.page_out,
-            [IO_Port.BUS]: this.bus_out,
-        };
-        this.address = 0;
         this.little_endian = little_endian;
         switch (bits) {
             case 8:
@@ -56,17 +47,30 @@ export class Storage {
             throw new Error(`${this.bits} is not a supported word length for a Storage device`);
         }
     }
+    inputs = {
+        [IO_Port.ADDR]: this.address_in,
+        [IO_Port.PAGE]: this.page_in,
+        [IO_Port.BUS]: this.bus_in,
+    };
+    outputs = {
+        [IO_Port.ADDR]: this.address_out,
+        [IO_Port.PAGE]: this.page_out,
+        [IO_Port.BUS]: this.bus_out,
+    };
+    data;
+    address_mask;
+    address = 0;
     address_out(v) {
         this.address = (this.address & ~this.address_mask) | v;
     }
     address_in() {
-        return Math.min(Math.pow(2, this.bits), this.data.length - (this.address & ~this.address_mask));
+        return Math.min(2 ** this.bits, this.data.length - (this.address & ~this.address_mask));
     }
     page_out(v) {
         this.address = (this.address & this.address_mask) | (v << this.bits);
     }
     page_in() {
-        return Math.ceil(this.data.length / (Math.pow(2, this.bits)));
+        return Math.ceil(this.data.length / (2 ** this.bits));
     }
     bus_out(v) {
         if (this.address > this.data.length) {

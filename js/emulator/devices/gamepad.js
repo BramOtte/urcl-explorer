@@ -19,45 +19,35 @@ export var Gamepad_Exes;
     Gamepad_Exes[Gamepad_Exes["RIGHT_Y"] = 3] = "RIGHT_Y";
 })(Gamepad_Exes || (Gamepad_Exes = {}));
 export class Pad {
+    pads = [];
+    gamepads = new Map();
+    selected = 0;
+    axis_index = 0;
+    info_index = 0;
     constructor() {
-        this.pads = [];
-        this.gamepads = new Map();
-        this.selected = 0;
-        this.axis_index = 0;
-        this.info_index = 0;
-        this.connect = (e) => {
-            const pad = new ControlPad(e.gamepad);
-            console.log(pad);
-            this.gamepads.set(e.gamepad, pad);
-            this.add_pad(pad);
-        };
-        this.disconnect = (e) => {
-            const pad = this.gamepads.get(e.gamepad);
-            if (pad !== undefined) {
-                this.remove_pad(pad);
-                this.gamepads.delete(e.gamepad);
-            }
-        };
-        this.inputs = {
-            [IO_Port.GAMEPAD]: () => { var _a, _b; return (_b = (_a = this.pads[this.selected]) === null || _a === void 0 ? void 0 : _a.buttons) !== null && _b !== void 0 ? _b : 0; },
-            [IO_Port.AXIS]: () => { var _a, _b, _c; return (_c = (_b = (_a = this.pads[this.selected]) === null || _a === void 0 ? void 0 : _a.axis) === null || _b === void 0 ? void 0 : _b.call(_a, this.axis_index)) !== null && _c !== void 0 ? _c : 0; },
-            [IO_Port.GAMEPAD_INFO]: () => { var _a, _b; return (_b = (_a = this.pads[this.selected]) === null || _a === void 0 ? void 0 : _a.info(this.info_index)) !== null && _b !== void 0 ? _b : 0; }
-        };
-        this.outputs = {
-            [IO_Port.GAMEPAD]: (i) => this.selected = i,
-            [IO_Port.AXIS]: (i) => this.axis_index = i,
-        };
         addEventListener("gamepadconnected", this.connect);
         addEventListener("gamepaddisconnected", this.disconnect);
     }
     cleanup() {
-        var _a;
         for (const pad of this.pads) {
-            (_a = pad === null || pad === void 0 ? void 0 : pad.cleanup) === null || _a === void 0 ? void 0 : _a.call(pad);
+            pad?.cleanup?.();
         }
         removeEventListener("gamepadconnected", this.connect);
         removeEventListener("gamepaddisconnected", this.disconnect);
     }
+    connect = (e) => {
+        const pad = new ControlPad(e.gamepad);
+        console.log(pad);
+        this.gamepads.set(e.gamepad, pad);
+        this.add_pad(pad);
+    };
+    disconnect = (e) => {
+        const pad = this.gamepads.get(e.gamepad);
+        if (pad !== undefined) {
+            this.remove_pad(pad);
+            this.gamepads.delete(e.gamepad);
+        }
+    };
     add_pad(pad) {
         this.pads.push(pad);
     }
@@ -68,5 +58,14 @@ export class Pad {
         }
         this.pads[index] = undefined;
     }
+    inputs = {
+        [IO_Port.GAMEPAD]: () => this.pads[this.selected]?.buttons ?? 0,
+        [IO_Port.AXIS]: () => this.pads[this.selected]?.axis?.(this.axis_index) ?? 0,
+        [IO_Port.GAMEPAD_INFO]: () => this.pads[this.selected]?.info(this.info_index) ?? 0
+    };
+    outputs = {
+        [IO_Port.GAMEPAD]: (i) => this.selected = i,
+        [IO_Port.AXIS]: (i) => this.axis_index = i,
+    };
 }
 //# sourceMappingURL=gamepad.js.map
