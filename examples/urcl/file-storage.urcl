@@ -6,8 +6,7 @@ OUT %FILE '.'
 OUT %FILE 'M'
 OUT %FILE 'D'
 IN r1 %FILE
-OUT %NUMB r1
-
+BNZ .error r1
 
 IN r1 %PAGE
 IMM r2 0
@@ -24,3 +23,11 @@ IMM r2 0
         BNE .loop r3 r4
     INC r2 r2
     BNE .page_loop r1 r2
+HLT
+
+.error
+    OUT %TEXT 'E'
+    OUT %TEXT 'R'
+    OUT %TEXT 'R'
+    OUT %TEXT 'O'
+    OUT %TEXT 'R'
