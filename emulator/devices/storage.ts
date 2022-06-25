@@ -1,11 +1,12 @@
 import { IO_Port } from "../instructions.js";
 import { read16, read32, write16, write32 } from "../util.js";
-import { Device } from "./device.js";
+import { Device, Device_Input, Device_Output } from "./device.js";
 
 export class Storage implements Device {
-    private little_endian: boolean;
-    constructor(public bits: number, data: ArrayBufferView, little_endian: boolean, size: number){
-        this.little_endian = little_endian;
+    constructor(public bits: number, private little_endian: boolean, private size: number){
+    }
+    public set_bytes(data: ArrayBufferView){
+        const {bits, size, little_endian} = this;
         switch (bits){
             case 8: {
                 this.address_mask = 0xff;
@@ -27,6 +28,7 @@ export class Storage implements Device {
             default: throw new Error(`${bits} is not a supported word length for a Storage device`);
         }
     }
+
     public get_bytes(){
         if (this.data instanceof Uint8Array){
             return new Uint8Array(this.data.buffer, this.data.byteOffset, this.data.byteLength);
@@ -38,18 +40,18 @@ export class Storage implements Device {
             throw new Error(`${this.bits} is not a supported word length for a Storage device`);
         }
     }
-    inputs = {
+    inputs: {[K in IO_Port]?: Device_Input} = {
         [IO_Port.ADDR]: this.address_in,
         [IO_Port.PAGE]: this.page_in,
         [IO_Port.BUS]: this.bus_in,
     }
-    outputs = {
+    outputs: {[K in IO_Port]?: Device_Output} = {
         [IO_Port.ADDR]: this.address_out,
         [IO_Port.PAGE]: this.page_out,
         [IO_Port.BUS]: this.bus_out,
     }
-    private data;
-    private address_mask;
+    private data!: Uint8Array | Uint16Array | Uint32Array;
+    private address_mask!: number;
     private address = 0;
     address_out(v: number){
         this.address = (this.address & ~this.address_mask) | v;

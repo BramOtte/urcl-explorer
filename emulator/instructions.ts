@@ -98,7 +98,8 @@ export enum IO_Port {
     KEY,
     MOUSE_X, MOUSE_Y, MOUSE_DX, MOUSE_DY,
     MOUSE_DWHEEL,
-    MOUSE_BUTTONS
+    MOUSE_BUTTONS,
+    FILE,
 }
 
 export interface Instruction_Ctx {

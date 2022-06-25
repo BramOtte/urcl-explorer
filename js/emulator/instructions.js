@@ -223,6 +223,7 @@ export var IO_Port;
     IO_Port[IO_Port["MOUSE_DY"] = 71] = "MOUSE_DY";
     IO_Port[IO_Port["MOUSE_DWHEEL"] = 72] = "MOUSE_DWHEEL";
     IO_Port[IO_Port["MOUSE_BUTTONS"] = 73] = "MOUSE_BUTTONS";
+    IO_Port[IO_Port["FILE"] = 74] = "FILE";
 })(IO_Port || (IO_Port = {}));
 const { SET, GET, GET_RAM: GAM, SET_RAM: SAM, RAM_OFFSET: RAO } = Operant_Operation;
 export const Opcodes_operants = {

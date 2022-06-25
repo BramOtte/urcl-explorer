@@ -5,7 +5,7 @@ import { Emulator, Step_Result } from "../emulator/emulator.js";
 import { compile } from "../emulator/compiler.js";
 import { parse } from "../emulator/parser.js";
 import { parse_argv } from "./args.js";
-import { Storage } from "../emulator/devices/storage.js";
+import { Node_Storage } from "../emulator/devices/node_storage.js";
 import { URCL_Header } from "../emulator/instructions.js";
 import { RNG } from "../emulator/devices/rng.js";
 
@@ -71,12 +71,12 @@ const [program, debug_info] = compile(code);
 debug_info.file_name = args[0];
 
 emulator.load_program(program, debug_info);
-let storage: undefined | Storage
+const storage: Node_Storage = new Node_Storage(program.headers[URCL_Header.BITS].value, __little_endian, __storage_size*1024);
+emulator.add_io_device(storage);
 if (__storage){
     const file: Uint8Array = (await fs.readFile(__storage));
     let bytes = file;
-    storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size*1024);
-    emulator.add_io_device(storage);
+    storage.set_bytes(bytes)
 }
 
 if (__text_file){

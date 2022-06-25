@@ -3,9 +3,14 @@ import { read16, read32, write16, write32 } from "../util.js";
 export class Storage {
     bits;
     little_endian;
-    constructor(bits, data, little_endian, size) {
+    size;
+    constructor(bits, little_endian, size) {
         this.bits = bits;
         this.little_endian = little_endian;
+        this.size = size;
+    }
+    set_bytes(data) {
+        const { bits, size, little_endian } = this;
         switch (bits) {
             case 8:
                 {

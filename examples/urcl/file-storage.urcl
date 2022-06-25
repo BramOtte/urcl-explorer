@@ -1,0 +1,26 @@
+OUT %FILE 'T'
+OUT %FILE 'O'
+OUT %FILE 'D'
+OUT %FILE 'O'
+OUT %FILE '.'
+OUT %FILE 'M'
+OUT %FILE 'D'
+IN r1 %FILE
+OUT %NUMB r1
+
+
+IN r1 %PAGE
+IMM r2 0
+
+.page_loop
+    OUT %PAGE r2
+    IN r3 %ADDR
+    IMM r4 0
+    .loop
+        OUT %ADDR r4
+        IN r5 %BUS
+        OUT %TEXT r5
+        INC r4 r4
+        BNE .loop r3 r4
+    INC r2 r2
+    BNE .page_loop r1 r2

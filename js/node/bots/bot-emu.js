@@ -236,7 +236,8 @@ options:
                 else {
                     bytes = new Uint8Array();
                 }
-                storage = new Storage(program.headers[URCL_Header.BITS].value, bytes, __little_endian, __storage_size * 1024);
+                storage = new Storage(program.headers[URCL_Header.BITS].value, __little_endian, __storage_size * 1024);
+                storage.set_bytes(bytes);
                 emulator.add_io_device(storage);
             }
             const canvas = Canvas.createCanvas(__width, __height);
