@@ -40,10 +40,10 @@ const clock_speed_output = document.getElementById("clock-speed-output");
 const memory_update_input = document.getElementById("update-mem-input");
 const url = new URL(location.href, location.origin);
 const srcurl = url.searchParams.get("srcurl");
+const storage_url = url.searchParams.get("storage");
 const width = parseInt(url.searchParams.get("width") ?? "");
 const height = parseInt(url.searchParams.get("height") ?? "");
 const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
-console.log(color);
 memory_update_input.oninput = () => update_views();
 const max_clock_speed = 40_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
@@ -66,6 +66,13 @@ share_button.onclick = e => {
 let storage_uploaded;
 let storage_device;
 let storage_loads = 0;
+function load_array_buffer(buffer) {
+    storage_uploaded = new Uint8Array(buffer);
+    const bytes = storage_uploaded.slice();
+    emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+    storage_device.set_bytes(bytes);
+    storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+}
 storage_little.oninput =
     storage_input.oninput = async (e) => {
         storage_msg.classList.remove("error");
@@ -77,12 +84,7 @@ storage_little.oninput =
         }
         const file = files[0];
         try {
-            const data = await file.arrayBuffer();
-            storage_uploaded = new Uint8Array(data);
-            const bytes = storage_uploaded.slice();
-            emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
-            storage_device.set_bytes(bytes);
-            storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+            load_array_buffer(await file.arrayBuffer());
         }
         catch (error) {
             storage_msg.classList.add("error");
@@ -412,4 +414,13 @@ else
         }
         source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
     }
+if (storage_url) {
+    fetch(storage_url).then(res => res.arrayBuffer()).then(buffer => {
+        console.log(storage_uploaded, buffer);
+        if (storage_uploaded != null) {
+            return;
+        }
+        load_array_buffer(buffer);
+    });
+}
 //# sourceMappingURL=index.js.map
