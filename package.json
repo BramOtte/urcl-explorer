@@ -8,7 +8,8 @@
     "node": "16.x"
   },
   "scripts": {
-    "start": "node js/node/urcx-bot.js"
+    "start": "node js/node/urcx-bot.js",
+    "bundle": "esbuild index.ts --bundle --outdir=js --format=esm --sourcemap --minify"
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.1",

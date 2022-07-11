@@ -1,3 +1,6 @@
+import "./editor/editor.js";
+import "./scroll-out/scroll-out.js";
+
 import { Editor_Window } from "./editor/editor.js";
 import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
