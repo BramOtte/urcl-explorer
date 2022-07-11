@@ -9,7 +9,7 @@
   },
   "scripts": {
     "start": "node js/node/urcx-bot.js",
-    "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --minify"
+    "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text"
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.1",

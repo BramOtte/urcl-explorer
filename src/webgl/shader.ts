@@ -19,9 +19,9 @@ export function createProgram(gl: GL, vertexSource: string, fragmentSource: stri
   gl.deleteShader(fragmentShader);
 
   if (!gl.getProgramParameter(program, gl.LINK_STATUS)) {
-    gl.deleteProgram(program);
-
     const linkErrLog = gl.getProgramInfoLog(program);
+    
+    gl.deleteProgram(program);
     throw new Error("Shader program did not link successfully. "
     + "Error log: " + linkErrLog);
   }
