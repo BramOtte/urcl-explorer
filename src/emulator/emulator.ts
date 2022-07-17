@@ -212,14 +212,14 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const res = device(this.finish_step_in.bind(this, port));
         if (res === undefined){
             if (this.debug_info.port_breaks[port] & Break.ONREAD){
-                this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                this.debug(`Read from port ${port} (${IO_Port[port]})`);
             }
             this.pc--;
             return true;
         } else {
             this.a = res;
             if (this.debug_info.port_breaks[port] & Break.ONREAD){
-                this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
             }
             return false;
         }
@@ -237,7 +237,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
                 return;
             }
             if (this.outs[port] === undefined){
-                this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=${value}`);
+                this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}`);
                 this.outs[port] = value
             }
             return;
@@ -248,7 +248,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
                 const char = JSON.stringify(String.fromCodePoint(value));
                 char_str = `'${char.substring(1, char.length-1)}'`;
             } catch {}
-            this.debug(`Written to port ${port} (${IO_Port[port]}) value=${value} ${char_str}`);
+            this.debug(`Written to port ${port} (${IO_Port[port]}) value=0x${value.toString(16)} ${char_str}`);
         }
         device(value);
     } catch (e){
@@ -335,20 +335,20 @@ step(): Step_Result {
 
     m_set(addr: number, value: number){
         if (addr >= this.memory.length){
-            this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on store: 0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
         }
         if (this.debug_info.memory_breaks[addr] & Break.ONWRITE){
-            this.debug(`Written memory[${addr}] which was ${this.memory[addr]} to ${value}`);
+            this.debug(`Written memory[0x${addr.toString(16)}] which was 0x${this.memory[addr].toString(16)} to 0x${value.toString(16)}`);
 
         }
         this.memory[addr] = value;
     }
     m_get(addr: number){
         if (addr >= this.memory.length){
-            this.error(`Heap overflow on load: #${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on load: #0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
         }
         if (this.debug_info.memory_breaks[addr] & Break.ONREAD){
-            this.debug(`Read memory[${addr}] = ${this.memory[addr]}`);
+            this.debug(`Read memory[0x${addr.toString(16)}] = 0x${this.memory[addr].toString(16)}`);
         }
         return this.memory[addr];
     }
@@ -364,7 +364,7 @@ step(): Step_Result {
         switch (target){
             case Operant_Prim.Reg: {
                 if (this.debug_info.register_breaks[index] & Break.ONWRITE){
-                    this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to ${value}`);
+                    this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to 0x${value.toString(16)}`);
                 }
                 this.registers[index] = value;
             } return;
@@ -377,7 +377,7 @@ step(): Step_Result {
             case Operant_Prim.Imm: return index;
             case Operant_Prim.Reg: {
                 if (this.debug_info.register_breaks[index] & Break.ONREAD){
-                    this.debug(`Read r${index - register_count + 1} = ${this.registers[index]}`);
+                    this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
                 }
                 return this.registers[index];
             }
