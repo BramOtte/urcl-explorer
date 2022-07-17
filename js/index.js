@@ -941,7 +941,6 @@ var Editor_Window = class extends HTMLElement {
       let span = div.firstElementChild;
       if (line.length == 0) {
         div.innerHTML = "<span> </span>";
-        span = null;
       } else {
         const tokens = [];
         tokenize(line, 0, tokens);
@@ -956,14 +955,16 @@ var Editor_Window = class extends HTMLElement {
         }
       }
       while (span !== null) {
+        const next = span.nextElementSibling;
         div.removeChild(span);
-        span = span.nextElementSibling;
+        span = next;
       }
       div = div.nextElementSibling;
     }
     while (div !== null) {
+      const next = div.nextElementSibling;
       this.colors.removeChild(div);
-      div = div.nextElementSibling;
+      div = next;
     }
   }
   call_input_listeners() {

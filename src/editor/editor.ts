@@ -198,7 +198,6 @@ export class Editor_Window extends HTMLElement {
             let span: Element | null = div.firstElementChild;
             if (line.length == 0) {
                 div.innerHTML = "<span> </span>";
-                span = null;
             } else {
                 const tokens: Token[] = [];
                 tokenize(line, 0, tokens);
@@ -215,15 +214,17 @@ export class Editor_Window extends HTMLElement {
             }
 
             while (span !== null){
+                const next = span.nextElementSibling;
                 div.removeChild(span);
-                span = span.nextElementSibling;
+                span = next
             }
             div = div.nextElementSibling;
         }
 
-        while (div  !== null){
+        while (div !== null){
+            const next = div.nextElementSibling;
             this.colors.removeChild(div);
-            div = div.nextElementSibling;
+            div = next;
         }
     }
 
