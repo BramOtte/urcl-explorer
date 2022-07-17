@@ -24,6 +24,7 @@ editor-window .colors, editor-window .line-nrs, editor-window textarea {
 }
 
 editor-window .line-nrs {
+    margin-left: 1ch;
     text-align: right;
 }
 
@@ -60,9 +61,12 @@ editor-window textarea {
 .pc-line {
     color: greenyellow;
     width: max-content;
+    position: relative;
 }
 .pc-line::before {
     content: ">";
+    position: absolute;
+    right: 100%;
 }
 
 .opcode, .dw, .name {
