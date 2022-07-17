@@ -627,6 +627,23 @@ function bound(n, min, max) {
   return Math.max(min, Math.min(max, n));
 }
 
+// src/l.ts
+function l(tagOrElement = "DIV", attributes = {}, ...children) {
+  const element = typeof tagOrElement === "string" ? document.createElement(tagOrElement) : tagOrElement;
+  attribute(element, attributes);
+  element.append(...children);
+  return element;
+}
+function attribute(element, attributes) {
+  for (const [key, value] of Object.entries(attributes)) {
+    if (typeof value === "object") {
+      attribute(element[key], value);
+    } else {
+      element[key] = value;
+    }
+  }
+}
+
 // src/editor/tokenizer.ts
 function bind(func, ...args) {
   return func.bind(null, ...args);
@@ -743,31 +760,29 @@ var tokenize = bind(list, bind(or, [
 
 // src/editor/editor.ts
 var Editor_Window = class extends HTMLElement {
-  line_nrs = document.createElement("div");
-  code = document.createElement("div");
-  input = document.createElement("textarea");
-  colors = document.createElement("pre");
+  line_nrs;
+  code;
+  input;
+  colors;
   profile_check = document.createElement("input");
   profiled = [];
   profile_present = false;
-  old_lines = [];
+  character;
+  lines = [];
   tab_width = 4;
   constructor() {
     super();
-    this.append(this.line_nrs, this.code);
-    this.code.append(this.input, this.colors);
-    this.code.style.position = "relative";
-    this.code.className = "code";
-    this.colors.className = "colors";
-    this.line_nrs.className = "line-nrs";
+    l(this, {}, this.line_nrs = l("div", { className: "line-nrs" }), this.code = l("div", { className: "code" }, this.input = l("textarea", { spellcheck: false }), this.colors = l("code", { className: "colors" })), this.character = l("div", { style: { visibility: "hidden", position: "absolute" } }, "a"));
     this.input.addEventListener("input", this.input_cb.bind(this));
-    this.input.spellcheck = false;
     this.input.addEventListener("keydown", this.keydown_cb.bind(this));
     this.profile_check.type = "checkbox";
     const profile_text = document.createElement("span");
     this.parentElement?.insertBefore(this.profile_check, this);
     profile_text.textContent = `Show line-profile`;
     this.parentElement?.insertBefore(profile_text, this);
+    const resize_observer = new ResizeObserver(() => this.render_lines());
+    resize_observer.observe(this);
+    this.onscroll = () => this.render_lines();
   }
   get value() {
     return this.input.value;
@@ -883,14 +898,13 @@ var Editor_Window = class extends HTMLElement {
     }
   }
   input_cb() {
-    this.input.style.height = "1px";
+    this.input.style.height = "0px";
     const height2 = this.input.scrollHeight;
-    this.input.style.width = `${this.input.scrollWidth}px`;
-    this.input.style.height = `${height2}px`;
-    const src = this.input.value;
-    const old_lines = this.old_lines;
-    const lines = src.split("\n");
-    this.old_lines = lines;
+    this.input.style.height = height2 + "px";
+    this.input.style.width = "0px";
+    this.input.style.width = this.input.scrollWidth + "px";
+    const lines = this.input.value.split("\n");
+    this.lines = lines;
     {
       const width2 = (lines.length + "").length;
       const start_lines = this.line_nrs.children.length;
@@ -906,70 +920,51 @@ var Editor_Window = class extends HTMLElement {
         }
       }
     }
-    const max_source_size = 1e5;
-    if (src.length > max_source_size) {
-      this.input.style.color = "white";
-      this.colors.style.color = "transparent";
-      this.call_input_listeners();
-      return;
-    }
-    this.input.style.color = "transparent";
-    this.colors.style.display = "white";
-    const min = Math.min(lines.length, old_lines.length);
-    let start = 0;
-    for (; start < min && lines[start] === old_lines[start]; start++)
-      ;
-    let end_i = 0;
-    for (; end_i < min - start && lines.at(-end_i - 1) === old_lines.at(-end_i - 1); end_i++)
-      ;
-    const end = lines.length - end_i;
-    const at_end = this.colors.children.item(old_lines.length - end_i);
-    while (this.colors.children.length < lines.length) {
-      const elem = document.createElement("div");
-      if (at_end) {
-        this.colors.insertBefore(elem, at_end);
-      } else {
-        this.colors.appendChild(elem);
-      }
-    }
-    while (this.colors.children.length > lines.length) {
-      const child = this.colors.children[Math.min(this.colors.children.length, old_lines.length) - end_i - 1];
-      if (!child) {
-        console.error("This should never happen");
-        this.input.style.color = "white";
-        this.colors.style.color = "transparent";
-        break;
-      }
-      this.colors.removeChild(child);
-    }
+    this.render_lines();
+    this.call_input_listeners();
+  }
+  render_lines() {
+    const ch = this.character.clientHeight;
+    const pixel_start = this.scrollTop;
+    const pixel_end = Math.min(pixel_start + this.clientHeight, this.input.scrollHeight);
+    const start = Math.floor(pixel_start / ch);
+    const end = Math.min(this.lines.length, Math.ceil(pixel_end / ch));
+    this.colors.style.top = start * ch + "px";
+    let div = this.colors.firstElementChild;
     for (let i = start; i < end; i++) {
-      const line = lines[i];
-      const element = this.colors.children[i];
-      const tokens = [];
-      tokenize(line, 0, tokens);
-      if (tokens.length === 0) {
-        element.innerHTML = "<span>\n</span>";
-        continue;
+      const line = this.lines[i].replaceAll("\r", "");
+      if (div === null) {
+        div = document.createElement("div");
+        this.colors.appendChild(div);
       }
-      let span = element.firstElementChild;
-      for (const { type, start: start2, end: end2 } of tokens) {
-        if (!span) {
-          span = document.createElement("span");
-          element.appendChild(span);
+      div.innerHTML = "";
+      let span = div.firstElementChild;
+      if (line.length == 0) {
+        div.innerHTML = "<span> </span>";
+        span = null;
+      } else {
+        const tokens = [];
+        tokenize(line, 0, tokens);
+        for (const { type, start: start2, end: end2 } of tokens) {
+          if (span === null) {
+            span = document.createElement("span");
+            div.appendChild(span);
+          }
+          span.textContent = line.substring(start2, end2);
+          span.className = type;
+          span = span.nextElementSibling;
         }
-        span.textContent = line.substring(start2, end2);
-        span.className = type;
+      }
+      while (span !== null) {
+        div.removeChild(span);
         span = span.nextElementSibling;
       }
-      while (span) {
-        const next = span.nextElementSibling;
-        element.removeChild(span);
-        span = next;
-      }
+      div = div.nextElementSibling;
     }
-    this.input.style.width = `${this.colors.scrollWidth}px`;
-    this.colors.style.height = `${height2}px`;
-    this.call_input_listeners();
+    while (div !== null) {
+      this.colors.removeChild(div);
+      div = div.nextElementSibling;
+    }
   }
   call_input_listeners() {
     for (const listener of this.input_listeners) {
@@ -1536,7 +1531,7 @@ function loadShader(gl2, type, source) {
 }
 
 // src/emulator/devices/gl-display.frag
-var gl_display_default = '#version 300 es\r\nprecision mediump float;\r\nin vec2 v_uv;\r\nout vec4 color;\r\n\r\nuniform sampler2D u_image;\r\nuniform uint u_color_mode;\r\n\r\nvec4 rgb(vec4 v, uint bits){\r\n    uint color = uint(v.x * 255.) + (uint(v.y * 255.) << 8u) + (uint(v.z * 255.) << 16u);\r\n    uint blue_bits = bits / 3u;\r\n    uint blue_mask = (1u << blue_bits) - 1u;\r\n    uint red_bits = (bits - blue_bits) / 2u;\r\n    uint red_mask = (1u << red_bits) - 1u;\r\n    uint green_bits = bits - blue_bits - red_bits;\r\n    uint green_mask = (1u << green_bits) - 1u;\r\n    \r\n    uint green_offset = blue_bits;\r\n    uint red_offset = green_offset + green_bits;\r\n    return vec4(\r\n        float((color >> red_offset   ) & red_mask) / float(red_mask),\r\n        float((color >> green_offset ) & green_mask) / float(green_mask),\r\n        float((color                  ) & blue_mask) / float(blue_mask),\r\n        1\r\n    );\r\n}\r\nvec4 rgbi(vec4 v){\r\n    uint c = uint(v.x * 255.);\r\n    uint r = (c >> 3u) & 1u;\r\n    uint g = (c >> 2u) & 1u;\r\n    uint b = (c >> 1u) & 1u;\r\n    uint i = ((c >> 0u) & 1u) + 1u;\r\n    if ((c & 15u) == 1u){\r\n        return vec4(0.25, 0.25, 0.25, 1.);\r\n    }\r\n    return vec4(float(r*i)/2.1, float(g*i)/2.1, float(b*i)/2.1, 1.);\r\n}\r\n// vec4 pallet_pico8[16] = vec4[16](\r\n//     ${pico8.map(v => `vec4(${v.map(n=>(n/255))},1.)`).join(",")}\r\n// );\r\n\r\nvec4 pico8(vec4 v){\r\n    return v;\r\n    // return pallet_pico8[uint(v.x * 255.) & 15u];\r\n}\r\n\r\nvec4 mono(vec4 c){\r\n    return vec4(c.x, c.x, c.x, 1);\r\n}\r\n\r\nvec4 bin(vec4 c){\r\n    return c.x > 0. || c.y > 0. || c.z > 0. ? vec4(1,1,1,1) : vec4(0,0,0,1);\r\n}\r\n\r\n\r\nvoid main(){\r\n    vec4 c = texture(u_image, v_uv);\r\n    switch (u_color_mode){\r\n        case 0u: color = rgb(c, 8u); break;\r\n        case 1u: color = mono(c); break;\r\n        case 2u: color = bin(c); break;\r\n        case 3u: color = rgb(c, 8u); break;\r\n        case 4u: color = rgb(c, 16u); break;\r\n        case 5u: color = rgb(c, 24u); break;\r\n        case 6u: color = rgb(c, 6u); break;\r\n        case 7u: color = rgb(c, 12u); break;\r\n        case 8u: color = pico8(c); break;\r\n        case 9u: color = rgbi(c); break;\r\n        default: color = pico8(c); break;\r\n    }\r\n}';
+var gl_display_default = "#version 300 es\r\nprecision mediump float;\r\nin vec2 v_uv;\r\nout vec4 color;\r\n\r\nuniform sampler2D u_image;\r\nuniform uint u_color_mode;\r\n\r\nvec4 rgb(vec4 v, uint bits){\r\n    uint color = uint(v.x * 255.) + (uint(v.y * 255.) << 8u) + (uint(v.z * 255.) << 16u);\r\n    uint blue_bits = bits / 3u;\r\n    uint blue_mask = (1u << blue_bits) - 1u;\r\n    uint red_bits = (bits - blue_bits) / 2u;\r\n    uint red_mask = (1u << red_bits) - 1u;\r\n    uint green_bits = bits - blue_bits - red_bits;\r\n    uint green_mask = (1u << green_bits) - 1u;\r\n    \r\n    uint green_offset = blue_bits;\r\n    uint red_offset = green_offset + green_bits;\r\n    return vec4(\r\n        float((color >> red_offset   ) & red_mask) / float(red_mask),\r\n        float((color >> green_offset ) & green_mask) / float(green_mask),\r\n        float((color                  ) & blue_mask) / float(blue_mask),\r\n        1\r\n    );\r\n}\r\nvec4 rgbi(vec4 v){\r\n    uint c = uint(v.x * 255.);\r\n    uint r = (c >> 3u) & 1u;\r\n    uint g = (c >> 2u) & 1u;\r\n    uint b = (c >> 1u) & 1u;\r\n    uint i = ((c >> 0u) & 1u) + 1u;\r\n    if ((c & 15u) == 1u){\r\n        return vec4(0.25, 0.25, 0.25, 1.);\r\n    }\r\n    return vec4(float(r*i)/2.1, float(g*i)/2.1, float(b*i)/2.1, 1.);\r\n}\r\nvec4 pallet_pico8[16] = vec4[16](\r\n    vec4(0./255., 0./255., 0./255., 1.), vec4(29./255., 43./255., 83./255., 1.),\r\n    vec4(126./255., 37./255., 83./255., 1.), vec4(0./255., 135./255., 81./255., 1.),\r\n    vec4(171./255., 82./255., 54./255., 1.), vec4(95./255., 87./255., 79./255., 1.),\r\n    vec4(194./255., 195./255., 199./255., 1.), vec4(255./255., 241./255., 232./255., 1.),\r\n    vec4(255./255., 0./255., 77./255., 1.), vec4(255./255., 163./255., 0./255., 1.),\r\n    vec4(255./255., 236./255., 39./255., 1.), vec4(0./255., 228./255., 54./255., 1.),\r\n    vec4(41./255., 173./255., 255./255., 1.), vec4(131./255., 118./255., 156./255., 1.),\r\n    vec4(255./255., 119./255., 168./255., 1.), vec4(255./255., 204./255., 170./255., 1.)\r\n);\r\n\r\nvec4 pico8(vec4 v){\r\n    return pallet_pico8[uint(v.x * 255.) & 15u];\r\n}\r\n\r\nvec4 mono(vec4 c){\r\n    return vec4(c.x, c.x, c.x, 1);\r\n}\r\n\r\nvec4 bin(vec4 c){\r\n    return c.x > 0. || c.y > 0. || c.z > 0. ? vec4(1,1,1,1) : vec4(0,0,0,1);\r\n}\r\n\r\n\r\nvoid main(){\r\n    vec4 c = texture(u_image, v_uv);\r\n    switch (u_color_mode){\r\n        case 0u: color = rgb(c, 8u); break;\r\n        case 1u: color = mono(c); break;\r\n        case 2u: color = bin(c); break;\r\n        case 3u: color = rgb(c, 8u); break;\r\n        case 4u: color = rgb(c, 16u); break;\r\n        case 5u: color = rgb(c, 24u); break;\r\n        case 6u: color = rgb(c, 6u); break;\r\n        case 7u: color = rgb(c, 12u); break;\r\n        case 8u: color = pico8(c); break;\r\n        case 9u: color = rgbi(c); break;\r\n        default: color = pico8(c); break;\r\n    }\r\n}";
 
 // src/emulator/devices/gl-display.vert
 var gl_display_default2 = "#version 300 es\r\nprecision mediump float;\r\nin vec2 a_uv;\r\nin vec2 a_pos;\r\n\r\nout vec2 v_uv;\r\n\r\nvoid main(){\r\n    gl_Position = vec4(a_pos, 0., 1.);\r\n    v_uv = a_uv;\r\n}";

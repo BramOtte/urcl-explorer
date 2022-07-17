@@ -1,27 +1,30 @@
 import { pad_left } from "../emulator/util.js";
+import { l } from "../l.js";
 import { regex_end, Token, tokenize } from "./tokenizer.js";
 
 export class Editor_Window extends HTMLElement {
-    private line_nrs = document.createElement("div")
-    private code = document.createElement("div");
-    private input = document.createElement("textarea");
-    private colors = document.createElement("pre");
+    private line_nrs: HTMLElement;
+    private code: HTMLElement;
+    private input: HTMLTextAreaElement;
+    private colors: HTMLElement;
     private profile_check = document.createElement("input");
     private profiled: boolean[] = [];
     private profile_present: boolean = false;
-    private old_lines: string[] = [];
+    private character: HTMLElement;
+    private lines: string[] = [];
     tab_width = 4
     constructor(){
         super();
-        this.append(this.line_nrs, this.code);
-        this.code.append(this.input, this.colors);
+        l(this, {}, 
+            this.line_nrs = l("div", {className: "line-nrs"}),
+            this.code = l("div", {className: "code"},
+                this.input = l("textarea", {spellcheck: false}),
+                this.colors = l("code", {className: "colors"})
+            ),
+            this.character = l("div", {style: {visibility: "hidden", position: "absolute"}}, "a")
+        );
 
-        this.code.style.position = "relative";
-        this.code.className = "code";
-        this.colors.className = "colors";
-        this.line_nrs.className = "line-nrs";
         this.input.addEventListener("input", this.input_cb.bind(this));
-        this.input.spellcheck = false;
 
         this.input.addEventListener("keydown", this.keydown_cb.bind(this));
         this.profile_check.type = "checkbox";
@@ -29,6 +32,12 @@ export class Editor_Window extends HTMLElement {
         this.parentElement?.insertBefore(this.profile_check, this);
         profile_text.textContent = `Show line-profile`;
         this.parentElement?.insertBefore(profile_text, this);
+
+        const resize_observer = new ResizeObserver(() => this.render_lines());
+        resize_observer.observe(this);
+
+
+        this.onscroll = () => this.render_lines();
     }
     get value(){
         return this.input.value;
@@ -137,15 +146,15 @@ export class Editor_Window extends HTMLElement {
         }
     }
     private input_cb(){
-        this.input.style.height = "1px";
-        const height = this.input.scrollHeight;
-        this.input.style.width = `${this.input.scrollWidth}px`;
-        this.input.style.height = `${height}px`;
+        this.input.style.height = "0px";
+        const height = this.input.scrollHeight
+        this.input.style.height = height + "px";
+
+        this.input.style.width = "0px";
+        this.input.style.width = this.input.scrollWidth + "px";
         
-        const src = this.input.value;
-        const old_lines = this.old_lines;
-        const lines = src.split("\n");
-        this.old_lines = lines;
+        const lines = this.input.value.split("\n");
+        this.lines = lines;
         {
             const width = (lines.length+"").length
             const start_lines = this.line_nrs.children.length
@@ -161,77 +170,63 @@ export class Editor_Window extends HTMLElement {
                 }
             }
         }
-        
-        const max_source_size = 100_000;
-        if (src.length > max_source_size){
-            this.input.style.color = "white";
-            this.colors.style.color = "transparent";
-            this.call_input_listeners();
-            return
-        } 
-        this.input.style.color = "transparent";
-        this.colors.style.display = "white";
-        const min = Math.min(lines.length, old_lines.length);
-        let start = 0;
-        for (; start < min && lines[start] === old_lines[start]; start++);
-        let end_i = 0;
-        
-        for (; end_i < min - start && lines.at(-end_i-1) === old_lines.at(-end_i-1); end_i++);
-        
-        const end = lines.length - end_i;
-        const at_end = this.colors.children.item(old_lines.length - end_i);
-        
-        while (this.colors.children.length < lines.length){
-            const elem = document.createElement("div");
-            if (at_end){
-                this.colors.insertBefore(elem, at_end);
-            } else {
-                this.colors.appendChild(elem);
-            }
-        }
-        while (this.colors.children.length > lines.length){
-            const child = this.colors.children[Math.min(this.colors.children.length, old_lines.length) - end_i - 1];
-            if (!child){
-                console.error("This should never happen");
-                this.input.style.color = "white";
-                this.colors.style.color = "transparent";
-                break;
-            }
-            this.colors.removeChild(child);
-        }
-
-        
-
-        for (let i = start; i < end; i++){
-            const line = lines[i];
-            const element = this.colors.children[i];
-            const tokens: Token[] = [];
-            tokenize(line, 0, tokens);
-            if (tokens.length === 0){
-                element.innerHTML = "<span>\n</span>";
-                continue;
-            }
-            let span = element.firstElementChild;
-            for (const {type, start, end} of tokens){
-                if (!span){
-                    span = document.createElement("span");
-                    element.appendChild(span);
-                }
-                span.textContent = line.substring(start, end);
-                span.className = type;
-                span = span.nextElementSibling;
-            }
-            while (span){
-                const next = span.nextElementSibling;
-                element.removeChild(span);
-                span = next;
-            }
-        }
-
-        this.input.style.width = `${this.colors.scrollWidth}px`;
-        this.colors.style.height = `${height}px`;
+        this.render_lines();
         this.call_input_listeners();
     }
+
+    private render_lines(){
+        const ch = this.character.clientHeight;
+    
+        const pixel_start = this.scrollTop;
+        const pixel_end = Math.min(pixel_start + this.clientHeight, this.input.scrollHeight);
+
+        const start = Math.floor(pixel_start / ch);
+        const end = Math.min(this.lines.length, Math.ceil(pixel_end / ch));
+
+        this.colors.style.top = (start*ch) + "px";
+
+
+        let div: Element | null = this.colors.firstElementChild;
+        for (let i = start; i < end; i++) {
+            const line = this.lines[i].replaceAll("\r", "");
+            if (div === null) {
+                div = document.createElement("div");
+                this.colors.appendChild(div);
+            }
+
+            div.innerHTML = "";
+            let span: Element | null = div.firstElementChild;
+            if (line.length == 0) {
+                div.innerHTML = "<span> </span>";
+                span = null;
+            } else {
+                const tokens: Token[] = [];
+                tokenize(line, 0, tokens);
+                for (const {type, start, end} of tokens){
+                    if (span === null){
+                        span = document.createElement("span");
+                        div.appendChild(span);
+                    }
+                    span.textContent = line.substring(start, end);
+                    span.className = type;
+
+                    span = span.nextElementSibling;
+                }
+            }
+
+            while (span !== null){
+                div.removeChild(span);
+                span = span.nextElementSibling;
+            }
+            div = div.nextElementSibling;
+        }
+
+        while (div  !== null){
+            this.colors.removeChild(div);
+            div = div.nextElementSibling;
+        }
+    }
+
     private call_input_listeners(){
         for (const listener of this.input_listeners){
             listener.call(this, new Event("input"));
@@ -245,15 +240,6 @@ export class Editor_Window extends HTMLElement {
 }
 customElements.define("editor-window", Editor_Window);
 
-function line_starts(src: string): number[] {
-    const starts: number[] = [];
-    for (let i = 0; i >= 0 && i < src.length; i++){
-        starts.push(i);
-        const next = src.indexOf("\n", i);
-        i = next >= i ? next: src.length;
-    }
-    return starts;
-}
 
 function str_splice(string: string, index: number, delete_count: number, insert: string){
     return string.slice(0, index) + insert + string.slice(index + delete_count);
