@@ -62,6 +62,10 @@ textarea {
   font-family: "unscii";
 }
 
+#register-view {
+  overflow-x: auto;
+}
+
 #stdout {
   height: 200px;
   width: 200px;
