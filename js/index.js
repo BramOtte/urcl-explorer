@@ -772,12 +772,11 @@ var Editor_Window = class extends HTMLElement {
   profile_check = document.createElement("input");
   profiled = [];
   profile_present = false;
-  character;
   lines = [];
   tab_width = 4;
   constructor() {
     super();
-    l(this, {}, this.line_nrs = l("div", { className: "line-nrs" }), this.code = l("div", { className: "code" }, this.input = l("textarea", { spellcheck: false }), this.colors = l("code", { className: "colors" })), this.character = l("div", { style: { visibility: "hidden", position: "absolute" } }, "a"));
+    l(this, {}, this.line_nrs = l("div", { className: "line-nrs" }), this.code = l("div", { className: "code" }, this.input = l("textarea", { spellcheck: false }), this.colors = l("code", { className: "colors" })));
     this.input.addEventListener("input", this.input_cb.bind(this));
     this.input.addEventListener("keydown", this.keydown_cb.bind(this));
     this.profile_check.type = "checkbox";

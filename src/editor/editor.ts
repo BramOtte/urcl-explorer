@@ -10,7 +10,6 @@ export class Editor_Window extends HTMLElement {
     private profile_check = document.createElement("input");
     private profiled: boolean[] = [];
     private profile_present: boolean = false;
-    private character: HTMLElement;
     private lines: string[] = [];
     tab_width = 4
     constructor(){
@@ -21,7 +20,6 @@ export class Editor_Window extends HTMLElement {
                 this.input = l("textarea", {spellcheck: false}),
                 this.colors = l("code", {className: "colors"})
             ),
-            this.character = l("div", {style: {visibility: "hidden", position: "absolute"}}, "a")
         );
 
         this.input.addEventListener("input", this.input_cb.bind(this));
