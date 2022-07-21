@@ -146,6 +146,11 @@ export class Editor_Window extends HTMLElement {
         }
     }
     private input_cb(){
+        this.render_lines();
+        this.call_input_listeners();
+    }
+
+    private render_lines(){
         this.input.style.height = "0px";
         const height = this.input.scrollHeight
         this.input.style.height = height + "px";
@@ -170,12 +175,8 @@ export class Editor_Window extends HTMLElement {
                 }
             }
         }
-        this.render_lines();
-        this.call_input_listeners();
-    }
 
-    private render_lines(){
-        const ch = this.character.clientHeight;
+        const ch = this.input.scrollHeight / Math.max(1, this.lines.length);
     
         const pixel_start = this.scrollTop;
         const pixel_end = Math.min(pixel_start + this.clientHeight, this.input.scrollHeight);

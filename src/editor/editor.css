@@ -5,7 +5,7 @@ editor-window {
     font-family: monospace, monospace;
     font-size: 1rem;
     white-space: pre;
-    gap: 0.25em;
+    gap: 0.5em;
     width: 100%;
     height: 100%;
 }
@@ -17,10 +17,6 @@ editor-window * {
     padding: 0px;
     margin: 0px;
     color: white;
-}
-
-editor-window .colors, editor-window .line-nrs, editor-window textarea {
-    padding: 0.5ch;
 }
 
 editor-window .line-nrs {
