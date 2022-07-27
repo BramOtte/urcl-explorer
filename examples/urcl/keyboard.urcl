@@ -1,5 +1,5 @@
 // output might not be visible
-// make sure you have the console scrolled down and enlarged
+// make sure you have the console scrolled down
 BITS == 16
 MINREG 4
 @DEFINE @FrameTime 100
