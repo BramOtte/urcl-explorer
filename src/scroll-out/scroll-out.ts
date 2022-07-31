@@ -54,17 +54,9 @@ export class Scroll_Out extends HTMLElement {
     }
     public write(text_to_add: string){
         this.buf += text_to_add;
-        const clear_escape = "\x1b[2J";
-        let i = this.buf.lastIndexOf(clear_escape);
-        if (i >= 0) {
-            this.buf = this.buf.substring(i + clear_escape.length);
-            this.flush();
-        }
-
     }
     public flush(){
         if (this.buf.length === 0){
-            this.lines = [""];
             return;
         }
         let j = 0;
@@ -72,6 +64,15 @@ export class Scroll_Out extends HTMLElement {
             const line = this.buf.substring(j, i-1);
             const full_line = this.lines[this.lines.length-1] += line; 
             this.text_width = Math.max(full_line.length, this.text_width);
+
+            const clear_escape = "\x1b[2J";
+            const escape_index = full_line.lastIndexOf(clear_escape);
+            if (escape_index >= 0) {
+                const escaped = full_line.substring(escape_index + clear_escape.length);
+                this.lines = [escaped];
+                this.size = escaped.length;
+            }
+
             this.size += line.length;
             this.lines.push("");
         }
