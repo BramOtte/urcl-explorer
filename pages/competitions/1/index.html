@@ -26,6 +26,9 @@
         a:hover {
         color: white;
         }
+        time {
+            background-color: rgb(1, 44, 47);
+        }
     </style>
 </head>
 <body>
@@ -53,10 +56,15 @@
     </p>
     <h2>This event</h2>
     <p>
-        The event will start at <time>Monday 1 august 22:00 2022 UTC</time> and you'l have till <time>Friday 5 august 23:59 2022 UTC</time> to finish your submission<br>
-        A vote will start shortly after that and will be closed at Sunday 7 august 23:59 2022 UTC. <br><br>
+        The event will start at <time datetime="2022-8-1Z24:00"></time> and you'l have till <time datetime="2022-8-5Z24:00"></time> to finish your submission<br>
+        A vote will start shortly after that and will be closed at <time datetime="2022-8-7Z24:00"></time>. <br><br>
 
         The theme and limitations will be announced at the start of the event.
     </p>
+    <script>
+        document.querySelectorAll("time").forEach(element => {
+            element.innerText = new Date(element.dateTime).toLocaleString({}, {month: "short", day: "2-digit", hour:"2-digit", minute: "2-digit"});
+        });
+    </script>
 </body>
 </html>
