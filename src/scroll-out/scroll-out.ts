@@ -54,16 +54,17 @@ export class Scroll_Out extends HTMLElement {
     }
     public write(text_to_add: string){
         this.buf += text_to_add;
-
         const clear_escape = "\x1b[2J";
         let i = this.buf.lastIndexOf(clear_escape);
         if (i >= 0) {
             this.buf = this.buf.substring(i + clear_escape.length);
+            this.flush();
         }
 
     }
     public flush(){
         if (this.buf.length === 0){
+            this.lines = [""];
             return;
         }
         let j = 0;

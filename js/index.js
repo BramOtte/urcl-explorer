@@ -1062,10 +1062,12 @@ var Scroll_Out = class extends HTMLElement {
     let i = this.buf.lastIndexOf(clear_escape);
     if (i >= 0) {
       this.buf = this.buf.substring(i + clear_escape.length);
+      this.flush();
     }
   }
   flush() {
     if (this.buf.length === 0) {
+      this.lines = [""];
       return;
     }
     let j = 0;
