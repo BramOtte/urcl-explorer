@@ -80,14 +80,9 @@ var Register = /* @__PURE__ */ ((Register2) => {
   return Register2;
 })(Register || {});
 var register_count = enum_count(Register);
-var Operant_Prim = /* @__PURE__ */ ((Operant_Prim3) => {
-  Operant_Prim3[Operant_Prim3["Reg"] = 0] = "Reg";
-  Operant_Prim3[Operant_Prim3["Imm"] = 1] = "Imm";
-  return Operant_Prim3;
-})(Operant_Prim || {});
 var Operant_Type = /* @__PURE__ */ ((Operant_Type2) => {
-  Operant_Type2[Operant_Type2["Reg"] = 0] = "Reg";
-  Operant_Type2[Operant_Type2["Imm"] = 1] = "Imm";
+  Operant_Type2[Operant_Type2["Reg"] = 0 /* Reg */] = "Reg";
+  Operant_Type2[Operant_Type2["Imm"] = 1 /* Imm */] = "Imm";
   Operant_Type2[Operant_Type2["Memory"] = 2] = "Memory";
   Operant_Type2[Operant_Type2["Label"] = 3] = "Label";
   Operant_Type2[Operant_Type2["Data_Label"] = 4] = "Data_Label";
@@ -1063,6 +1058,11 @@ var Scroll_Out = class extends HTMLElement {
   }
   write(text_to_add) {
     this.buf += text_to_add;
+    const clear_escape = "\x1B[2J";
+    let i = this.buf.lastIndexOf(clear_escape);
+    if (i >= 0) {
+      this.buf = this.buf.substring(i + clear_escape.length);
+    }
   }
   flush() {
     if (this.buf.length === 0) {
@@ -1112,8 +1112,8 @@ customElements.define("scroll-out", Scroll_Out);
 // src/emulator/compiler.ts
 function compile(parsed) {
   const { headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks } = parsed;
-  const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
-  const header_bits = parsed.headers[URCL_Header.BITS].value;
+  const in_ram = parsed.headers[3 /* RUN */]?.value === 1 /* RAM */;
+  const header_bits = parsed.headers[0 /* BITS */].value;
   const bits = header_bits <= 8 ? 8 : header_bits <= 16 ? 16 : header_bits <= 32 ? 32 : void 0;
   if (bits === void 0) {
     throw new Error("bits can not exceed 32");
@@ -1124,73 +1124,73 @@ function compile(parsed) {
   const smax = max >>> 1;
   const uhalf = max & max << bits / 2;
   const lhalf = max - uhalf;
-  const minreg = headers[URCL_Header.MINREG].value;
-  const minheap = headers[URCL_Header.MINHEAP].value;
-  const minstack = headers[URCL_Header.MINSTACK].value;
+  const minreg = headers[1 /* MINREG */].value;
+  const minheap = headers[2 /* MINHEAP */].value;
+  const minstack = headers[4 /* MINSTACK */].value;
   const heap_offset = parsed.data.length;
   const new_operant_values = operant_values.map((vals) => vals.slice());
   const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
     switch (t) {
-      case Operant_Type.Reg: {
+      case 0 /* Reg */: {
         const num = new_operant_values[i][j] + 1 - register_count;
         if (num > minreg) {
           throw new Error(`register ${num} does not exist, ${num} > minreg:${minreg}`);
         }
-        return Operant_Prim.Reg;
+        return 0 /* Reg */;
       }
-      case Operant_Type.Imm:
-        return Operant_Prim.Imm;
-      case Operant_Type.Label:
-        return Operant_Prim.Imm;
-      case Operant_Type.String:
-        return Operant_Prim.Reg;
-      case Operant_Type.Memory: {
+      case 1 /* Imm */:
+        return 1 /* Imm */;
+      case 3 /* Label */:
+        return 1 /* Imm */;
+      case 6 /* String */:
+        return 0 /* Reg */;
+      case 2 /* Memory */: {
         new_operant_values[i][j] += heap_offset;
-        return Operant_Prim.Imm;
+        return 1 /* Imm */;
       }
-      case Operant_Type.Data_Label:
-        return Operant_Prim.Imm;
-      case Operant_Type.Constant: {
+      case 4 /* Data_Label */:
+        return 1 /* Imm */;
+      case 5 /* Constant */: {
         const vals = new_operant_values[i];
         const constant = vals[j];
         switch (constant) {
-          case Constants.BITS:
+          case 0 /* BITS */:
             vals[j] = bits;
             break;
-          case Constants.MSB:
+          case 1 /* MSB */:
             vals[j] = msb;
             break;
-          case Constants.SMSB:
+          case 2 /* SMSB */:
             vals[j] = smsb;
             break;
-          case Constants.MAX:
+          case 3 /* MAX */:
             vals[j] = max;
             break;
-          case Constants.SMAX:
+          case 4 /* SMAX */:
             vals[j] = smax;
             break;
-          case Constants.UHALF:
+          case 5 /* UHALF */:
             vals[j] = uhalf;
             break;
-          case Constants.LHALF:
+          case 6 /* LHALF */:
             vals[j] = lhalf;
             break;
-          case Constants.MINREG:
+          case 7 /* MINREG */:
             vals[j] = minreg;
             break;
-          case Constants.MINHEAP:
+          case 8 /* MINHEAP */:
             vals[j] = minheap;
             break;
-          case Constants.HEAP:
+          case 9 /* HEAP */:
             vals[j] = minheap;
             break;
-          case Constants.MINSTACK:
+          case 10 /* MINSTACK */:
             vals[j] = minstack;
             break;
           default:
             throw new Error(`Unsupported constant ${constant} ${Constants[constant]}`);
         }
-        return Operant_Prim.Imm;
+        return 1 /* Imm */;
       }
       default:
         throw new Error(`Unkown opperant type ${t} ${Operant_Type[t]}`);
@@ -1211,10 +1211,10 @@ var Clock = class {
   wait_end = 0;
   time_out;
   inputs = {
-    [IO_Port.WAIT]: this.wait_in
+    [44 /* WAIT */]: this.wait_in
   };
   outputs = {
-    [IO_Port.WAIT]: this.wait_out
+    [44 /* WAIT */]: this.wait_out
   };
   wait_out(time) {
     if (time === 0) {
@@ -1258,9 +1258,9 @@ var Console_IO = class {
   }
   bits = 32;
   inputs = {
-    [IO_Port.TEXT]: this.text_in,
-    [IO_Port.NUMB]: this.numb_in,
-    [IO_Port.FLOAT]: (cb) => {
+    [1 /* TEXT */]: this.text_in,
+    [2 /* NUMB */]: this.numb_in,
+    [28 /* FLOAT */]: (cb) => {
       if (this.bits >= 32) {
         this.numb_in(cb, (s) => f32_encode(Number(s)));
       } else if (this.bits >= 16) {
@@ -1269,17 +1269,17 @@ var Console_IO = class {
         throw new Error(`8 bit floats are not supported`);
       }
     },
-    [IO_Port.FIXED]: (cb) => {
+    [29 /* FIXED */]: (cb) => {
       this.numb_in(cb, (s) => Math.floor(Number(s) * 2 ** (this.bits / 2)));
     }
   };
   outputs = {
-    [IO_Port.TEXT]: this.text_out,
-    [IO_Port.NUMB]: this.numb_out,
-    [IO_Port.UINT]: this.numb_out,
-    [IO_Port.HEX]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
-    [IO_Port.BIN]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
-    [IO_Port.FLOAT]: (v) => {
+    [1 /* TEXT */]: this.text_out,
+    [2 /* NUMB */]: this.numb_out,
+    [25 /* UINT */]: this.numb_out,
+    [27 /* HEX */]: (v) => this.write(sepperate(v.toString(16).padStart(Math.ceil(this.bits / 4), "0"))),
+    [26 /* BIN */]: (v) => this.write(sepperate(v.toString(2).padStart(this.bits, "0"))),
+    [28 /* FLOAT */]: (v) => {
       if (this.bits >= 32) {
         this.write(f32_decode(v).toString());
       } else if (this.bits >= 16) {
@@ -1288,23 +1288,23 @@ var Console_IO = class {
         throw new Error(`8 bit floats are not supported`);
       }
     },
-    [IO_Port.FIXED]: (v) => {
+    [29 /* FIXED */]: (v) => {
       this.write((v / 2 ** (this.bits / 2)).toString());
     },
-    [IO_Port.INT]: (v) => {
+    [24 /* INT */]: (v) => {
       const sign_bit = 2 ** (this.bits - 1);
       if (v & sign_bit) {
         v = (v & sign_bit - 1) - sign_bit;
       }
       this.write(v.toString());
     },
-    [IO_Port.ASCII]: this.text_out,
-    [IO_Port.CHAR5]: this.text_out,
-    [IO_Port.CHAR6]: this.text_out,
-    [IO_Port.ASCII]: this.text_out,
-    [IO_Port.UTF8]: this.text_out,
-    [IO_Port.UTF16]: this.text_out,
-    [IO_Port.UTF32]: this.text_out
+    [16 /* ASCII */]: this.text_out,
+    [17 /* CHAR5 */]: this.text_out,
+    [18 /* CHAR6 */]: this.text_out,
+    [16 /* ASCII */]: this.text_out,
+    [20 /* UTF8 */]: this.text_out,
+    [21 /* UTF16 */]: this.text_out,
+    [22 /* UTF32 */]: this.text_out
   };
   set_text(text) {
     this.input.text = text;
@@ -1381,200 +1381,6 @@ var pico8 = [
   16742312,
   16764074
 ].map((v) => [v >>> 16 & 255, v >>> 8 & 255, v & 255]);
-var Display = class {
-  constructor(ctx, bits, color_mode = 2 /* Bin */, save_buffers = false) {
-    this.bits = bits;
-    this.color_mode = color_mode;
-    this.save_buffers = save_buffers;
-    const { width: width2, height: height2 } = ctx.canvas;
-    this.ctx = ctx;
-    this.image = ctx.createImageData(width2, height2);
-    this.read_buffer = new Uint32Array(width2 * height2);
-  }
-  ctx;
-  buffers = [];
-  image;
-  read_buffer;
-  get data() {
-    return this.image.data;
-  }
-  buffer_enabled = 0;
-  x = 0;
-  y = 0;
-  inputs = {
-    [IO_Port.COLOR]: this.color_in,
-    [IO_Port.X]: this.x_in,
-    [IO_Port.Y]: this.y_in,
-    [IO_Port.BUFFER]: this.buffer_in
-  };
-  outputs = {
-    [IO_Port.COLOR]: this.color_out,
-    [IO_Port.X]: this.x_out,
-    [IO_Port.Y]: this.y_out,
-    [IO_Port.BUFFER]: this.buffer_out
-  };
-  reset() {
-    this.x = 0;
-    this.y = 0;
-    this.clear();
-    this.ctx.putImageData(this.image, 0, 0);
-    this.buffer_enabled = 0;
-    this.buffers.length = 0;
-  }
-  resize(width2, height2) {
-    const ow = this.width, oh = this.height;
-    this.image = this.ctx.getImageData(0, 0, width2, height2);
-    this.width = width2;
-    this.height = height2;
-    this.ctx.putImageData(this.image, 0, 0);
-    const read_buf = new Uint32Array(width2 * height2);
-    for (let y = 0; y < height2; y++) {
-      read_buf.set(this.read_buffer.subarray(y * oh, y * oh + Math.min(width2, ow)), y * height2);
-    }
-  }
-  clear() {
-    for (let i = 0; i < this.data.length; i += 4) {
-      this.data[i] = 0;
-      this.data[i + 1] = 0;
-      this.data[i + 2] = 0;
-      this.data[i + 3] = 255;
-    }
-  }
-  x_in() {
-    return this.width;
-  }
-  y_in() {
-    return this.height;
-  }
-  x_out(value) {
-    this.x = value;
-  }
-  y_out(value) {
-    this.y = value;
-  }
-  color_in() {
-    if (!this.in_bounds(this.x, this.y)) {
-      return 0;
-    }
-    const i = this.x + this.y * this.width;
-    return this.read_buffer[i];
-  }
-  color_out(color2) {
-    if (!this.in_bounds(this.x, this.y)) {
-      return;
-    }
-    const i = this.x + this.y * this.width;
-    this.data.set(this.short_to_full(color2), i * 4);
-    this.read_buffer[i] = color2;
-    if (!this.buffer_enabled) {
-      this.ctx.putImageData(this.image, 0, 0);
-      if (this.save_buffers) {
-        this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
-      }
-    }
-  }
-  buffer_in() {
-    return this.buffer_enabled;
-  }
-  buffer_out(value) {
-    switch (value) {
-      case 0:
-        {
-          this.ctx.putImageData(this.image, 0, 0);
-          if (this.save_buffers) {
-            this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
-          }
-          this.clear();
-          this.buffer_enabled = 0;
-        }
-        ;
-        break;
-      case 1:
-        {
-          this.buffer_enabled = 1;
-        }
-        break;
-      case 2:
-        {
-          this.ctx.putImageData(this.image, 0, 0);
-          if (this.save_buffers) {
-            this.buffers.push(this.ctx.getImageData(0, 0, this.width, this.height));
-          }
-        }
-        break;
-    }
-  }
-  in_bounds(x, y) {
-    return x >= 0 && x < this.width && y >= 0 && y < this.height;
-  }
-  short_to_full(short, color_mode = this.color_mode) {
-    switch (color_mode) {
-      case 0 /* RGB */:
-        return this.short_to_full_rgb(short);
-      case 6 /* RGB6 */:
-        return this.short_to_full_rgb(short, 6);
-      case 3 /* RGB8 */:
-        return this.short_to_full_rgb(short, 8);
-      case 7 /* RGB12 */:
-        return this.short_to_full_rgb(short, 12);
-      case 4 /* RGB16 */:
-        return this.short_to_full_rgb(short, 16);
-      case 5 /* RGB24 */:
-        return this.short_to_full_rgb(short, 24);
-      case 9 /* RGBI */: {
-        if ((short & 15) == 1) {
-          return [64, 64, 64];
-        }
-        const r = short >>> 3 & 1;
-        const g = short >>> 2 & 1;
-        const b = short >>> 1 & 1;
-        const i = short >>> 0 & 1;
-        return [(r >> i) * 127, (g >> i) * 127, (b >> i) * 127];
-      }
-      case 1 /* Mono */: {
-        const val = Math.max(0, Math.min(255, short));
-        return [val, val, val];
-      }
-      case 2 /* Bin */: {
-        const value = short > 0 ? 255 : 0;
-        return [value, value, value];
-      }
-      case 8 /* PICO8 */: {
-        return pico8[short & 15];
-      }
-      default:
-        return [255, 0, 255];
-    }
-  }
-  short_to_full_rgb(short, bits = this.bits) {
-    bits = Math.min(24, bits);
-    const blue_bits = 0 | bits / 3;
-    const blue_mask = (1 << blue_bits) - 1;
-    const red_bits = 0 | (bits - blue_bits) / 2;
-    const red_mask = (1 << red_bits) - 1;
-    const green_bits = bits - blue_bits - red_bits;
-    const green_mask = (1 << green_bits) - 1;
-    const green_offset = blue_bits;
-    const red_offset = green_offset + green_bits;
-    return [
-      (short >>> red_offset & red_mask) * 255 / red_mask,
-      (short >>> green_offset & green_mask) * 255 / green_mask,
-      (short & blue_mask) * 255 / blue_mask
-    ];
-  }
-  get width() {
-    return this.ctx.canvas.width;
-  }
-  set width(value) {
-    this.ctx.canvas.width = value;
-  }
-  get height() {
-    return this.ctx.canvas.height;
-  }
-  set height(value) {
-    this.ctx.canvas.height = value;
-  }
-};
 
 // src/emulator/devices/controlpad.ts
 var ControlPad = class {
@@ -1582,14 +1388,14 @@ var ControlPad = class {
     this.gamepad = gamepad2;
   }
   xbox_mapping = {
-    0: 1 << Gamepad_Key.A,
-    1: 1 << Gamepad_Key.B,
-    8: 1 << Gamepad_Key.SELECT,
-    9: 1 << Gamepad_Key.START,
-    12: 1 << Gamepad_Key.UP,
-    13: 1 << Gamepad_Key.DOWN,
-    14: 1 << Gamepad_Key.LEFT,
-    15: 1 << Gamepad_Key.RIGHT
+    0: 1 << 0 /* A */,
+    1: 1 << 1 /* B */,
+    8: 1 << 2 /* SELECT */,
+    9: 1 << 3 /* START */,
+    12: 1 << 6 /* UP */,
+    13: 1 << 7 /* DOWN */,
+    14: 1 << 4 /* LEFT */,
+    15: 1 << 5 /* RIGHT */
   };
   info(index) {
     if (index == 0) {
@@ -1682,13 +1488,13 @@ var Pad = class {
     this.pads[index] = void 0;
   }
   inputs = {
-    [IO_Port.GAMEPAD]: () => this.pads[this.selected]?.buttons ?? 0,
-    [IO_Port.AXIS]: () => this.pads[this.selected]?.axis?.(this.axis_index) ?? 0,
-    [IO_Port.GAMEPAD_INFO]: () => this.pads[this.selected]?.info(this.info_index) ?? 0
+    [64 /* GAMEPAD */]: () => this.pads[this.selected]?.buttons ?? 0,
+    [65 /* AXIS */]: () => this.pads[this.selected]?.axis?.(this.axis_index) ?? 0,
+    [66 /* GAMEPAD_INFO */]: () => this.pads[this.selected]?.info(this.info_index) ?? 0
   };
   outputs = {
-    [IO_Port.GAMEPAD]: (i) => this.selected = i,
-    [IO_Port.AXIS]: (i) => this.axis_index = i
+    [64 /* GAMEPAD */]: (i) => this.selected = i,
+    [65 /* AXIS */]: (i) => this.axis_index = i
   };
 };
 
@@ -1737,7 +1543,7 @@ var gl_display_default2 = "#version 300 es\r\nprecision mediump float;\r\nin vec
 
 // src/emulator/devices/gl-display.ts
 var Gl_Display = class {
-  constructor(gl2, color_mode = Color_Mode.PICO8) {
+  constructor(gl2, color_mode = 8 /* PICO8 */) {
     this.color_mode = color_mode;
     this.gl = gl2;
     const { drawingBufferWidth: width2, drawingBufferHeight: height2 } = gl2;
@@ -1806,16 +1612,16 @@ var Gl_Display = class {
   vert_src = gl_display_default2;
   frag_src = gl_display_default;
   inputs = {
-    [IO_Port.COLOR]: this.color_in,
-    [IO_Port.X]: this.x_in,
-    [IO_Port.Y]: this.y_in,
-    [IO_Port.BUFFER]: this.buffer_in
+    [10 /* COLOR */]: this.color_in,
+    [8 /* X */]: this.x_in,
+    [9 /* Y */]: this.y_in,
+    [11 /* BUFFER */]: this.buffer_in
   };
   outputs = {
-    [IO_Port.COLOR]: this.color_out,
-    [IO_Port.X]: this.x_out,
-    [IO_Port.Y]: this.y_out,
-    [IO_Port.BUFFER]: this.buffer_out
+    [10 /* COLOR */]: this.color_out,
+    [8 /* X */]: this.x_out,
+    [9 /* Y */]: this.y_out,
+    [11 /* BUFFER */]: this.buffer_out
   };
   reset() {
     this.x = 0;
@@ -1929,13 +1735,13 @@ var Gl_Display = class {
   }
   update_display() {
     let { gl: gl2, width: width2, height: height2, bytes, uni_mode, color_mode, bits } = this;
-    if (color_mode === Color_Mode.RGB) {
+    if (color_mode === 0 /* RGB */) {
       if (this.bits >= 24) {
-        color_mode = Color_Mode.RGB24;
+        color_mode = 5 /* RGB24 */;
       } else if (this.bits >= 16) {
-        color_mode = Color_Mode.RGB16;
+        color_mode = 4 /* RGB16 */;
       } else {
-        color_mode = Color_Mode.RGB8;
+        color_mode = 3 /* RGB8 */;
       }
     }
     gl2.uniform1ui(uni_mode, color_mode);
@@ -1970,10 +1776,10 @@ var Keyboard = class {
     addEventListener("keyup", this.onkeyup.bind(this));
   }
   inputs = {
-    [IO_Port.KEY]: () => this.down.slice(this.offset, this.offset + this.bits).reduceRight((acc, v) => (acc << 1) + v, 0)
+    [67 /* KEY */]: () => this.down.slice(this.offset, this.offset + this.bits).reduceRight((acc, v) => (acc << 1) + v, 0)
   };
   outputs = {
-    [IO_Port.KEY]: (i) => this.offset = i
+    [67 /* KEY */]: (i) => this.offset = i
   };
   key(k2) {
     return this.keymap[k2];
@@ -2241,19 +2047,19 @@ var Mouse = class {
     removeEventListener("contextmenu", this.oncontext);
   }
   inputs = {
-    [IO_Port.MOUSE_X]: () => this.x,
-    [IO_Port.MOUSE_Y]: () => this.y,
-    [IO_Port.MOUSE_DX]: () => {
+    [68 /* MOUSE_X */]: () => this.x,
+    [69 /* MOUSE_Y */]: () => this.y,
+    [70 /* MOUSE_DX */]: () => {
       const dx = 0 | this.x - this.lastx;
       this.lastx += dx;
       return dx;
     },
-    [IO_Port.MOUSE_DY]: () => {
+    [71 /* MOUSE_DY */]: () => {
       const dy = 0 | this.y - this.lasty;
       this.lasty += dy;
       return dy;
     },
-    [IO_Port.MOUSE_BUTTONS]: () => this.buttons
+    [73 /* MOUSE_BUTTONS */]: () => this.buttons
   };
   outputs = {};
 };
@@ -2264,7 +2070,7 @@ var RNG = class {
     this.bits = bits;
   }
   inputs = {
-    [IO_Port.RNG]: () => 0 | Math.random() * (4294967295 >>> 32 - this.bits)
+    [40 /* RNG */]: () => 0 | Math.random() * (4294967295 >>> 32 - this.bits)
   };
 };
 
@@ -2312,10 +2118,10 @@ var Sound = class {
   constructor() {
   }
   outputs = {
-    [IO_Port.NOTE]: (v) => {
+    [41 /* NOTE */]: (v) => {
       this.note = v;
     },
-    [IO_Port.NLEG]: (v) => {
+    [43 /* NLEG */]: (v) => {
       this.play(this.note, v);
     }
   };
@@ -2370,14 +2176,14 @@ var Storage = class {
     }
   }
   inputs = {
-    [IO_Port.ADDR]: this.address_in,
-    [IO_Port.PAGE]: this.page_in,
-    [IO_Port.BUS]: this.bus_in
+    [32 /* ADDR */]: this.address_in,
+    [34 /* PAGE */]: this.page_in,
+    [33 /* BUS */]: this.bus_in
   };
   outputs = {
-    [IO_Port.ADDR]: this.address_out,
-    [IO_Port.PAGE]: this.page_out,
-    [IO_Port.BUS]: this.bus_out
+    [32 /* ADDR */]: this.address_out,
+    [34 /* PAGE */]: this.page_out,
+    [33 /* BUS */]: this.bus_out
   };
   data;
   address_mask;
@@ -2421,13 +2227,6 @@ function break_flag(flags) {
 }
 
 // src/emulator/emulator.ts
-var Step_Result = /* @__PURE__ */ ((Step_Result2) => {
-  Step_Result2[Step_Result2["Continue"] = 0] = "Continue";
-  Step_Result2[Step_Result2["Halt"] = 1] = "Halt";
-  Step_Result2[Step_Result2["Input"] = 2] = "Input";
-  Step_Result2[Step_Result2["Debug"] = 3] = "Debug";
-  return Step_Result2;
-})(Step_Result || {});
 var Emulator = class {
   constructor(options) {
     this.options = options;
@@ -2472,15 +2271,15 @@ var Emulator = class {
     this._debug_message = void 0;
     this.program = program, this.debug_info = debug_info;
     this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
-    const bits = program.headers[URCL_Header.BITS].value;
+    const bits = program.headers[0 /* BITS */].value;
     const static_data = program.data;
-    const heap = program.headers[URCL_Header.MINHEAP].value;
-    const stack = program.headers[URCL_Header.MINSTACK].value;
-    const registers = program.headers[URCL_Header.MINREG].value + register_count;
-    const run = program.headers[URCL_Header.RUN].value;
+    const heap = program.headers[2 /* MINHEAP */].value;
+    const stack = program.headers[4 /* MINSTACK */].value;
+    const registers = program.headers[1 /* MINREG */].value + register_count;
+    const run = program.headers[3 /* RUN */].value;
     this.heap_size = heap;
     this.debug_reached = false;
-    if (run === Header_Run.RAM) {
+    if (run === 1 /* RAM */) {
       throw new Error("emulator currently doesn't support running in ram");
     }
     let WordArray;
@@ -2549,14 +2348,14 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     return this.pc_full;
   }
   set pc(value) {
-    this.registers[Register.PC] = value;
+    this.registers[0 /* PC */] = value;
     this.pc_full = value;
   }
   get stack_ptr() {
-    return this.registers[Register.SP];
+    return this.registers[1 /* SP */];
   }
   set stack_ptr(value) {
-    this.registers[Register.SP] = value;
+    this.registers[1 /* SP */] = value;
   }
   bits = 8;
   device_inputs = {};
@@ -2611,8 +2410,8 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     try {
       const device = this.device_inputs[port];
       if (device === void 0) {
-        if (port === IO_Port.SUPPORTED) {
-          this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === IO_Port.SUPPORTED ? 1 : 0;
+        if (port === 5 /* SUPPORTED */) {
+          this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === 5 /* SUPPORTED */ ? 1 : 0;
           return false;
         }
         if (this.ins[port] === void 0) {
@@ -2621,19 +2420,19 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         this.ins[port] = 1;
         return false;
       }
-      if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+      if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
         this.debug(`Reading from Port ${port} (${IO_Port[port]})`);
       }
       const res = device(this.finish_step_in.bind(this, port));
       if (res === void 0) {
-        if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+        if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]})`);
         }
         this.pc--;
         return true;
       } else {
         this.a = res;
-        if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+        if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
         }
         return false;
@@ -2647,7 +2446,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     try {
       const device = this.device_outputs[port];
       if (device === void 0) {
-        if (port === IO_Port.SUPPORTED) {
+        if (port === 5 /* SUPPORTED */) {
           this.supported = value;
           return;
         }
@@ -2657,7 +2456,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         }
         return;
       }
-      if (this.debug_info.port_breaks[port] & Break.ONWRITE) {
+      if (this.debug_info.port_breaks[port] & 2 /* ONWRITE */) {
         let char_str = "";
         try {
           const char = JSON.stringify(String.fromCodePoint(value));
@@ -2724,7 +2523,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     }
     this.pc_counters[pc]++;
     const opcode = this.program.opcodes[pc];
-    if (opcode === Opcode.HLT) {
+    if (opcode === 36 /* HLT */) {
       this.pc--;
       return 1 /* Halt */;
     }
@@ -2735,7 +2534,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     const op_types = this.program.operant_prims[pc];
     const op_values = this.program.operant_values[pc];
     const length = op_values.length;
-    if (length >= 1 && op !== Operant_Operation.SET)
+    if (length >= 1 && op !== 0 /* SET */)
       this.a = this.read(op_types[0], op_values[0]);
     if (length >= 2)
       this.b = this.read(op_types[1], op_values[1]);
@@ -2744,7 +2543,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (func(this)) {
       return 2 /* Input */;
     }
-    if (length >= 1 && op === Operant_Operation.SET)
+    if (length >= 1 && op === 0 /* SET */)
       this.write(op_types[0], op_values[0], this.a);
     if (this._debug_message !== void 0) {
       return 3 /* Debug */;
@@ -2755,7 +2554,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (addr >= this.memory.length) {
       this.error(`Heap overflow on store: 0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
     }
-    if (this.debug_info.memory_breaks[addr] & Break.ONWRITE) {
+    if (this.debug_info.memory_breaks[addr] & 2 /* ONWRITE */) {
       this.debug(`Written memory[0x${addr.toString(16)}] which was 0x${this.memory[addr].toString(16)} to 0x${value.toString(16)}`);
     }
     this.memory[addr] = value;
@@ -2764,7 +2563,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (addr >= this.memory.length) {
       this.error(`Heap overflow on load: #0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
     }
-    if (this.debug_info.memory_breaks[addr] & Break.ONREAD) {
+    if (this.debug_info.memory_breaks[addr] & 1 /* ONREAD */) {
       this.debug(`Read memory[0x${addr.toString(16)}] = 0x${this.memory[addr].toString(16)}`);
     }
     return this.memory[addr];
@@ -2778,15 +2577,15 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   write(target, index, value) {
     switch (target) {
-      case Operant_Prim.Reg:
+      case 0 /* Reg */:
         {
-          if (this.debug_info.register_breaks[index] & Break.ONWRITE) {
+          if (this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
             this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to 0x${value.toString(16)}`);
           }
           this.registers[index] = value;
         }
         return;
-      case Operant_Prim.Imm:
+      case 1 /* Imm */:
         return;
       default:
         this.error(`Unknown operant target ${target}`);
@@ -2794,10 +2593,10 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   read(source, index) {
     switch (source) {
-      case Operant_Prim.Imm:
+      case 1 /* Imm */:
         return index;
-      case Operant_Prim.Reg: {
-        if (this.debug_info.register_breaks[index] & Break.ONREAD) {
+      case 0 /* Reg */: {
+        if (this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
           this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
         }
         return this.registers[index];
@@ -3000,7 +2799,7 @@ function parse(source, options = {}) {
       let i = 0;
       while (i < value_strs.length) {
         const res = parse_operant(() => value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, [], []);
-        if (res?.[0] !== Operant_Type.String) {
+        if (res?.[0] !== 6 /* String */) {
           out.data.push(res ? res[1] : -1);
         }
       }
@@ -3029,7 +2828,7 @@ function parse(source, options = {}) {
       let i = 0;
       while (i < parts.length) {
         const res = parse_operant(() => parts[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
-        if (res?.[0] !== Operant_Type.String) {
+        if (res?.[0] !== 6 /* String */) {
           out.data.push(res ? res[1] : -1);
         }
       }
@@ -3047,12 +2846,12 @@ function parse(source, options = {}) {
         }
       }
       if (targets.length == 0) {
-        flag_arr.push(Break.ONREAD);
+        flag_arr.push(1 /* ONREAD */);
         out.program_breaks[inst_i] = break_flag(flag_arr);
         continue;
       }
       if (flag_arr.length == 0) {
-        flag_arr.push(Break.ONREAD, Break.ONWRITE);
+        flag_arr.push(1 /* ONREAD */, 2 /* ONWRITE */);
       }
       const flags = break_flag(flag_arr);
       for (let i = 0; i < targets.length; i++) {
@@ -3130,11 +2929,11 @@ function parse(source, options = {}) {
           default:
             {
               if (target.toUpperCase() === "PC") {
-                out.register_breaks[Register.PC] = flags;
+                out.register_breaks[0 /* PC */] = flags;
                 continue;
               }
               if (target.toUpperCase() === "SP") {
-                out.register_breaks[Register.SP] = flags;
+                out.register_breaks[1 /* SP */] = flags;
                 continue;
               }
               out.warnings.push(warn(line_nr, `Unknown debug target/flag, expected register, heap location or label or one of [${enum_strings(Break)}]`));
@@ -3235,7 +3034,7 @@ function parse_instructions(line_nr, inst_i, out, errors, warnings) {
   const strings = out.operant_strings[inst_i];
   while (i < strings.length) {
     const [type, value] = parse_operant(() => strings[i++], line_nr, inst_i, out.labels, out.constants, out.data, errors, warnings) ?? [];
-    if (type === Operant_Type.String) {
+    if (type === 6 /* String */) {
       errors.push(warn(line_nr, "Strings are not allowed in instructions"));
     } else if (type !== void 0) {
       types.push(type);
@@ -3296,11 +3095,11 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
   switch (operant.toUpperCase()) {
     case "R0":
     case "$0":
-      return [Operant_Type.Imm, 0];
+      return [1 /* Imm */, 0];
     case "PC":
-      return [Operant_Type.Reg, Register.PC];
+      return [0 /* Reg */, 0 /* PC */];
     case "SP":
-      return [Operant_Type.Reg, Register.SP];
+      return [0 /* Reg */, 1 /* SP */];
   }
   switch (operant[0]) {
     case ".": {
@@ -3311,10 +3110,10 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
       }
       const { type, index } = label;
       if (type === 0 /* Inst */) {
-        return [Operant_Type.Label, index];
+        return [3 /* Label */, index];
       }
       if (type === 1 /* DW */) {
-        return [Operant_Type.Data_Label, index];
+        return [4 /* Data_Label */, index];
       }
     }
     case "~": {
@@ -3323,7 +3122,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
         errors.push(warn(line_nr, `Invalid relative address ${operant}`));
         return void 0;
       }
-      return [Operant_Type.Label, value + inst_i];
+      return [3 /* Label */, value + inst_i];
     }
     case "R":
     case "r":
@@ -3333,7 +3132,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
         errors.push(warn(line_nr, `Invalid register ${operant}`));
         return void 0;
       }
-      return [Operant_Type.Reg, value + register_count - 1];
+      return [0 /* Reg */, value + register_count - 1];
     }
     case "M":
     case "m":
@@ -3343,11 +3142,11 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
         errors.push(warn(line_nr, `Invalid memory address ${operant}`));
         return void 0;
       }
-      return [Operant_Type.Memory, value];
+      return [2 /* Memory */, value];
     }
     case "%": {
       const port = resolve_port(operant, line_nr, errors) ?? NaN;
-      return [Operant_Type.Imm, port];
+      return [1 /* Imm */, port];
     }
     case "'": {
       let char_lit;
@@ -3361,7 +3160,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
   ${e}`));
         return void 0;
       }
-      return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
+      return [1 /* Imm */, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
     }
     case '"': {
       let i = 1;
@@ -3380,12 +3179,12 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
           for (let i2 = 0; i2 < string.length; i2++) {
             data.push(string.codePointAt(i2) ?? 0);
           }
-          return [Operant_Type.String, value];
+          return [6 /* String */, value];
         }
         const next = get_operant();
         if (next === void 0) {
           errors.push(warn(line_nr, `missing end of string`));
-          return [Operant_Type.String, value];
+          return [6 /* String */, value];
         }
         operant += " " + next;
       }
@@ -3398,7 +3197,7 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
         errors.push(warn(line_nr, `Unkown Compiler Constant ${operant}`));
         return void 0;
       }
-      return [Operant_Type.Constant, constant];
+      return [5 /* Constant */, constant];
     }
     default: {
       if (operant.endsWith("f32")) {
@@ -3407,21 +3206,21 @@ function parse_operant(get_operant, line_nr, inst_i, labels, macro_constants, da
           errors.push(warn(line_nr, `Invalid immediate float ${operant}`));
           return void 0;
         }
-        return [Operant_Type.Imm, value];
+        return [1 /* Imm */, value];
       } else if (operant.endsWith("f16")) {
         const value = my_parse_float(operant);
         if (value === void 0) {
           errors.push(warn(line_nr, `Invalid immediate float ${operant}`));
           return void 0;
         }
-        return [Operant_Type.Imm, f16_encode(value)];
+        return [1 /* Imm */, f16_encode(value)];
       } else {
         const value = my_parse_int(operant);
         if (!Number.isInteger(value)) {
           errors.push(warn(line_nr, `Invalid immediate int ${operant}`));
           return void 0;
         }
-        return [Operant_Type.Imm, value];
+        return [1 /* Imm */, value];
       }
     }
   }
@@ -3719,7 +3518,7 @@ function frame() {
         const its = Math.min(max_its, 0 | dt * clock_speed / 1e3);
         const [res, steps] = emulator.burst(its, 16);
         process_step_result(res, steps);
-        if (its === max_its || res === Step_Result.Continue && steps !== its) {
+        if (its === max_its || res === 0 /* Continue */ && steps !== its) {
           last_step = start_time;
           clock_speed_output.value = `${format_int(clock_speed)}Hz slowdown to ${format_int(steps * 1e3 / 16)}Hz, executed ${format_int(clock_count)} instructions`;
         } else {
@@ -3750,7 +3549,7 @@ function process_step_result(result, steps) {
   input = false;
   debug_output_element.innerText = "";
   switch (result) {
-    case Step_Result.Continue:
+    case 0 /* Continue */:
       {
         if (running) {
           animation_frame = requestAnimationFrame(frame);
@@ -3760,14 +3559,14 @@ function process_step_result(result, steps) {
         }
       }
       break;
-    case Step_Result.Input:
+    case 2 /* Input */:
       {
         step_button.disabled = true;
         pause_button.disabled = false;
         input = true;
       }
       break;
-    case Step_Result.Halt:
+    case 1 /* Halt */:
       {
         output_element.innerText += "Program halted";
         step_button.disabled = true;
@@ -3776,7 +3575,7 @@ function process_step_result(result, steps) {
         running = false;
       }
       break;
-    case Step_Result.Debug:
+    case 3 /* Debug */:
       {
         if (running) {
           pause();
