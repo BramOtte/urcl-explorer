@@ -77,6 +77,14 @@ export class Scroll_Out extends HTMLElement {
             this.lines.push("");
         }
         const full_line = this.lines[this.lines.length-1] += this.buf.substring(j, this.buf.length);
+        const clear_escape = "\x1b[2J";
+        const escape_index = full_line.lastIndexOf(clear_escape);
+        if (escape_index >= 0) {
+            const escaped = full_line.substring(escape_index + clear_escape.length);
+            this.lines = [escaped];
+            this.size = escaped.length;
+        }
+
         this.text_width = Math.max(full_line.length, this.text_width);
         this.size += this.buf.length-j;
         this.buf = "";

@@ -1070,10 +1070,10 @@ var Scroll_Out = class extends HTMLElement {
       const line = this.buf.substring(j, i2 - 1);
       const full_line2 = this.lines[this.lines.length - 1] += line;
       this.text_width = Math.max(full_line2.length, this.text_width);
-      const clear_escape = "\x1B[2J";
-      const escape_index = full_line2.lastIndexOf(clear_escape);
-      if (escape_index >= 0) {
-        const escaped = full_line2.substring(escape_index + clear_escape.length);
+      const clear_escape2 = "\x1B[2J";
+      const escape_index2 = full_line2.lastIndexOf(clear_escape2);
+      if (escape_index2 >= 0) {
+        const escaped = full_line2.substring(escape_index2 + clear_escape2.length);
         this.lines = [escaped];
         this.size = escaped.length;
       }
@@ -1081,6 +1081,13 @@ var Scroll_Out = class extends HTMLElement {
       this.lines.push("");
     }
     const full_line = this.lines[this.lines.length - 1] += this.buf.substring(j, this.buf.length);
+    const clear_escape = "\x1B[2J";
+    const escape_index = full_line.lastIndexOf(clear_escape);
+    if (escape_index >= 0) {
+      const escaped = full_line.substring(escape_index + clear_escape.length);
+      this.lines = [escaped];
+      this.size = escaped.length;
+    }
     this.text_width = Math.max(full_line.length, this.text_width);
     this.size += this.buf.length - j;
     this.buf = "";
