@@ -67,6 +67,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const run = program.headers[URCL_Header.RUN].value;
         this.heap_size = heap;
         this.debug_reached = false;
+        this.pc = 0;
 
         this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
         this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;

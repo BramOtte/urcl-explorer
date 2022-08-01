@@ -2294,6 +2294,7 @@ var Emulator = class {
     const run = program.headers[3 /* RUN */].value;
     this.heap_size = heap;
     this.debug_reached = false;
+    this.pc = 0;
     this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
     this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
     this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
