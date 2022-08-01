@@ -3505,12 +3505,20 @@ function compile_and_reset() {
       storage_device.set_bytes(bytes);
       storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
+    const bits = emulator.bits;
+    const total_register_count = emulator.registers.length;
+    const memory_size = emulator.memory.length;
+    const instruction_count = emulator.program.opcodes.length;
     output_element.innerText += `
 compilation done
-bits: ${emulator.bits}
-register-count: ${emulator.registers.length}
-memory-size: ${emulator.memory.length}
+bits: ${bits} /8
+register-count: ${total_register_count} /12
+memory-size: ${memory_size} /256
+instruction-count: ${instruction_count} /256
 `;
+    if (bits == 8 && total_register_count <= 10 + register_count && memory_size <= 256) {
+      output_element.innerText += "Program follows competition limitations \u{1F38A}\n";
+    }
     if (animation_frame) {
       cancelAnimationFrame(animation_frame);
     }
