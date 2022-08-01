@@ -113,7 +113,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
         if (split_instruction(line, line_nr, inst_i, out, out.errors)){
             if (last_label && labeled === Labeled.DW){
-                out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
+                // out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
             }
             labeled = Labeled.INST;
             inst_i++; continue;
@@ -151,7 +151,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             }
             if (last_label){
                 if (labeled === Labeled.INST){
-                    out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
+                    // out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
                 }
                 last_label.type = Label_Type.DW;
                 last_label.index = out.data.length;

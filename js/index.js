@@ -1,3 +1,5 @@
+"use strict";
+
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -2757,7 +2759,6 @@ function parse(source, options = {}) {
     }
     if (split_instruction(line, line_nr, inst_i, out, out.errors)) {
       if (last_label && labeled === 2 /* DW */) {
-        out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
       }
       labeled = 1 /* INST */;
       inst_i++;
@@ -2800,7 +2801,6 @@ function parse(source, options = {}) {
       }
       if (last_label) {
         if (labeled === 1 /* INST */) {
-          out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
         }
         last_label.type = 1 /* DW */;
         last_label.index = out.data.length;
