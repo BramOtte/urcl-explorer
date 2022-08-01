@@ -1,0 +1,29 @@
+RUN ROM
+BITS == 8
+MINHEAP 100
+MINSTACK 28
+MINREG 10
+
+// warning: remove the srcurl=... in the addressbar to make sure you don't lose your changes on reload
+// it is also adviced to make copies of your code as the code you write here is only stored in your browser
+// also be carefull when cliking the example links
+// good luck!
+
+.main_loop
+    OUT %WAIT 0 // set the time to wait for to be the next frame
+    IN r1 %GAMEPAD
+    OUT %NUMB r1
+    OUT %TEXT '\n'
+
+    // game logic can go here
+
+
+    IN r0 %WAIT // wait until next frame
+
+    // clear the console
+    OUT %TEXT 0x1b
+    OUT %TEXT '['
+    OUT %TEXT '2'
+    OUT %TEXT 'J'
+
+    JMP .main_loop
