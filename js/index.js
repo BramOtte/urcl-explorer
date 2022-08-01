@@ -2269,6 +2269,10 @@ var Emulator = class {
     return msg;
   }
   heap_size = 0;
+  do_debug_memory = false;
+  do_debug_registers = false;
+  do_debug_ports = false;
+  do_debug_program = false;
   load_program(program, debug_info) {
     this._debug_message = void 0;
     this.program = program, this.debug_info = debug_info;
@@ -2281,6 +2285,10 @@ var Emulator = class {
     const run = program.headers[3 /* RUN */].value;
     this.heap_size = heap;
     this.debug_reached = false;
+    this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
+    this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
+    this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
+    this.do_debug_program = Object.keys(debug_info.program_breaks).length > 0;
     if (run === 1 /* RAM */) {
       throw new Error("emulator currently doesn't support running in ram");
     }
@@ -2422,19 +2430,19 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         this.ins[port] = 1;
         return false;
       }
-      if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
+      if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
         this.debug(`Reading from Port ${port} (${IO_Port[port]})`);
       }
       const res = device(this.finish_step_in.bind(this, port));
       if (res === void 0) {
-        if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
+        if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]})`);
         }
         this.pc--;
         return true;
       } else {
         this.a = res;
-        if (this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
+        if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
         }
         return false;
@@ -2458,7 +2466,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         }
         return;
       }
-      if (this.debug_info.port_breaks[port] & 2 /* ONWRITE */) {
+      if (this.do_debug_ports && this.debug_info.port_breaks[port] & 2 /* ONWRITE */) {
         let char_str = "";
         try {
           const char = JSON.stringify(String.fromCodePoint(value));
@@ -2513,7 +2521,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   debug_reached = false;
   step() {
     const pc = this.pc++;
-    if (this.debug_info.program_breaks[pc] && !this.debug_reached) {
+    if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached) {
       this.debug_reached = true;
       this.debug(`Reached @DEBUG Before:`);
       this.pc--;
@@ -2556,7 +2564,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (addr >= this.memory.length) {
       this.error(`Heap overflow on store: 0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
     }
-    if (this.debug_info.memory_breaks[addr] & 2 /* ONWRITE */) {
+    if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & 2 /* ONWRITE */) {
       this.debug(`Written memory[0x${addr.toString(16)}] which was 0x${this.memory[addr].toString(16)} to 0x${value.toString(16)}`);
     }
     this.memory[addr] = value;
@@ -2565,7 +2573,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (addr >= this.memory.length) {
       this.error(`Heap overflow on load: #0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
     }
-    if (this.debug_info.memory_breaks[addr] & 1 /* ONREAD */) {
+    if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & 1 /* ONREAD */) {
       this.debug(`Read memory[0x${addr.toString(16)}] = 0x${this.memory[addr].toString(16)}`);
     }
     return this.memory[addr];
@@ -2581,7 +2589,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     switch (target) {
       case 0 /* Reg */:
         {
-          if (this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
+          if (this.do_debug_registers && this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
             this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to 0x${value.toString(16)}`);
           }
           this.registers[index] = value;
@@ -2598,7 +2606,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
       case 1 /* Imm */:
         return index;
       case 0 /* Reg */: {
-        if (this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
+        if (this.do_debug_registers && this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
           this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
         }
         return this.registers[index];
