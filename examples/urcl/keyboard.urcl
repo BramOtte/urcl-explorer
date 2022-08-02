@@ -1,6 +1,7 @@
-// output might not be visible
-// make sure you have the console scrolled down
-BITS == 16
+//Made by Verlio as a demonstration of the key port
+//Uses only US QWERTY layout mappings for simplicity sake
+
+BITS >= 10
 MINREG 4
 @DEFINE @FrameTime 100
 //Keyboard thingy mabober
@@ -8,7 +9,6 @@ MINREG 4
 IMM R1 0 //starting pos
 
 .loop1
-//OUT %NUMB R1
 OUT %KEY R1
 IN R2 %KEY
 .loop2
@@ -16,22 +16,17 @@ BOD .KeyPressed R2
 .KeyPressedRet
 RSH R2 R2
 INC R1 R1
-AND R3 R1 15
+AND R3 R1 15a
 BNZ .loop2 R3
 BRL .loop1 R1 0xE7
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
-OUT %TEXT 0xA
+
 OUT %WAIT @FrameTime
 IN R0 %WAIT
 IMM R1 0
+OUT %TEXT 0x1b
+OUT %TEXT '['
+OUT %TEXT '2'
+OUT %TEXT 'J'
 JMP .loop1
 
 .KeyPressed
@@ -120,43 +115,43 @@ DW .Char_Slash
 DW .Char_Caps
 
 .Char_Zero
-DW '0' 0
+DW ['0' 0]
 .Char_Enter
-DW "ENTER" 0
+DW ["ENTER" 0]
 .Char_Escape
-DW "ESC" 0
+DW ["ESC" 0]
 .Char_Backspace
-DW "BKSP" 0
+DW ["BKSP" 0]
 .Char_Tab
-DW "TAB" 0
+DW ["TAB" 0]
 .Char_Spacebar
-DW "SB" 0
+DW ["SB" 0]
 .Char_Minus
-DW '-' 0
+DW ['-' 0]
 .Char_Equals
-DW '=' 0
+DW ['=' 0]
 .Char_LeftBrace
 DW [0x5B 0]
 .Char_RightBrace
-DW ']' 0
+DW [']' 0]
 .Char_Backslash
-DW '\\' 0
+DW ['\\' 0]
 .Char_HashTilde
-DW '#' 0
+DW ['#' 0]
 .Char_Semicolon
-DW ';' 0
+DW [';' 0]
 .Char_Apostrophe
-DW 0x27 0
+DW [0x27 0]
 .Char_Grave
-DW '`' 0
+DW ['`' 0]
 .Char_Comma
-DW ',' 0
+DW [',' 0]
 .Char_Period
-DW '.' 0
+DW ['.' 0]
 .Char_Slash
-DW '/' 0
+DW ['/' 0]
 .Char_Caps
-DW "CAPS" 0
+DW ["CAPS" 0]
 
 .Table2
 DW .Char_PrintScreen
@@ -195,73 +190,73 @@ DW .Char_Power
 DW .Char_NumEquals
 
 .Char_PrintScreen
-DW "PRTSC" 0
+DW ["PRTSC" 0]
 .Char_ScrollLock
-DW "SCRLK" 0
+DW ["SCRLK" 0]
 .Char_Pause
-DW "PAUSE" 0
+DW ["PAUSE" 0]
 .Char_Insert
-DW "INS" 0
+DW ["INS" 0]
 .Char_Home
-DW "HOME" 0
+DW ["HOME" 0]
 .Char_PageUp
-DW "PGUP" 0
+DW ["PGUP" 0]
 .Char_Delete
-DW "DEL" 0
+DW ["DEL" 0]
 .Char_End
-DW "END" 0
+DW ["END" 0]
 .Char_PageDown
-DW "PGDOWN" 0
+DW ["PGDOWN" 0]
 .Char_Right
-DW "RIGHT" 0
+DW ["RIGHT" 0]
 .Char_Left
-DW "LEFT" 0
+DW ["LEFT" 0]
 .Char_Down
-DW "DOWN" 0
+DW ["DOWN" 0]
 .Char_Up
-DW "UP" 0
+DW ["UP" 0]
 .Char_NumLock
-DW "NUMLK" 0
+DW ["NUMLK" 0]
 .Char_NumSlash
-DW "NUM/" 0
+DW ["NUM/" 0]
 .Char_NumMult
-DW "NUM*" 0
+DW ["NUM*" 0]
 .Char_NumMinus
-DW "NUM-" 0
+DW ["NUM-" 0]
 .Char_NumPlus
-DW "NUM+" 0
+DW ["NUM+" 0]
 .Char_NumEnter
-DW "NUMENTER" 0
+DW ["NUMENTER" 0]
 .Char_Num1
-DW "NUM1" 0
+DW ["NUM1" 0]
 .Char_Num2
-DW "NUM2" 0
+DW ["NUM2" 0]
 .Char_Num3
-DW "NUM3" 0
+DW ["NUM3" 0]
 .Char_Num4
-DW "NUM4" 0
+DW ["NUM4" 0]
 .Char_Num5
-DW "NUM5" 0
+DW ["NUM5" 0]
 .Char_Num6
-DW "NUM6" 0
+DW ["NUM6" 0]
 .Char_Num7
-DW "NUM7" 0
+DW ["NUM7" 0]
 .Char_Num8
-DW "NUM8" 0
+DW ["NUM8" 0]
 .Char_Num9
-DW "NUM9" 0
+DW ["NUM9" 0]
 .Char_Num0
-DW "NUM0" 0
+DW ["NUM0" 0]
 .Char_NumDot
-DW "NUM." 0
+DW ["NUM." 0]
 .Char_Compose
-DW "COMPOSE" 0
+DW ["COMPOSE" 0]
 .Char_102ndKey
-DW "ISO\\" 0
+DW ["ISO\\" 0]
 .Char_Power
-DW "POWER" 0
+DW ["POWER" 0]
 .Char_NumEquals
-DW "NUM=" 0
+DW ["NUM=" 0]
 
 .Table3
 DW .Char_Execute
@@ -382,200 +377,200 @@ DW .Char_RightAlt
 DW .Char_RightMeta
 
 .Char_Execute
-DW "EXEC" 0
+DW ["EXEC" 0]
 .Char_Help
-DW "HELP" 0
+DW ["HELP" 0]
 .Char_Menu
-DW "MENU" 0
+DW ["MENU" 0]
 .Char_Select
-DW "SEL" 0
+DW ["SEL" 0]
 .Char_Stop
-DW "STOP" 0
+DW ["STOP" 0]
 .Char_Again
-DW "AGAIN" 0
+DW ["AGAIN" 0]
 .Char_Undo
-DW "UNDO" 0
+DW ["UNDO" 0]
 .Char_Cut
-DW "CUT" 0
+DW ["CUT" 0]
 .Char_Copy
-DW "COPY" 0
+DW ["COPY" 0]
 .Char_Paste
-DW "PASTE" 0
+DW ["PASTE" 0]
 .Char_Find
-DW "FIND" 0
+DW ["FIND" 0]
 .Char_Mute
-DW "MUTE" 0
+DW ["MUTE" 0]
 .Char_VolumeUp
-DW "VOLUP" 0
+DW ["VOLUP" 0]
 .Char_VolumeDown
-DW "VOLDOWN" 0
+DW ["VOLDOWN" 0]
 .Char_NumComma
-DW "NUM," 0
+DW ["NUM," 0]
 .Char_International1
-DW "RO" 0
+DW ["RO" 0]
 .Char_International2
-DW "KANA" 0
+DW ["KANA" 0]
 .Char_International3
-DW "YEN" 0
+DW ["YEN" 0]
 .Char_International4
-DW "HENKAN" 0
+DW ["HENKAN" 0]
 .Char_International5
-DW "MUHENKAN" 0
+DW ["MUHENKAN" 0]
 .Char_International6
-DW "INT6" 0
+DW ["INT6" 0]
 .Char_International7
-DW "INT7" 0
+DW ["INT7" 0]
 .Char_International8
-DW "INT8" 0
+DW ["INT8" 0]
 .Char_International9
-DW "INT9" 0
+DW ["INT9" 0]
 .Char_Lang1
-DW "HANGUL" 0
+DW ["HANGUL" 0]
 .Char_Lang2
-DW "HANJA" 0
+DW ["HANJA" 0]
 .Char_Lang3
-DW "LANG3" 0
+DW ["LANG3" 0]
 .Char_Lang4
-DW "LANG4" 0
+DW ["LANG4" 0]
 .Char_Lang5
-DW "LANG5" 0
+DW ["LANG5" 0]
 .Char_Lang6
-DW "LANG6" 0
+DW ["LANG6" 0]
 .Char_Lang7
-DW "LANG7" 0
+DW ["LANG7" 0]
 .Char_Lang8
-DW "LANG8" 0
+DW ["LANG8" 0]
 .Char_Lang9
-DW "LANG9" 0
+DW ["LANG9" 0]
 .Char_AlternateErase
-DW "ALTERASE" 0
+DW ["ALTERASE" 0]
 .Char_SysReq
-DW "SYSREQ" 0
+DW ["SYSREQ" 0]
 .Char_Cancel
-DW "CANCEL" 0
+DW ["CANCEL" 0]
 .Char_Clear
-DW "CLEAR" 0
+DW ["CLEAR" 0]
 .Char_Prior
-DW "PRIOR" 0
+DW ["PRIOR" 0]
 .Char_Return
-DW "RET" 0
+DW ["RET" 0]
 .Char_Separator
-DW "SEPARATOR" 0
+DW ["SEPARATOR" 0]
 .Char_Out
-DW "OUT" 0
+DW ["OUT" 0]
 .Char_Oper
-DW "OPER" 0
+DW ["OPER" 0]
 .Char_CrSel
-DW "CRSEL" 0
+DW ["CRSEL" 0]
 .Char_ExSel
-DW "EXSEL" 0
+DW ["EXSEL" 0]
 .Error
-DW "ERROR" 0
+DW ["ERROR" 0]
 .Char_Num00
-DW "NUM00" 0
+DW ["NUM00" 0]
 .Char_Num000
-DW "NUM000" 0
+DW ["NUM000" 0]
 .Char_ThousandsSeparator
-DW "THOUSEP" 0
+DW ["THOUSEP" 0]
 .Char_DecimalSeparator
-DW "DECSEP" 0
+DW ["DECSEP" 0]
 .Char_CurrencyUnit
-DW "CUR" 0
+DW ["CUR" 0]
 .Char_CurrencySubunit
-DW "SUBCUR" 0
+DW ["SUBCUR" 0]
 .Char_NumLeftParen
-DW "NUM(" 0
+DW ["NUM(" 0]
 .Char_NumRightParen
-DW "NUM)" 0
+DW ["NUM)" 0]
 .Char_NumLeftCurlyBracket
-DW "NUM{" 0
+DW ["NUM{" 0]
 .Char_NumRightCurlyBracket
-DW "NUM}" 0
+DW ["NUM}" 0]
 .Char_NumTab
-DW "NUMTAB" 0
+DW ["NUMTAB" 0]
 .Char_NumBackspace
-DW "NUMBKSP" 0
+DW ["NUMBKSP" 0]
 .Char_NumA
-DW "NUMA" 0
+DW ["NUMA" 0]
 .Char_NumB
-DW "NUMB" 0
+DW ["NUMB" 0]
 .Char_NumC
-DW "NUMC" 0
+DW ["NUMC" 0]
 .Char_NumD
-DW "NUMD" 0
+DW ["NUMD" 0]
 .Char_NumE
-DW "NUME" 0
+DW ["NUME" 0]
 .Char_NumF
-DW "NUMF" 0
+DW ["NUMF" 0]
 .Char_NumXOR
-DW "NUMXOR" 0
+DW ["NUMXOR" 0]
 .Char_NumExponent
-DW "NUM^" 0
+DW ["NUM^" 0]
 .Char_NumPercent
-DW "NUM%" 0
+DW ["NUM%" 0]
 .Char_NumLessThan
-DW "NUM<" 0
+DW ["NUM<" 0]
 .Char_NumGreaterThan
-DW "NUM>" 0
+DW ["NUM>" 0]
 .Char_NumAND
-DW "NUM&" 0
+DW ["NUM&" 0]
 .Char_NumLogicalAND
-DW "NUM&&" 0
+DW ["NUM&&" 0]
 .Char_NumOR
-DW "NUM|" 0
+DW ["NUM|" 0]
 .Char_NumLogicalOR
-DW "NUM||" 0
+DW ["NUM||" 0]
 .Char_NumColon
-DW "NUM:" 0
+DW ["NUM:" 0]
 .Char_NumHash
-DW "NUM#" 0
+DW ["NUM#" 0]
 .Char_NumSpace
-DW "NUMSP" 0
+DW ["NUMSP" 0]
 .Char_NumAt
-DW "NUM@" 0
+DW ["NUM@" 0]
 .Char_NumNOT
-DW "NUM!" 0
+DW ["NUM!" 0]
 .Char_NumMemStore
-DW "NUMMEMSTR" 0
+DW ["NUMMEMSTR" 0]
 .Char_NumMemRecall
-DW "NUMMEMLOD" 0
+DW ["NUMMEMLOD" 0]
 .Char_NumMemClear
-DW "NUMMEMCLR" 0
+DW ["NUMMEMCLR" 0]
 .Char_NumMemAdd
-DW "NUMMEM+" 0
+DW ["NUMMEM+" 0]
 .Char_NumMemSub
-DW "NUMMEM-" 0
+DW ["NUMMEM-" 0]
 .Char_NumMemMult
-DW "NUMMEM*" 0
+DW ["NUMMEM*" 0]
 .Char_NumMemDiv
-DW "NUMMEM/" 0
+DW ["NUMMEM/" 0]
 .Char_NumNegate
-DW "NUM+/-" 0
+DW ["NUM+/-" 0]
 .Char_NumClear
-DW "NUMCLR" 0
+DW ["NUMCLR" 0]
 .Char_NumClearEntry
-DW "NUMCLRETRY" 0
+DW ["NUMCLRETRY" 0]
 .Char_NumBinary
-DW "NUMBIN" 0
+DW ["NUMBIN" 0]
 .Char_NumOctal
-DW "NUMOCT" 0
+DW ["NUMOCT" 0]
 .Char_NumDecimal
-DW "NUMDEC" 0
+DW ["NUMDEC" 0]
 .Char_NumHexadecimal
-DW "NUMHEX" 0
+DW ["NUMHEX" 0]
 .Char_LeftCtrl
-DW "LCTRL" 0
+DW ["LCTRL" 0]
 .Char_LeftShift
-DW "LSHFT" 0
+DW ["LSHFT" 0]
 .Char_LeftAlt
-DW "LALT" 0
+DW ["LALT" 0]
 .Char_LeftMeta
-DW "LMETA" 0
+DW ["LMETA" 0]
 .Char_RightCtrl
-DW "RCTRL" 0
+DW ["RCTRL" 0]
 .Char_RightShift
-DW "RSHFT" 0
+DW ["RSHFT" 0]
 .Char_RightAlt
-DW "RALT" 0
+DW ["RALT" 0]
 .Char_RightMeta
-DW "RMETA" 0
+DW ["RMETA" 0]
