@@ -16,7 +16,7 @@ BOD .KeyPressed R2
 .KeyPressedRet
 RSH R2 R2
 INC R1 R1
-AND R3 R1 15a
+AND R3 R1 15
 BNZ .loop2 R3
 BRL .loop1 R1 0xE7
 
