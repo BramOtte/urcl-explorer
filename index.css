@@ -68,7 +68,7 @@ textarea {
 
 #stdout {
   height: 40ch;
-  width: 20ch;
+  width: 40ch;
   overflow: scroll;
   background: #000;
   color: #FFF;
