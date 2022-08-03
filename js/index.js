@@ -2413,7 +2413,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     return 1 << this.bits - 1;
   }
   push(value) {
-    if (this.stack_ptr <= this.heap_size) {
+    if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
       this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
     }
     this.memory[--this.stack_ptr] = value;
