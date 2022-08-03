@@ -194,7 +194,8 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size){
             this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
         }
-        this.memory[--this.stack_ptr] = value;
+        this.stack_ptr -= 1;
+        this.memory[this.stack_ptr] = value;
     }
     pop(): Word { 
         if (this.stack_ptr >= this.memory.length){
