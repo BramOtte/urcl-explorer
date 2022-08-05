@@ -1,5 +1,3 @@
-"use strict";
-
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -3518,7 +3516,7 @@ register-count: ${total_register_count} /12
 memory-size: ${memory_size} /256
 instruction-count: ${instruction_count} /256
 `;
-    if (bits == 8 && total_register_count <= 10 + register_count && memory_size <= 256) {
+    if (bits == 8 && total_register_count <= 10 + register_count && memory_size <= 256 && instruction_count <= 256) {
       output_element.innerText += "Program follows competition limitations \u{1F38A}\n";
     }
     if (animation_frame) {
