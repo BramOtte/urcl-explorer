@@ -1,3 +1,5 @@
+"use strict";
+
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -2414,14 +2416,16 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
       this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
     }
-    this.stack_ptr -= 1;
+    this.write_reg(1 /* SP */, this.stack_ptr - 1);
     this.memory[this.stack_ptr] = value;
   }
   pop() {
     if (this.stack_ptr >= this.memory.length) {
       this.error(`Stack underflow: ${this.stack_ptr} >= ${this.memory.length}`);
     }
-    return this.memory[this.stack_ptr++];
+    const value = this.memory[this.stack_ptr];
+    this.write_reg(1 /* SP */, this.stack_ptr + 1);
+    return value;
   }
   ins = [];
   outs = [];
@@ -2598,10 +2602,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     switch (target) {
       case 0 /* Reg */:
         {
-          if (this.do_debug_registers && this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
-            this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to 0x${value.toString(16)}`);
-          }
-          this.registers[index] = value;
+          this.write_reg(index, value);
         }
         return;
       case 1 /* Imm */:
@@ -2610,19 +2611,31 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         this.error(`Unknown operant target ${target}`);
     }
   }
+  write_reg(index, value) {
+    if (this.do_debug_registers && this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
+      const old = this.registers[index];
+      this.registers[index] = value;
+      const register_name = Register[index] ?? `r${index - register_count + 1}`;
+      this.debug(`Written ${register_name} which was ${old} to 0x${this.registers[index].toString(16)}`);
+    }
+    this.registers[index] = value;
+  }
   read(source, index) {
     switch (source) {
       case 1 /* Imm */:
         return index;
       case 0 /* Reg */: {
-        if (this.do_debug_registers && this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
-          this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
-        }
-        return this.registers[index];
+        return this.read_reg(index);
       }
       default:
         this.error(`Unknown operant source ${source}`);
     }
+  }
+  read_reg(index) {
+    if (this.do_debug_registers && this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
+      this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
+    }
+    return this.registers[index];
   }
   error(msg) {
     const { pc_line_nrs, lines, file_name } = this.debug_info;

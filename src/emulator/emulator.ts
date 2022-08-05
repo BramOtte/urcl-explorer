@@ -194,14 +194,17 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size){
             this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
         }
-        this.stack_ptr -= 1;
+        this.write_reg(Register.SP, this.stack_ptr - 1);
         this.memory[this.stack_ptr] = value;
     }
     pop(): Word { 
         if (this.stack_ptr >= this.memory.length){
             this.error(`Stack underflow: ${this.stack_ptr} >= ${this.memory.length}`);
         }
-        return this.memory[this.stack_ptr++];
+        const value = this.memory[this.stack_ptr];
+        this.write_reg(Register.SP, this.stack_ptr + 1);
+
+        return value;
     }
     ins: number[] = [];
     outs: number[] = [];
@@ -377,27 +380,40 @@ step(): Step_Result {
     write(target: Operant_Prim, index: Word, value: Word){
         switch (target){
             case Operant_Prim.Reg: {
-                if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONWRITE){
-                    this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to 0x${value.toString(16)}`);
-                }
-                this.registers[index] = value;
+                this.write_reg(index, value);
             } return;
             case Operant_Prim.Imm: return; // do nothing
             default: this.error(`Unknown operant target ${target}`);
         }
     }
+    write_reg(index: Word, value: Word) {
+        
+        if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONWRITE) {
+            const old = this.registers[index];
+            this.registers[index] = value;
+
+            const register_name = Register[index] ?? `r${index - register_count + 1}`;
+            this.debug(`Written ${register_name} which was ${old} to 0x${this.registers[index].toString(16)}`);
+        }
+        this.registers[index] = value;
+
+    }
     read(source: Operant_Prim, index: Word){
         switch (source){
             case Operant_Prim.Imm: return index;
             case Operant_Prim.Reg: {
-                if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONREAD){
-                    this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
-                }
-                return this.registers[index];
+                return this.read_reg(index);
             }
             default: this.error(`Unknown operant source ${source}`); 
         }
     }
+    read_reg(index: Word): Word {
+        if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONREAD){
+            this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
+        }
+        return this.registers[index];
+    }
+
     error(msg: string): never {
         const {pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
