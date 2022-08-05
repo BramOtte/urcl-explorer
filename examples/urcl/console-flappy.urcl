@@ -1,0 +1,347 @@
+RUN ROM
+BITS == 8
+MINREG 10
+MINHEAP 0
+
+
+@define @y r10
+@define @dy r9
+@define @x r8
+@define @p1 r7
+@define @input r5
+@define @score r4
+
+@define @height 16
+
+IMM @y 0
+
+IMM @p1 3
+IMM @x 7
+
+.main_loop
+    IMM r2 @height
+    IMM @dy 1
+    .input_loop
+        IN r1 %GAMEPAD
+        BNZ .skip_jump @input 
+
+        BRZ .skip_jump r1
+            IMM @dy -3
+        .skip_jump
+        MOV @input r1
+
+        DEC r2 r2
+        OUT %WAIT 10
+        IN r0 %WAIT // wait until next frame
+        BNZ .input_loop r2
+
+    OUT %WAIT 10 // set the time to wait for to be the next frame
+
+    // clear the console
+    OUT %TEXT 0x1b
+    OUT %TEXT '['
+    OUT %TEXT '2'
+    OUT %TEXT 'J'
+
+    DEC @x @x
+    BLE .skip_wrap @x 8
+        IMM @x 7
+        IN r1 %RNG
+        AND r1 r1 7
+        ADD @p1 r1 3
+        INC @score @score
+    .skip_wrap
+    
+    ADD @y @y @dy
+    BGE .game_over @y @height
+
+    BRL .maybe_collide @y @p1
+    ADD r3 @p1 5
+    BGE .maybe_collide @y r3
+    
+    JMP .no_collision
+
+    .maybe_collide
+    BRE .pipe_collide @x 0
+
+    .no_collision
+
+    IMM r1 0
+    .top_loop
+        IMM r2 0
+        BNE .top_line_loop r1 @y
+            OUT %TEXT '@'
+            OUT %TEXT '@'
+            INC r2 r2
+        .top_line_loop
+            BGE .end_top_line_loop r2 @x
+            OUT %TEXT ' '
+            OUT %TEXT ' '
+            INC r2 r2
+            JMP .top_line_loop
+        .end_top_line_loop
+        OUT %TEXT '#'
+        OUT %TEXT '#'
+        OUT %TEXT '\n'
+        INC r1 r1
+        BRL .top_loop r1 @p1
+
+    IMM r2 0
+    .bird_loop
+        BNE .bird_no r1 @y
+            OUT %TEXT '@'
+            OUT %TEXT '@'
+        .bird_no
+        INC r2 r2
+        INC r1 r1
+        OUT %TEXT '\n'
+        BRL .bird_loop r2 5
+
+    .bottom_loop
+        IMM r2 0
+        BNE .bottom_line_loop r1 @y
+            OUT %TEXT '@'
+            OUT %TEXT '@'
+            INC r2 r2
+        .bottom_line_loop
+            BGE .end_bottom_line_loop r2 @x
+            OUT %TEXT ' '
+            OUT %TEXT ' '
+            INC r2 r2
+            JMP .bottom_line_loop
+        .end_bottom_line_loop
+        OUT %TEXT '#'
+        OUT %TEXT '#'
+        OUT %TEXT '\n'
+        INC r1 r1
+        BRL .bottom_loop r1 @height
+    
+    CAL .print_score
+    
+    IN r0 %WAIT // wait until next frame
+
+    JMP .main_loop
+
+.print_score
+    OUT %TEXT 'S'
+    OUT %TEXT 'c'
+    OUT %TEXT 'o'
+    OUT %TEXT 'r'
+    OUT %TEXT 'e'
+    OUT %TEXT ':'
+    OUT %TEXT ' '
+    OUT %NUMB @score
+
+    RET
+
+.pipe_collide
+    OUT %TEXT 'X'
+.game_over
+    OUT %TEXT 0x1b
+    OUT %TEXT '['
+    OUT %TEXT '2'
+    OUT %TEXT 'J'
+
+    CAL .print_score
+    OUT %TEXT '\n'
+    OUT %TEXT 'G'
+    OUT %TEXT 'a'
+    OUT %TEXT 'm'
+    OUT %TEXT 'e'
+    OUT %TEXT ' '
+    OUT %TEXT 'o'
+    OUT %TEXT 'v'
+    OUT %TEXT 'e'
+    OUT %TEXT 'r'
+    OUT %TEXT '\n'
+    OUT %TEXT '\n'
+
+    JMP .print_end_screen
+
+// everything before this point was mostly written by Bram
+
+// we basically concatenated two programs which were under half the limit each
+// that way we make an überprogram almost hitting the limit, but not quite
+
+// everything after this point was mostly written by Terrain
+
+@define @sped r7
+@define @index r8
+@define @prev r9
+@define @char r10
+
+.rom1
+DW [ 0xB1 0x37 0x12 0x71 0xAE 0xE4 0xA7 0x10 0x34 0xC4 0x8C 0xB9 0x37 0x71 0x6E 0xA9 0x35 0x87 0x53 0x8A 0x6B 0xAD 0xC9 0x9C 0x9C 0x8D 0x16 0x49 0x70 0x0D 0x1F 0x24 0xEE 0x0D 0xDC 0x46 0x81 0xC2 0xD1 0x6B 0xE0 0x9C 0xC6 0x22 0x6C 0x23 0x67 0xB9 0x72 0xC7 0x04 0xF8 0x8D 0xB3 0x93 0x3A 0x1A 0xA4 0x34 0xDC 0x71 0x75 0x87 0x53 0x96 0x75 0x16 0x36 0xEE 0x7C 0x31 0x27 0xC9 0x9D 0x12 0xE1 0x62 0xE6 0x70 0x0D 0xC7 0x1D 0x33 0x92 0x3C 0x35 0x31 0xAD 0x23 0x89 0xA4 0xA7 0xCB 0x01 0xAD 0x07 0x26 0x45 0xAF 0x98 0x75 0x38 0x77 0x5B 0x88 0xDB 0x38 0x52 0x11 0x68 0x69 0xB4 0x67 0x4E 0x60 0xE3 0x00 0xA2 0x73 0x0E 0xA7 0x28 0xD1 0x92 0x32 0x98 0x1A 0x3E 0x73 0x9C ]
+.rom2
+DW [ 0xe7 0x39 0xa6 0x92 0xa4 0x8f 0x0c 0xe6 0xb4 0x1c ]
+.rom3
+DW [ 0x32 0x2a 0x4e 0x61 0xd4 0xe5 0x1f 0xce 0x73 0x9c ]
+.rom4
+DW [ 0x59 0x27 0xcc 0x3a 0x9c 0x1b 0xac 0xde 0x73 0x9c ]
+.rom5
+DW [ 0x8d 0x1b 0xc0 0x45 0xd4 0x68 0xf8 0x06 0x8f 0x83 0x24 0x89 0x19 0xf3 0x0e 0xa7 0x39 0xce 0x73 0x9c ]
+.rom6
+DW [ 0x60 0x14 0x4e 0x61 0xd4 0xe0 0xa3 0x8e 0x73 0x9c ]
+.rom7
+DW [ 0x90 0x31 0xc3 0x39 0xc3 0x0e 0x09 0xce 0x73 0x9c ]
+.rom8
+DW [ 0x99 0x16 0xbe 0x03 0x8b 0x41 0x38 0x06 0x8f 0x87 0xa4 0x67 0xcc 0x3a 0x9c ]
+.rom9
+DW
+
+.print_end_screen
+
+IMM @prev '\n'
+
+IMM @sped 150
+
+IMM @index .rom1
+CAL .print_8
+ADD @index @index 5
+BRL ~-2 @index .rom2
+
+IMM @sped 120
+
+CAL .chorus
+
+HLT
+
+.chorus
+    IMM @char 26
+    CAL .print_char
+    
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+    
+    IMM @index .rom3
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom4
+
+    
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+    
+    IMM @index .rom4
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom5
+    
+
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+
+    IMM @index .rom5
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom6
+
+    
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+
+    IMM @index .rom6
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom7
+
+    
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+
+    IMM @index .rom7
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom8
+
+    
+    IMM @index .rom2
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom3
+
+    IMM @index .rom8
+    CAL .print_8
+    ADD @index @index 5
+    BRL ~-2 @index .rom9
+
+
+    RET
+
+.print_8
+    LOD r1 @index
+    BSR @char r1 3
+    CAL .print_char
+
+    BSL r1 r1 2
+    LLOD r2 @index 1
+    BSR @char r2 6
+    OR @char @char r1
+    CAL .print_char
+
+    RSH @char r2
+    CAL .print_char
+
+    BSL @char r2 4
+    LLOD r1 @index 2
+    BSR r2 r1 4
+    OR @char @char r2
+    CAL .print_char
+
+    LLOD r2 @index 3
+    BSR @char r2 7
+    LSH r1 r1
+    OR @char @char r1
+    CAL .print_char
+
+    BSR @char r2 2
+    CAL .print_char
+
+    BSL @char r2 3
+    LLOD r1 @index 4
+    BSR r2 r1 5
+    OR @char @char r2
+    CAL .print_char
+
+    MOV @char r1
+    CAL .print_char
+
+    RET
+
+.print_char
+    AND @char @char 0b11111
+    BGE .lookup @char 32
+    BGE .lookup @char 26
+    ADD @char @char 65
+    BRE .upper @prev '\n'
+        ADD @char @char 32
+    .upper
+    OUT %TEXT @char
+    MOV @prev @char
+    OUT %WAIT @sped
+    IN r0 %WAIT
+    RET
+
+.table
+DW [ "\n' ,()" ]
+
+.lookup
+    SUB @char @char 26
+    LLOD @char .table @char
+    BNE .lookup_print @char ' '
+    BNE .lookup_print @prev '\n'
+    RET
+    .lookup_print
+    OUT %TEXT @char
+    MOV @prev @char
+    RET
