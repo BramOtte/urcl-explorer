@@ -150,10 +150,7 @@
                     <a class="nav-link">Console</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link">Registers</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link">Memory</a>
+                    <a class="nav-link">Debug</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link">Configuration</a>
@@ -164,7 +161,7 @@
             </ul>
             <div id="left-area">
                 <div id="source-tab">
-                    <button id="share-button" style="font-size: 1em;">copy share url</button>
+                    <button id="share-button" class="btn">Copy Share URL</button>
                     <editor-window id="urcl-source"></editor-window>
                 </div>
             </div>
@@ -184,10 +181,7 @@
                     <a class="nav-link">Console</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link">Registers</a>
-                </li>
-                <li class="nav-item">
-                    <a class="nav-link">Memory</a>
+                    <a class="nav-link">Debug</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link">Configuration</a>
@@ -198,12 +192,12 @@
             </ul>
             <div id="right-area">
                 <div id="configuration-tab">
-                    clock speed Hz <input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
-                    auto run <input type="checkbox" id="auto-run-input" checked> <br>
-                    storage-file <input id="storage-input" type="file"> <span id="storage-msg"></span><br>
-                    little endian <input id="storage-little" type="checkbox"><br>
-                    <button id="storage-update">Update storage</button>
-                    <button id="storage-download">Update and download storage</button>
+                    <span style="padding-right: 0.5em;">Clock Speed Hz</span><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
+					<span style="padding-right: 0.5em;">Auto Run</span><input type="checkbox" id="auto-run-input" checked> <br>
+					<span style="padding-right: 0.5em;">Storage File</span><input id="storage-input" type="file"><span id="storage-msg"></span><br>
+                    <span style="padding-right: 0.5em;">Little Endian</span><input id="storage-little" type="checkbox"><br>
+                    <button id="storage-update">Update Storage</button>
+                    <button id="storage-download">Update & Download Storage</button>
                 </div>
                 <div style="display: flex;">
                     <div id="examples-tab">
@@ -235,31 +229,27 @@
                         </details>
                     </div>
                     <div id="build-output-tab">
-                        <h2>Output</h2>
                         <pre id="output"></pre>
                         <pre id="debug-output"></pre>
                     </div>
                 </div>
             </div>
-            <div id="registers-tab">
-                <h3>registers</h3>
+            <div id="debug-tab">
+				<h3>Registers</h3>
                 <pre id="register-view"></pre>
-            </div>
-            <div id="memory-tab">
-                <h3>memory</h3>
-                auto update <input type="checkbox" id="update-mem-input"> <br>
+                <h3>Memory</h3>
+                <span style="padding-right: 0.5em;">Auto Update</span><input type="checkbox" id="update-mem-input"> <br>
                 <pre id="memory-view" style="max-height: 12vh; overflow: auto;"></pre>
             </div>
             <div style="display: flex; gap: 2rem;">
                 <div id="console-tab">
-                    <h3>Console</h3>
-                    <scroll-out id="stdout"></scroll-out>
-                    <textarea id="stdin" type="text"></textarea>
+                    <scroll-out id="stdout" style="width: 100%;"></scroll-out>
+                    <textarea id="stdin" type="text" style="width: 100%;"></textarea>
                     <br>
-                    null terminate<input type="checkbox" id="null-terminate">
+                    <span style="padding-right: 0.5em;">Null Terminate</span><input type="checkbox" id="null-terminate">
                 </div>
-                <div style="width: 100%;" id="display-tab">
-                    color mode
+                <div id="display-tab">
+                    Color Mode
                     <select id="color-mode" value="PICO8">
                         <option value="PICO8">PICO8</option>
                         <option value="Mono">Mono</option>
@@ -272,11 +262,11 @@
                         <option value="RGB">RGB</option>
                         <option value="RGBI">RGBI</option>
                     </select>
-                    <br>
-                    width <input type="number" id="display-width" value="32"><button id="display-fullscreen">fullscreen</button><br>
-                    height <input type="number" id="display-height" value="32"><br>
+                    Width <input type="number" id="display-width" value="32">
+                    Height <input type="number" id="display-height" value="32">
+					<button id="display-fullscreen">Fullscreen</button><br>
                     <div id="pref-display"></div>
-                    <canvas style="width: 100%; display: block;" width="32" height="32"></canvas>
+                    <canvas style="width: 75%; display: block;" width="32" height="32"></canvas>
                 </div>
             </div>
         </div>
