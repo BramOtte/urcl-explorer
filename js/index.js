@@ -1,5 +1,3 @@
-"use strict";
-
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -1129,6 +1127,7 @@ function compile(parsed) {
   if (bits === void 0) {
     throw new Error("bits can not exceed 32");
   }
+  parsed.headers[0 /* BITS */].value = bits;
   const msb = 1 << bits - 1;
   const smsb = 1 << bits - 2;
   const max = 4294967295 >>> 32 - bits;
