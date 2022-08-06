@@ -1,237 +1,238 @@
 <!DOCTYPE html>
-<link rel="stylesheet" href="./index.css">
-
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>URCL Explorer</title>
+    <link rel="stylesheet" href="./index.css">
     <link rel="stylesheet" href="src/scroll-out/scoll-out.css">
     <link rel="stylesheet" href="src/editor/editor.css">
-	<link rel="stylesheet" href="./mdb.dark.min.css">
+    <link rel="stylesheet" href="./mdb.dark.min.css">
     <link rel="icon" type="image/png" href="src/img/favicon.png">
-	<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
-	<script>
-		const synced_tabs = {};
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.2.0/dist/js/bootstrap.bundle.min.js" integrity="sha384-A3rJD856KowSb7dwlZdYEkO39Gagi7vIsF0jrRAoQmDKKtQBHUuLZ9AsSv4jD4Xa" crossorigin="anonymous"></script>
+    <script>
+        const synced_tabs = {};
 
-		window.addEventListener("load", function()
-		{
-			create_tab_group("left-tabs", "left-area");
-			create_tab_group("right-tabs", "right-area");
-			sync_tabs(["left-tabs", "right-tabs"]);
-			on_tab_selected("left-tabs", "left-area", "Source");
-			on_tab_selected("right-tabs", "right-area", "Build Output");
-		});
+        window.addEventListener("load", function()
+        {
+            create_tab_group("left-tabs", "left-area");
+            create_tab_group("right-tabs", "right-area");
+            sync_tabs(["left-tabs", "right-tabs"]);
+            on_tab_selected("left-tabs", "left-area", "Source");
+            on_tab_selected("right-tabs", "right-area", "Build Output");
+        });
 
-		function create_tab_group(group, view)
-		{
-			const tabs = document.getElementById(group);
-			const links = tabs.getElementsByTagName("a");
-			for (let i = 0; i < links.length; i++)
-			{
-				const link = links[i];
-				link.href = "javascript:on_tab_selected('" + group + "', '" + view + "', '" + link.innerText + "')";
-				const tab_id = link.innerText.replace(" ", "-").toLowerCase() + "-tab";
-				document.getElementById(tab_id).classList.add("d-none");
-			}
-		}
+        function create_tab_group(group, view)
+        {
+            const tabs = document.getElementById(group);
+            const links = tabs.getElementsByTagName("a");
+            for (let i = 0; i < links.length; i++)
+            {
+                const link = links[i];
+                link.href = "javascript:on_tab_selected('" + group + "', '" + view + "', '" + link.innerText + "')";
+                const tab_id = link.innerText.replace(" ", "-").toLowerCase() + "-tab";
+                document.getElementById(tab_id).classList.add("d-none");
+            }
+        }
 
-		function sync_tabs(tabs)
-		{
-			for (let i = 0; i < tabs.length; i++)
-			{
-				synced_tabs[tabs[i]] = [];
+        function sync_tabs(tabs)
+        {
+            for (let i = 0; i < tabs.length; i++)
+            {
+                synced_tabs[tabs[i]] = [];
 
-				for (let j = 0; j < tabs.length; j++)
-				{
-					if (i !== j) synced_tabs[tabs[i]].push(tabs[j]);
-				}
-			}
-		}
+                for (let j = 0; j < tabs.length; j++)
+                {
+                    if (i !== j) synced_tabs[tabs[i]].push(tabs[j]);
+                }
+            }
+        }
 
-		function on_tab_selected(group, view, link_text)
-		{
-			link_text = link_text.toUpperCase();
-			const tabs = document.getElementById(group);
-			const area = document.getElementById(view);
-			const links = tabs.getElementsByTagName("a");
-			for (let i = 0; i < links.length; i++)
-			{
-				const link = links[i];
-				const tab_id = link.innerText.replace(" ", "-").toLowerCase() + "-tab";
-				
-				if (link.innerText.toUpperCase() === link_text)
-				{
-					const tab = document.getElementById(tab_id);
-					tab.parentNode.removeChild(tab);
-					area.appendChild(tab);
-					tab.classList.remove("d-none");
-					link.classList.add("active");
+        function on_tab_selected(group, view, link_text)
+        {
+            link_text = link_text.toUpperCase();
+            const tabs = document.getElementById(group);
+            const area = document.getElementById(view);
+            const links = tabs.getElementsByTagName("a");
+            for (let i = 0; i < links.length; i++)
+            {
+                const link = links[i];
+                const tab_id = link.innerText.replace(" ", "-").toLowerCase() + "-tab";
+                
+                if (link.innerText.toUpperCase() === link_text)
+                {
+                    const tab = document.getElementById(tab_id);
+                    tab.parentNode.removeChild(tab);
+                    area.appendChild(tab);
+                    tab.classList.remove("d-none");
+                    link.classList.add("active");
 
-					if (synced_tabs[group])
-					{
-						const other_groups = synced_tabs[group];
-						for (let j = 0; j < other_groups.length; j++)
-						{
-							disable_tab(other_groups[j], link_text);
-						}
-					}
-				}
-				else if (link.classList.contains("active"))
-				{
-					document.getElementById(tab_id).classList.add("d-none");
-					link.classList.remove("active");
+                    if (synced_tabs[group])
+                    {
+                        const other_groups = synced_tabs[group];
+                        for (let j = 0; j < other_groups.length; j++)
+                        {
+                            disable_tab(other_groups[j], link_text);
+                        }
+                    }
+                }
+                else if (link.classList.contains("active"))
+                {
+                    document.getElementById(tab_id).classList.add("d-none");
+                    link.classList.remove("active");
 
-					if (synced_tabs[group])
-					{
-						const other_groups = synced_tabs[group];
-						for (let j = 0; j < other_groups.length; j++)
-						{
-							enable_tab(other_groups[j], link.innerText);
-						}
-					}
-				}
-			}
-		}
+                    if (synced_tabs[group])
+                    {
+                        const other_groups = synced_tabs[group];
+                        for (let j = 0; j < other_groups.length; j++)
+                        {
+                            enable_tab(other_groups[j], link.innerText);
+                        }
+                    }
+                }
+            }
+        }
 
-		function enable_tab(group, link_text)
-		{
-			console.log("enable: " + group + ", " + link_text);
-			link_text = link_text.toUpperCase();
-			const tabs = document.getElementById(group);
-			const links = tabs.getElementsByTagName("a");
-			for (let i = 0; i < links.length; i++)
-			{
-				const link = links[i];
-				if (link.innerText.toUpperCase() === link_text)
-				{
-					link.classList.remove("d-none");
-				}
-			}
-		}
+        function enable_tab(group, link_text)
+        {
+            console.log("enable: " + group + ", " + link_text);
+            link_text = link_text.toUpperCase();
+            const tabs = document.getElementById(group);
+            const links = tabs.getElementsByTagName("a");
+            for (let i = 0; i < links.length; i++)
+            {
+                const link = links[i];
+                if (link.innerText.toUpperCase() === link_text)
+                {
+                    link.classList.remove("d-none");
+                }
+            }
+        }
 
-		function disable_tab(group, link_text)
-		{
-			console.log("disable: " + group + ", " + link_text);
-			link_text = link_text.toUpperCase();
-			const tabs = document.getElementById(group);
-			const links = tabs.getElementsByTagName("a");
-			for (let i = 0; i < links.length; i++)
-			{
-				const link = links[i];
-				if (link.innerText.toUpperCase() === link_text)
-				{
-					link.classList.add("d-none");
-				}
-			}
-		}
-	</script>
+        function disable_tab(group, link_text)
+        {
+            console.log("disable: " + group + ", " + link_text);
+            link_text = link_text.toUpperCase();
+            const tabs = document.getElementById(group);
+            const links = tabs.getElementsByTagName("a");
+            for (let i = 0; i < links.length; i++)
+            {
+                const link = links[i];
+                if (link.innerText.toUpperCase() === link_text)
+                {
+                    link.classList.add("d-none");
+                }
+            }
+        }
+    </script>
 </head>
-<body>
+<body class="container-fluid">
+    <div class="row">
+        <button id="compile-and-reset-button" class="btn btn-primary col major-button">Compile</button>
+        <button id="pause-button" class="btn btn-danger col major-button">Pause</button>
+        <button id="compile-and-run-button" class="btn btn-success col major-button">Compile & Run</button>
+        <button id="step-button" class="btn btn-warning col major-button">Step</button>
+    </div>
     <main>
         <div>
-			<ul id="left-tabs" class="nav nav-tabs">
-				<li class="nav-item">
-					<a class="nav-link">Source</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Build Output</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Display</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Console</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Registers</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Memory</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Configuration</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Examples</a>
-				</li>
-			</ul>
-			<div id="left-area">
-				<div id="source-tab">
-					<button id="share-button" style="font-size: 1em;">copy share url</button>
-					<editor-window id="urcl-source"></editor-window>
-				</div>
-			</div>
+            <ul id="left-tabs" class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link">Source</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Build Output</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Display</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Console</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Registers</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Memory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Configuration</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Examples</a>
+                </li>
+            </ul>
+            <div id="left-area">
+                <div id="source-tab">
+                    <button id="share-button" style="font-size: 1em;">copy share url</button>
+                    <editor-window id="urcl-source"></editor-window>
+                </div>
+            </div>
         </div>
         <div>
-			<button id="compile-and-reset-button" class="btn btn-primary">Compile</button>
-			<button id="pause-button" class="btn btn-secondary">Pause</button>
-			<button id="compile-and-run-button" class="btn btn-success">Compile & Run</button>
-			<button id="step-button" class="btn btn-secondary" disabled>Step</button><br>
-			<ul id="right-tabs" class="nav nav-tabs">
-				<li class="nav-item">
-					<a class="nav-link">Source</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Build Output</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Display</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Console</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Registers</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Memory</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Configuration</a>
-				</li>
-				<li class="nav-item">
-					<a class="nav-link">Examples</a>
-				</li>
-			</ul>
+            <ul id="right-tabs" class="nav nav-tabs">
+                <li class="nav-item">
+                    <a class="nav-link">Source</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Build Output</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Display</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Console</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Registers</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Memory</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Configuration</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link">Examples</a>
+                </li>
+            </ul>
             <div id="right-area">
-				<div id="configuration-tab">
-					clock speed Hz <input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
-					auto run <input type="checkbox" id="auto-run-input" checked> <br>
-					storage-file <input id="storage-input" type="file"> <span id="storage-msg"></span><br>
-					little endian <input id="storage-little" type="checkbox"><br>
-					<button id="storage-update">Update storage</button>
-					<button id="storage-download">Update and download storage</button>
-				</div>
+                <div id="configuration-tab">
+                    clock speed Hz <input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
+                    auto run <input type="checkbox" id="auto-run-input" checked> <br>
+                    storage-file <input id="storage-input" type="file"> <span id="storage-msg"></span><br>
+                    little endian <input id="storage-little" type="checkbox"><br>
+                    <button id="storage-update">Update storage</button>
+                    <button id="storage-download">Update and download storage</button>
+                </div>
                 <div style="display: flex;">
                     <div id="examples-tab">
-						<a href="pages/competitions/1">URCL coding competition! 🎊</a>
-						<details open>
-							<summary>Examples</summary>
-							<ul>
-								<li><a href="?srcurl=examples/urcl/competition1.urcl">Console game, bare bones</a></li>
-								<li><a href="?srcurl=examples/urcl/add.urcl">Addition</a></li>
-								<li><a href="?srcurl=examples/urcl/fib.urcl">Fibonacci Sequence </a></li>
-								<li><a href="?srcurl=examples/urcl/audio.urcl">Audio Ports</a></li>
-								<li><a href="?srcurl=examples/urcl/display-io.urcl">Display Ports</a></li>
-								<li><a href="?srcurl=examples/urcl/gamepad.urcl">Gamepad Port</a></li>
-								<li><a href="?srcurl=examples/urcl/mouse.urcl">Mouse Port</a></li>
-								<li><a href="?srcurl=examples/urcl/keyboard.urcl">Key Port by Verlio</a></li>
-								<li><a href="?srcurl=examples/urcl/sprites.urcl">Ball Sprite</a></li>
-								<li><a href="?srcurl=examples/urcl/game.urcl">Jumping Square</a></li>
-								<li><a href="?srcurl=examples/urcl/snake.urcl">Snake</a></li>
-								<li><a href="?srcurl=examples/urcl/pallet-test.urcl">Pallet Test</a></li>
-								<li><a href="?srcurl=examples/urcl/line.urcl">Drawing a Line</a></li>
-								<li><a href="?srcurl=examples/urcl/prime-sieve16.urcl">16 bit prime sieve</a></li>
-								<li><a href="?srcurl=examples/urcl/prime-sieve32.urcl">32 bit prime sieve</a></li>
-								<li><a href="?srcurl=examples/urcl/debug.urcl">Debug macro</a></li>
-								<li><a href="?width=128&height=128&color=RGB12&srcurl=https%3A%2F%2Fraw.githubusercontent.com%2Fstevembuko%2FURCL-renderer%2Fmain%2Frender.urcl">3D renderer by Uwerta</a></li>
-								<li><a href="?width=128&height=128&color=RGB16&srcurl=https://raw.githubusercontent.com/martandrMC/urcl-projects/main/minesweeper.urcl">Minesweeper by Mart</a></li>
+                        <a href="pages/competitions/1">URCL coding competition! 🎊</a>
+                        <details open>
+                            <summary>Examples</summary>
+                            <ul>
+                                <li><a href="?srcurl=examples/urcl/competition1.urcl">Console game, bare bones</a></li>
+                                <li><a href="?srcurl=examples/urcl/add.urcl">Addition</a></li>
+                                <li><a href="?srcurl=examples/urcl/fib.urcl">Fibonacci Sequence </a></li>
+                                <li><a href="?srcurl=examples/urcl/audio.urcl">Audio Ports</a></li>
+                                <li><a href="?srcurl=examples/urcl/display-io.urcl">Display Ports</a></li>
+                                <li><a href="?srcurl=examples/urcl/gamepad.urcl">Gamepad Port</a></li>
+                                <li><a href="?srcurl=examples/urcl/mouse.urcl">Mouse Port</a></li>
+                                <li><a href="?srcurl=examples/urcl/keyboard.urcl">Key Port by Verlio</a></li>
+                                <li><a href="?srcurl=examples/urcl/sprites.urcl">Ball Sprite</a></li>
+                                <li><a href="?srcurl=examples/urcl/game.urcl">Jumping Square</a></li>
+                                <li><a href="?srcurl=examples/urcl/snake.urcl">Snake</a></li>
+                                <li><a href="?srcurl=examples/urcl/pallet-test.urcl">Pallet Test</a></li>
+                                <li><a href="?srcurl=examples/urcl/line.urcl">Drawing a Line</a></li>
+                                <li><a href="?srcurl=examples/urcl/prime-sieve16.urcl">16 bit prime sieve</a></li>
+                                <li><a href="?srcurl=examples/urcl/prime-sieve32.urcl">32 bit prime sieve</a></li>
+                                <li><a href="?srcurl=examples/urcl/debug.urcl">Debug macro</a></li>
+                                <li><a href="?width=128&height=128&color=RGB12&srcurl=https%3A%2F%2Fraw.githubusercontent.com%2Fstevembuko%2FURCL-renderer%2Fmain%2Frender.urcl">3D renderer by Uwerta</a></li>
+                                <li><a href="?width=128&height=128&color=RGB16&srcurl=https://raw.githubusercontent.com/martandrMC/urcl-projects/main/minesweeper.urcl">Minesweeper by Mart</a></li>
 
-								<!-- <li><a href="?srcurl=examples/urcl/wolfenstein.urcl">wolfenstein</a></li> -->
-							</ul>
-						</details>
+                                <!-- <li><a href="?srcurl=examples/urcl/wolfenstein.urcl">wolfenstein</a></li> -->
+                            </ul>
+                        </details>
                     </div>
                     <div id="build-output-tab">
                         <h2>Output</h2>

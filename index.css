@@ -126,21 +126,6 @@ select {
   border: 0px;
 }
 
-#compile-and-run-button {
-  background: #0D0;
-  color: #111;
-}
-
-#compile-and-reset-button {
-  background: #F00;
-  color: #111;
-}
-
-#pause-button {
-  background: #66B6FF;
-  color: #111;
-}
-
-:disabled {
-  color: #AAA;
+.major-button {
+  margin: 0.5em;
 }
