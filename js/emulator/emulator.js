@@ -37,6 +37,10 @@ export class Emulator {
         this.options = options;
     }
     heap_size = 0;
+    do_debug_memory = false;
+    do_debug_registers = false;
+    do_debug_ports = false;
+    do_debug_program = false;
     load_program(program, debug_info) {
         this._debug_message = undefined;
         this.program = program, this.debug_info = debug_info;
@@ -49,6 +53,11 @@ export class Emulator {
         const run = program.headers[URCL_Header.RUN].value;
         this.heap_size = heap;
         this.debug_reached = false;
+        this.pc = 0;
+        this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
+        this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
+        this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
+        this.do_debug_program = Object.keys(debug_info.program_breaks).length > 0;
         if (run === Header_Run.RAM) {
             throw new Error("emulator currently doesn't support running in ram");
         }
@@ -166,16 +175,19 @@ export class Emulator {
         return (1 << (this.bits - 1));
     }
     push(value) {
-        if (this.stack_ptr <= this.heap_size) {
+        if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
             this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
         }
-        this.memory[--this.stack_ptr] = value;
+        this.write_reg(Register.SP, this.stack_ptr - 1);
+        this.memory[this.stack_ptr] = value;
     }
     pop() {
         if (this.stack_ptr >= this.memory.length) {
             this.error(`Stack underflow: ${this.stack_ptr} >= ${this.memory.length}`);
         }
-        return this.memory[this.stack_ptr++];
+        const value = this.memory[this.stack_ptr];
+        this.write_reg(Register.SP, this.stack_ptr + 1);
+        return value;
     }
     ins = [];
     outs = [];
@@ -193,21 +205,21 @@ export class Emulator {
                 this.ins[port] = 1;
                 return false;
             }
-            if (this.debug_info.port_breaks[port] & Break.ONREAD) {
+            if (this.do_debug_ports && this.debug_info.port_breaks[port] & Break.ONREAD) {
                 this.debug(`Reading from Port ${port} (${IO_Port[port]})`);
             }
             const res = device(this.finish_step_in.bind(this, port));
             if (res === undefined) {
-                if (this.debug_info.port_breaks[port] & Break.ONREAD) {
-                    this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                if (this.do_debug_ports && this.debug_info.port_breaks[port] & Break.ONREAD) {
+                    this.debug(`Read from port ${port} (${IO_Port[port]})`);
                 }
                 this.pc--;
                 return true;
             }
             else {
                 this.a = res;
-                if (this.debug_info.port_breaks[port] & Break.ONREAD) {
-                    this.debug(`Read from port ${port} (${IO_Port[port]}) value=${res}`);
+                if (this.do_debug_ports && this.debug_info.port_breaks[port] & Break.ONREAD) {
+                    this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
                 }
                 return false;
             }
@@ -226,19 +238,19 @@ export class Emulator {
                     return;
                 }
                 if (this.outs[port] === undefined) {
-                    this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=${value}`);
+                    this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}`);
                     this.outs[port] = value;
                 }
                 return;
             }
-            if (this.debug_info.port_breaks[port] & Break.ONWRITE) {
+            if (this.do_debug_ports && this.debug_info.port_breaks[port] & Break.ONWRITE) {
                 let char_str = "";
                 try {
                     const char = JSON.stringify(String.fromCodePoint(value));
                     char_str = `'${char.substring(1, char.length - 1)}'`;
                 }
                 catch { }
-                this.debug(`Written to port ${port} (${IO_Port[port]}) value=${value} ${char_str}`);
+                this.debug(`Written to port ${port} (${IO_Port[port]}) value=0x${value.toString(16)} ${char_str}`);
             }
             device(value);
         }
@@ -287,7 +299,7 @@ export class Emulator {
     debug_reached = false;
     step() {
         const pc = this.pc++;
-        if (this.debug_info.program_breaks[pc] && !this.debug_reached) {
+        if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached) {
             this.debug_reached = true;
             this.debug(`Reached @DEBUG Before:`);
             this.pc--;
@@ -328,19 +340,19 @@ export class Emulator {
     }
     m_set(addr, value) {
         if (addr >= this.memory.length) {
-            this.error(`Heap overflow on store: ${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on store: 0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
         }
-        if (this.debug_info.memory_breaks[addr] & Break.ONWRITE) {
-            this.debug(`Written memory[${addr}] which was ${this.memory[addr]} to ${value}`);
+        if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & Break.ONWRITE) {
+            this.debug(`Written memory[0x${addr.toString(16)}] which was 0x${this.memory[addr].toString(16)} to 0x${value.toString(16)}`);
         }
         this.memory[addr] = value;
     }
     m_get(addr) {
         if (addr >= this.memory.length) {
-            this.error(`Heap overflow on load: #${addr} >= ${this.memory.length}`);
+            this.error(`Heap overflow on load: #0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
         }
-        if (this.debug_info.memory_breaks[addr] & Break.ONREAD) {
-            this.debug(`Read memory[${addr}] = ${this.memory[addr]}`);
+        if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & Break.ONREAD) {
+            this.debug(`Read memory[0x${addr.toString(16)}] = 0x${this.memory[addr].toString(16)}`);
         }
         return this.memory[addr];
     }
@@ -356,27 +368,36 @@ export class Emulator {
         switch (target) {
             case Operant_Prim.Reg:
                 {
-                    if (this.debug_info.register_breaks[index] & Break.ONWRITE) {
-                        this.debug(`Written r${index - register_count + 1} which was ${this.registers[index]} to ${value}`);
-                    }
-                    this.registers[index] = value;
+                    this.write_reg(index, value);
                 }
                 return;
             case Operant_Prim.Imm: return; // do nothing
             default: this.error(`Unknown operant target ${target}`);
         }
     }
+    write_reg(index, value) {
+        if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONWRITE) {
+            const old = this.registers[index];
+            this.registers[index] = value;
+            const register_name = Register[index] ?? `r${index - register_count + 1}`;
+            this.debug(`Written ${register_name} which was ${old} to 0x${this.registers[index].toString(16)}`);
+        }
+        this.registers[index] = value;
+    }
     read(source, index) {
         switch (source) {
             case Operant_Prim.Imm: return index;
             case Operant_Prim.Reg: {
-                if (this.debug_info.register_breaks[index] & Break.ONREAD) {
-                    this.debug(`Read r${index - register_count + 1} = ${this.registers[index]}`);
-                }
-                return this.registers[index];
+                return this.read_reg(index);
             }
             default: this.error(`Unknown operant source ${source}`);
         }
+    }
+    read_reg(index) {
+        if (this.do_debug_registers && this.debug_info.register_breaks[index] & Break.ONREAD) {
+            this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
+        }
+        return this.registers[index];
     }
     error(msg) {
         const { pc_line_nrs, lines, file_name } = this.debug_info;

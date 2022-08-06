@@ -19,6 +19,7 @@ import { parse } from "./emulator/parser.js";
 import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString, format_int } from "./emulator/util.js";
 import { Scroll_Out } from "./scroll-out/scroll-out.js";
 import { register_count } from "./emulator/instructions.js";
+import { Emu } from "./emulator/to_js.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -203,7 +204,8 @@ function resize_display(){
     display.resize(width, height);
 }
 
-const emulator = new Emulator({on_continue: frame, warn: (msg) => output_element.innerText += `${msg}\n`});
+const emulator = new Emu({on_continue: frame});
+    //new Emulator({on_continue: frame, warn: (msg) => output_element.innerText += `${msg}\n`});
 emulator.add_io_device(new Sound())
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
@@ -401,12 +403,12 @@ function process_step_result(result: Step_Result, steps: number){
             if (running){
                 pause();
             }
-            const msg = emulator.get_debug_message();
-            if (msg !== undefined){
-                debug_output_element.innerText = msg;
-            } else {
-                throw new Error("Debug not handled");
-            }
+            // const msg = emulator.get_debug_message();
+            // if (msg !== undefined){
+            //     debug_output_element.innerText = msg;
+            // } else {
+            //     throw new Error("Debug not handled");
+            // }
         } break;
         default: {
             console.warn("unkown step result");
@@ -419,12 +421,12 @@ function update_views(){
     if (memory_update_input.checked){
         memory_view.innerText = memoryToString(emulator.memory as Arr, 0, emulator.memory.length, bits);
     }
-    register_view.innerText = 
-        registers_to_string(emulator)
-    const lines = emulator.debug_info.pc_line_nrs
-    const line = lines[Math.min(emulator.pc, lines.length-1)];
-    source_input.set_pc_line(line);
-    source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v] as [number, number]));
+    // register_view.innerText = 
+    //     registers_to_string(emulator)
+    // const lines = emulator.debug_info.pc_line_nrs
+    // const line = lines[Math.min(emulator.pc, lines.length-1)];
+    // source_input.set_pc_line(line);
+    // source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v] as [number, number]));
     console_output.flush();
 }
 change_color_mode();

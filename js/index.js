@@ -1,5 +1,3 @@
-"use strict";
-
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -468,21 +466,11 @@ function pad_left(str, size, char = " ") {
   const pad = Math.max(0, size - str.length);
   return char.repeat(pad) + str;
 }
-function pad_center(str, size, left_char = " ", right_char = left_char) {
-  const pad = Math.max(0, size - str.length);
-  const left = 0 | pad / 2;
-  const right = pad - left;
-  return left_char.repeat(left) + str + right_char.repeat(right);
-}
 function hex(num, size, pad = " ") {
   return pad_left(num.toString(16), size, pad).toUpperCase();
 }
 function hex_size(bits) {
   return Math.ceil(bits / 4);
-}
-function registers_to_string(emulator2) {
-  const nibbles = hex_size(emulator2.bits);
-  return Array.from({ length: register_count }, (_, i) => pad_center(Register[i], nibbles) + " ").join("") + Array.from({ length: emulator2.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" + Array.from(emulator2.registers, (v) => hex(v, nibbles) + " ").join("");
 }
 function memoryToString(view, from = 0, length = 4096, bits = 8) {
   const width2 = 16;
@@ -504,10 +492,6 @@ function memoryToString(view, from = 0, length = 4096, bits = 8) {
     lines.push(addr + " ".repeat(hexes - addr.length) + line);
   }
   return lines.join("\n");
-}
-function indent(string, spaces) {
-  const left = " ".repeat(spaces);
-  return string.split("\n").map((line) => left + line).join("\n");
 }
 function object_map(obj, callback, target = {}) {
   const res = target;
@@ -2237,473 +2221,6 @@ function break_flag(flags) {
   return flags.reduce((a, b) => a | b, 0);
 }
 
-// src/emulator/emulator.ts
-var Emulator = class {
-  constructor(options) {
-    this.options = options;
-  }
-  signed(v) {
-    if (this.bits === 32) {
-      return 0 | v;
-    }
-    return (v & this.sign_bit) === 0 ? v : v | 4294967295 << this.bits;
-  }
-  a = 0;
-  b = 0;
-  c = 0;
-  get sa() {
-    return this.signed(this.a);
-  }
-  set sa(v) {
-    this.a = v;
-  }
-  get sb() {
-    return this.signed(this.b);
-  }
-  set sb(v) {
-    this.b = v;
-  }
-  get sc() {
-    return this.signed(this.c);
-  }
-  set sc(v) {
-    this.c = v;
-  }
-  program;
-  debug_info;
-  _debug_message = void 0;
-  get_debug_message() {
-    const msg = this._debug_message;
-    this._debug_message = void 0;
-    return msg;
-  }
-  heap_size = 0;
-  do_debug_memory = false;
-  do_debug_registers = false;
-  do_debug_ports = false;
-  do_debug_program = false;
-  load_program(program, debug_info) {
-    this._debug_message = void 0;
-    this.program = program, this.debug_info = debug_info;
-    this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
-    const bits = program.headers[0 /* BITS */].value;
-    const static_data = program.data;
-    const heap = program.headers[2 /* MINHEAP */].value;
-    const stack = program.headers[4 /* MINSTACK */].value;
-    const registers = program.headers[1 /* MINREG */].value + register_count;
-    const run = program.headers[3 /* RUN */].value;
-    this.heap_size = heap;
-    this.debug_reached = false;
-    this.pc = 0;
-    this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
-    this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
-    this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
-    this.do_debug_program = Object.keys(debug_info.program_breaks).length > 0;
-    if (run === 1 /* RAM */) {
-      throw new Error("emulator currently doesn't support running in ram");
-    }
-    let WordArray;
-    if (bits <= 8) {
-      WordArray = Uint8Array;
-      this.bits = 8;
-    } else if (bits <= 16) {
-      WordArray = Uint16Array;
-      this.bits = 16;
-    } else if (bits <= 32) {
-      WordArray = Uint32Array;
-      this.bits = 32;
-    } else {
-      throw new Error(`BITS = ${bits} exceeds 32 bits`);
-    }
-    if (registers > this.max_size) {
-      throw new Error(`Too many registers ${registers}, must be <= ${this.max_size}`);
-    }
-    const memory_size = heap + stack + static_data.length;
-    if (memory_size > this.max_size) {
-      throw new Error(`Too much memory heap:${heap} + stack:${stack} + dws:${static_data.length} = ${memory_size}, must be <= ${this.max_size}`);
-    }
-    const buffer_size = (memory_size + registers) * WordArray.BYTES_PER_ELEMENT;
-    if (this.buffer.byteLength < buffer_size) {
-      this.warn(`resizing Arraybuffer to ${buffer_size} bytes`);
-      const max_size2 = this.options.max_memory?.();
-      if (max_size2 && buffer_size > max_size2) {
-        throw new Error(`Unable to allocate memory for the emulator because	
-${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
-      }
-      try {
-        this.buffer = new ArrayBuffer(buffer_size);
-      } catch (e) {
-        throw new Error(`Unable to allocate enough memory for the emulator because:
-	${e}`);
-      }
-    }
-    this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-    this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
-    for (let i = 0; i < static_data.length; i++) {
-      this.memory[i] = static_data[i];
-    }
-    this.reset();
-    for (const device of this.devices) {
-      device.bits = bits;
-    }
-  }
-  reset() {
-    this.stack_ptr = this.memory.length;
-    this.pc = 0;
-    this.ins = [];
-    this.outs = [];
-    for (const reset of this.device_resets) {
-      reset();
-    }
-  }
-  shrink_buffer() {
-    this.buffer = new ArrayBuffer(1024 * 1024);
-  }
-  buffer = new ArrayBuffer(1024 * 1024);
-  registers = new Uint8Array(32);
-  memory = new Uint8Array(256);
-  pc_counters = [];
-  pc_full = 0;
-  get pc() {
-    return this.pc_full;
-  }
-  set pc(value) {
-    this.registers[0 /* PC */] = value;
-    this.pc_full = value;
-  }
-  get stack_ptr() {
-    return this.registers[1 /* SP */];
-  }
-  set stack_ptr(value) {
-    this.registers[1 /* SP */] = value;
-  }
-  bits = 8;
-  device_inputs = {};
-  device_outputs = {};
-  device_resets = [];
-  devices = [];
-  add_io_device(device) {
-    this.devices.push(device);
-    if (device.inputs) {
-      for (const port in device.inputs) {
-        const input2 = device.inputs[port];
-        this.device_inputs[port] = input2.bind(device);
-      }
-    }
-    if (device.outputs) {
-      for (const port in device.outputs) {
-        const output = device.outputs[port];
-        this.device_outputs[port] = output.bind(device);
-      }
-    }
-    if (device.reset) {
-      this.device_resets.push(device.reset.bind(device));
-    }
-  }
-  get max_value() {
-    return 4294967295 >>> 32 - this.bits;
-  }
-  get max_size() {
-    return this.max_value + 1;
-  }
-  get max_signed() {
-    return (1 << this.bits - 1) - 1;
-  }
-  get sign_bit() {
-    return 1 << this.bits - 1;
-  }
-  push(value) {
-    if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
-      this.error(`Stack overflow: ${this.stack_ptr} <= ${this.heap_size}}`);
-    }
-    this.write_reg(1 /* SP */, this.stack_ptr - 1);
-    this.memory[this.stack_ptr] = value;
-  }
-  pop() {
-    if (this.stack_ptr >= this.memory.length) {
-      this.error(`Stack underflow: ${this.stack_ptr} >= ${this.memory.length}`);
-    }
-    const value = this.memory[this.stack_ptr];
-    this.write_reg(1 /* SP */, this.stack_ptr + 1);
-    return value;
-  }
-  ins = [];
-  outs = [];
-  in(port) {
-    try {
-      const device = this.device_inputs[port];
-      if (device === void 0) {
-        if (port === 5 /* SUPPORTED */) {
-          this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === 5 /* SUPPORTED */ ? 1 : 0;
-          return false;
-        }
-        if (this.ins[port] === void 0) {
-          this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
-        }
-        this.ins[port] = 1;
-        return false;
-      }
-      if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
-        this.debug(`Reading from Port ${port} (${IO_Port[port]})`);
-      }
-      const res = device(this.finish_step_in.bind(this, port));
-      if (res === void 0) {
-        if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
-          this.debug(`Read from port ${port} (${IO_Port[port]})`);
-        }
-        this.pc--;
-        return true;
-      } else {
-        this.a = res;
-        if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
-          this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
-        }
-        return false;
-      }
-    } catch (e) {
-      this.error("" + e);
-    }
-  }
-  supported = 0;
-  out(port, value) {
-    try {
-      const device = this.device_outputs[port];
-      if (device === void 0) {
-        if (port === 5 /* SUPPORTED */) {
-          this.supported = value;
-          return;
-        }
-        if (this.outs[port] === void 0) {
-          this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}`);
-          this.outs[port] = value;
-        }
-        return;
-      }
-      if (this.do_debug_ports && this.debug_info.port_breaks[port] & 2 /* ONWRITE */) {
-        let char_str = "";
-        try {
-          const char = JSON.stringify(String.fromCodePoint(value));
-          char_str = `'${char.substring(1, char.length - 1)}'`;
-        } catch {
-        }
-        this.debug(`Written to port ${port} (${IO_Port[port]}) value=0x${value.toString(16)} ${char_str}`);
-      }
-      device(value);
-    } catch (e) {
-      this.error("" + e);
-    }
-  }
-  burst(length, max_duration) {
-    const start_length = length;
-    const burst_length = 1024;
-    const end = performance.now() + max_duration;
-    for (; length >= burst_length; length -= burst_length) {
-      for (let i = 0; i < burst_length; i++) {
-        const res = this.step();
-        if (res !== 0 /* Continue */) {
-          return [res, start_length - length + i + 1];
-        }
-      }
-      if (performance.now() > end) {
-        return [0 /* Continue */, start_length - length + burst_length];
-      }
-    }
-    for (let i = 0; i < length; i++) {
-      const res = this.step();
-      if (res !== 0 /* Continue */) {
-        return [res, start_length - length + i + 1];
-      }
-    }
-    return [0 /* Continue */, start_length];
-  }
-  run(max_duration) {
-    const burst_length = 1024;
-    const end = performance.now() + max_duration;
-    let j = 0;
-    do {
-      for (let i = 0; i < burst_length; i++) {
-        const res = this.step();
-        if (res !== 0 /* Continue */) {
-          return [res, j + i + 1];
-        }
-      }
-      j += burst_length;
-    } while (performance.now() < end);
-    return [0 /* Continue */, j];
-  }
-  debug_reached = false;
-  step() {
-    const pc = this.pc++;
-    if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached) {
-      this.debug_reached = true;
-      this.debug(`Reached @DEBUG Before:`);
-      this.pc--;
-      return 3 /* Debug */;
-    }
-    this.debug_reached = false;
-    if (pc >= this.program.opcodes.length) {
-      return 1 /* Halt */;
-    }
-    this.pc_counters[pc]++;
-    const opcode = this.program.opcodes[pc];
-    if (opcode === 36 /* HLT */) {
-      this.pc--;
-      return 1 /* Halt */;
-    }
-    const [[op], func] = Opcodes_operants[opcode];
-    if (func === void 0) {
-      this.error(`unkown opcode ${opcode}`);
-    }
-    const op_types = this.program.operant_prims[pc];
-    const op_values = this.program.operant_values[pc];
-    const length = op_values.length;
-    if (length >= 1 && op !== 0 /* SET */)
-      this.a = this.read(op_types[0], op_values[0]);
-    if (length >= 2)
-      this.b = this.read(op_types[1], op_values[1]);
-    if (length >= 3)
-      this.c = this.read(op_types[2], op_values[2]);
-    if (func(this)) {
-      return 2 /* Input */;
-    }
-    if (length >= 1 && op === 0 /* SET */)
-      this.write(op_types[0], op_values[0], this.a);
-    if (this._debug_message !== void 0) {
-      return 3 /* Debug */;
-    }
-    return 0 /* Continue */;
-  }
-  m_set(addr, value) {
-    if (addr >= this.memory.length) {
-      this.error(`Heap overflow on store: 0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
-    }
-    if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & 2 /* ONWRITE */) {
-      this.debug(`Written memory[0x${addr.toString(16)}] which was 0x${this.memory[addr].toString(16)} to 0x${value.toString(16)}`);
-    }
-    this.memory[addr] = value;
-  }
-  m_get(addr) {
-    if (addr >= this.memory.length) {
-      this.error(`Heap overflow on load: #0x${addr.toString(16)} >= 0x${this.memory.length.toString(16)}`);
-    }
-    if (this.do_debug_memory && this.debug_info.memory_breaks[addr] & 1 /* ONREAD */) {
-      this.debug(`Read memory[0x${addr.toString(16)}] = 0x${this.memory[addr].toString(16)}`);
-    }
-    return this.memory[addr];
-  }
-  finish_step_in(port, result) {
-    const pc = this.pc++;
-    const type = this.program.operant_prims[pc][0];
-    const value = this.program.operant_values[pc][0];
-    this.write(type, value, result);
-    this.options.on_continue?.();
-  }
-  write(target, index, value) {
-    switch (target) {
-      case 0 /* Reg */:
-        {
-          this.write_reg(index, value);
-        }
-        return;
-      case 1 /* Imm */:
-        return;
-      default:
-        this.error(`Unknown operant target ${target}`);
-    }
-  }
-  write_reg(index, value) {
-    if (this.do_debug_registers && this.debug_info.register_breaks[index] & 2 /* ONWRITE */) {
-      const old = this.registers[index];
-      this.registers[index] = value;
-      const register_name = Register[index] ?? `r${index - register_count + 1}`;
-      this.debug(`Written ${register_name} which was ${old} to 0x${this.registers[index].toString(16)}`);
-    }
-    this.registers[index] = value;
-  }
-  read(source, index) {
-    switch (source) {
-      case 1 /* Imm */:
-        return index;
-      case 0 /* Reg */: {
-        return this.read_reg(index);
-      }
-      default:
-        this.error(`Unknown operant source ${source}`);
-    }
-  }
-  read_reg(index) {
-    if (this.do_debug_registers && this.debug_info.register_breaks[index] & 1 /* ONREAD */) {
-      this.debug(`Read r${index - register_count + 1} = 0x${this.registers[index].toString(16)}`);
-    }
-    return this.registers[index];
-  }
-  error(msg) {
-    const { pc_line_nrs, lines, file_name } = this.debug_info;
-    const line_nr = pc_line_nrs[this.pc - 1];
-    const trace = this.decode_memory(this.stack_ptr, this.memory.length, false);
-    const content = `${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}
-    ${lines[line_nr]}
-
-${indent(registers_to_string(this), 1)}
-
-stack trace:
-${trace}`;
-    if (this.options.error) {
-      this.options.error(content);
-    }
-    throw Error(content);
-  }
-  get_line_nr(pc = this.pc) {
-    return this.debug_info.pc_line_nrs[pc - 1] || -2;
-  }
-  get_line(pc = this.pc) {
-    const line = this.debug_info.lines[this.get_line_nr(pc)];
-    if (line == void 0) {
-      return "";
-    }
-    return `
-	${line}`;
-  }
-  format_message(msg, pc = this.pc) {
-    const { lines, file_name } = this.debug_info;
-    const line_nr = this.get_line_nr(pc);
-    return `${file_name ?? "eval"}:${line_nr + 1} - ${msg}
-	${lines[line_nr] ?? ""}`;
-  }
-  warn(msg) {
-    const content = this.format_message(`warning - ${msg}`);
-    if (this.options.warn) {
-      this.options.warn(content);
-    } else {
-      console.warn(content);
-    }
-  }
-  debug(msg) {
-    this._debug_message = (this._debug_message ?? "") + this.format_message(`debug - ${msg}`) + "\n";
-  }
-  decode_memory(start, end, reverse) {
-    const w = 8;
-    const headers = ["hexaddr", "hexval", "value", "*value", "linenr", "*opcode"];
-    let str = headers.map((v) => pad_center(v, w)).join("|");
-    let view = this.memory.slice(start, end);
-    if (reverse) {
-      view = view.reverse();
-    }
-    for (const [i, v] of view.entries()) {
-      const j = reverse ? end - i : start + i;
-      const index = hex(j, w, " ");
-      const h = hex(v, w, " ");
-      const value = pad_left("" + v, w);
-      const opcode = pad_left(Opcode[this.program.opcodes[v]] ?? ".", w);
-      const linenr = pad_left("" + (this.debug_info.pc_line_nrs[v] ?? "."), w);
-      const mem = pad_left("" + (this.memory[v] ?? "."), w);
-      str += `
-${index}|${h}|${value}|${mem}|${linenr}|${opcode}`;
-    }
-    return str;
-  }
-};
-
 // src/emulator/parser.ts
 function try_parse_int(x) {
   const int = my_parse_int(x);
@@ -3263,6 +2780,265 @@ function str_until(string, sub_string) {
   return string.slice(0, end);
 }
 
+// src/emulator/to_js.ts
+var { SET: SET2, GET: GET2, GET_RAM: GAM2, SET_RAM: SAM2, RAM_OFFSET: RAO2 } = Operant_Operation;
+var Emu = class {
+  constructor(options) {
+    this.options = options;
+  }
+  m_set(a, v) {
+    this.memory[a] = v;
+  }
+  m_get(a) {
+    return this.memory[a];
+  }
+  push(value) {
+    this.memory[--this.stack_pointer] = value;
+  }
+  pop() {
+    return this.memory[this.stack_pointer++];
+  }
+  warn(msg) {
+    console.warn(msg);
+  }
+  error(msg) {
+    const { pc_line_nrs, lines, file_name } = this.debug_info;
+    const line_nr = pc_line_nrs[this.pc - 1];
+    const content = `${file_name ?? "eval"}:${line_nr + 1} - ERROR - ${msg}
+    ${lines[line_nr]}
+`;
+    throw Error(content);
+  }
+  registers;
+  registers_s;
+  memory;
+  step;
+  pc = 0;
+  bits;
+  max_value;
+  max_signed;
+  sign_bit;
+  get stack_pointer() {
+    return this.registers[1 /* SP */];
+  }
+  set stack_pointer(value) {
+    this.registers[1 /* SP */] = value;
+  }
+  program;
+  debug_info;
+  load_program(program, debug_info) {
+    this.pc = 0;
+    this.program = program;
+    this.debug_info = debug_info;
+    const reg_count = program.headers[1 /* MINREG */].value + register_count;
+    const static_data = program.data;
+    const heap = program.headers[2 /* MINHEAP */].value;
+    const stack = program.headers[4 /* MINSTACK */].value;
+    this.bits = program.headers[0 /* BITS */].value;
+    this.max_value = 4294967295 >>> 32 - this.bits;
+    this.max_signed = this.max_value >>> 1;
+    this.sign_bit = 1 << this.bits - 1;
+    let UintArray;
+    let IntArray;
+    switch (this.bits) {
+      case 8:
+        UintArray = Uint8Array;
+        IntArray = Int8Array;
+        break;
+      case 16:
+        UintArray = Uint16Array;
+        IntArray = Int16Array;
+        break;
+      case 32:
+        UintArray = Uint32Array;
+        IntArray = Int32Array;
+        break;
+      default:
+        throw new Error(">:(");
+    }
+    this.registers = new UintArray(reg_count);
+    this.registers_s = new IntArray(this.registers.buffer);
+    const memory_size = heap + stack + static_data.length;
+    this.memory = new UintArray(memory_size);
+    this.memory.set(static_data);
+    console.log(program);
+    let src = "switch(this.pc) {\n";
+    for (let i = 0; i < program.opcodes.length; i++) {
+      const opcode = program.opcodes[i];
+      const [operations, alu] = Opcodes_operants[opcode];
+      let inst = alu.toString();
+      const start = inst.indexOf("=>") + 2;
+      inst = `s.pc = ${i + 1};
+${inst.substring(start)}`;
+      const prims = program.operant_prims[i];
+      const values = program.operant_values[i];
+      for (let j = 0; j < values.length; j++) {
+        const letter = "abc"[j];
+        const prim = prims[j];
+        const value = values[j];
+        console.log("->", prim, value);
+        if (prim === 1 /* Imm */) {
+          inst = inst.replaceAll(`s.${letter}`, `${value}`).replaceAll(`s.s${letter}`, `${value}`);
+        } else {
+          inst = inst.replaceAll(`s.${letter}`, `s.registers[${value}]`).replaceAll(`s.s${letter}`, `s.registers_s[${value}]`);
+        }
+      }
+      inst = inst.replaceAll("s.", "this.");
+      if (inst.includes("pc")) {
+        inst += `
+return ${0 /* Continue */};
+`;
+      }
+      src += `case ${i}: // ${Opcode[opcode]}
+${inst}
+`;
+    }
+    src += `}
+return ${1 /* Halt */}`;
+    console.log(src);
+    this.step = new Function(src);
+  }
+  burst(length, max_duration) {
+    const start_length = length;
+    const burst_length = 1024;
+    const end = performance.now() + max_duration;
+    for (; length >= burst_length; length -= burst_length) {
+      for (let i = 0; i < burst_length; i++) {
+        const res = this.step();
+        if (res !== 0 /* Continue */) {
+          return [res, start_length - length + i + 1];
+        }
+      }
+      if (performance.now() > end) {
+        return [0 /* Continue */, start_length - length + burst_length];
+      }
+    }
+    for (let i = 0; i < length; i++) {
+      const res = this.step();
+      if (res !== 0 /* Continue */) {
+        return [res, start_length - length + i + 1];
+      }
+    }
+    return [0 /* Continue */, start_length];
+  }
+  run(max_duration) {
+    const burst_length = 1024;
+    const end = performance.now() + max_duration;
+    let j = 0;
+    do {
+      for (let i = 0; i < burst_length; i++) {
+        const res = this.step();
+        if (res !== 0 /* Continue */) {
+          return [res, j + i + 1];
+        }
+      }
+      j += burst_length;
+    } while (performance.now() < end);
+    return [0 /* Continue */, j];
+  }
+  device_inputs = {};
+  device_outputs = {};
+  device_resets = [];
+  devices = [];
+  add_io_device(device) {
+    this.devices.push(device);
+    if (device.inputs) {
+      for (const port in device.inputs) {
+        const input2 = device.inputs[port];
+        this.device_inputs[port] = input2.bind(device);
+      }
+    }
+    if (device.outputs) {
+      for (const port in device.outputs) {
+        const output = device.outputs[port];
+        this.device_outputs[port] = output.bind(device);
+      }
+    }
+    if (device.reset) {
+      this.device_resets.push(device.reset.bind(device));
+    }
+  }
+  ins = [];
+  outs = [];
+  in(port) {
+    try {
+      const device = this.device_inputs[port];
+      if (device === void 0) {
+        if (port === 5 /* SUPPORTED */) {
+          this.a = this.device_inputs[this.supported] || this.device_outputs[this.supported] || this.supported === 5 /* SUPPORTED */ ? 1 : 0;
+          return false;
+        }
+        if (this.ins[port] === void 0) {
+          this.warn(`unsupported input device port ${port} (${IO_Port[port]})`);
+        }
+        this.ins[port] = 1;
+        return false;
+      }
+      const res = device(this.finish_step_in.bind(this, port));
+      if (res === void 0) {
+        this.pc--;
+        return true;
+      } else {
+        const type = this.program.operant_prims[this.pc - 1][0];
+        const value = this.program.operant_values[this.pc - 1][0];
+        this.write(type, value, res);
+        return false;
+      }
+    } catch (e) {
+      this.error("" + e);
+    }
+  }
+  supported = 0;
+  out(port, value) {
+    try {
+      const device = this.device_outputs[port];
+      if (device === void 0) {
+        if (port === 5 /* SUPPORTED */) {
+          this.supported = value;
+          return;
+        }
+        if (this.outs[port] === void 0) {
+          this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}`);
+          this.outs[port] = value;
+        }
+        return;
+      }
+      device(value);
+    } catch (e) {
+      this.error("" + e);
+    }
+  }
+  write(target, index, value) {
+    switch (target) {
+      case 0 /* Reg */:
+        {
+          this.write_reg(index, value);
+        }
+        return;
+      case 1 /* Imm */:
+        return;
+      default:
+        this.error(`Unknown operant target ${target}`);
+    }
+  }
+  write_reg(index, value) {
+    this.registers[index] = value;
+  }
+  finish_step_in(port, result) {
+    const pc = this.pc++;
+    const type = this.program.operant_prims[pc][0];
+    const value = this.program.operant_values[pc][0];
+    this.write(type, value, result);
+    this.options.on_continue?.();
+  }
+  a;
+  b;
+  c;
+  sa;
+  sb;
+  sc;
+};
+
 // src/index.ts
 var animation_frame;
 var running = false;
@@ -3426,8 +3202,7 @@ function resize_display() {
   const height2 = parseInt(height_input.value) || 16;
   display.resize(width2, height2);
 }
-var emulator = new Emulator({ on_continue: frame, warn: (msg) => output_element.innerText += `${msg}
-` });
+var emulator = new Emu({ on_continue: frame });
 emulator.add_io_device(new Sound());
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
@@ -3618,12 +3393,6 @@ function process_step_result(result, steps) {
         if (running) {
           pause();
         }
-        const msg = emulator.get_debug_message();
-        if (msg !== void 0) {
-          debug_output_element.innerText = msg;
-        } else {
-          throw new Error("Debug not handled");
-        }
       }
       break;
     default: {
@@ -3637,11 +3406,6 @@ function update_views() {
   if (memory_update_input.checked) {
     memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
   }
-  register_view.innerText = registers_to_string(emulator);
-  const lines = emulator.debug_info.pc_line_nrs;
-  const line = lines[Math.min(emulator.pc, lines.length - 1)];
-  source_input.set_pc_line(line);
-  source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v]));
   console_output.flush();
 }
 change_color_mode();
