@@ -1638,6 +1638,7 @@ var Gl_Display = class {
     this.y = 0;
     this.clear();
     this.buffer_enabled = 0;
+    this.update_display();
   }
   resize(width2, height2) {
     const buffer = new Uint32Array(width2 * height2);

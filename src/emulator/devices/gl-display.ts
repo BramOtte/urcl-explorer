@@ -40,6 +40,7 @@ export class Gl_Display implements Device {
         this.y = 0;
         this.clear();
         this.buffer_enabled = 0;
+        this.update_display();
     }
     
     constructor (
