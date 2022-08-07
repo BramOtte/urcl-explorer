@@ -486,11 +486,7 @@ function memoryToString(view, from = 0, length = 4096, bits = 8) {
   const width2 = 16;
   const end = Math.min(from + length, view.length);
   const hexes = hex_size(bits);
-  let lines = [
-    " ".repeat(hexes) + Array.from({ length: width2 }, (_, i) => {
-      return pad_left(hex(i, 1), hexes);
-    }).join(" ")
-  ];
+  let lines = [];
   for (let i = from; i < end; ) {
     const sub_end = Math.min(i + width2, end);
     let subs = [];
@@ -499,7 +495,7 @@ function memoryToString(view, from = 0, length = 4096, bits = 8) {
       subs.push(hex(view[i], hexes));
     }
     const line = subs.join(" ");
-    lines.push(addr + " ".repeat(hexes - addr.length) + line);
+    lines.push(addr + ":" + " ".repeat(hexes - addr.length) + line);
   }
   return lines.join("\n");
 }
@@ -1117,6 +1113,37 @@ var Scroll_Out = class extends HTMLElement {
   }
 };
 customElements.define("scroll-out", Scroll_Out);
+
+// src/buffer_view/buffer_view.ts
+var BufferView = class extends HTMLElement {
+  content;
+  scroll_div;
+  char;
+  memory = new Uint8Array();
+  width = 16;
+  constructor() {
+    super();
+    l(this, {
+      style: { whiteSpace: "pre", fontFamily: "monospace", position: "relative", overflow: "auto", display: "block" }
+    }, this.content = l("div", { style: { position: "absolute" } }), this.scroll_div = l("div"), this.char = l("div", { style: { position: "absolute", visibility: "hidden" } }, "a"));
+    this.onscroll = this.update;
+    const observer = new ResizeObserver(() => this.update());
+    observer.observe(this);
+  }
+  update() {
+    const ch = this.char.clientHeight;
+    console.log(ch);
+    const H = Math.ceil(this.memory.length / this.width);
+    const height2 = H * ch;
+    this.scroll_div.style.height = `${height2}px`;
+    const y = Math.floor(this.scrollTop / ch);
+    const h = Math.ceil((this.clientHeight + 2) / ch);
+    const sy = bound(y, 0, H), ey = bound(y + h, 0, H);
+    this.content.style.top = `${sy * ch}px`;
+    this.content.innerText = memoryToString(this.memory, sy * this.width, (ey - sy) * this.width, this.memory.BYTES_PER_ELEMENT * 8);
+  }
+};
+customElements.define("buffer-view", BufferView);
 
 // src/emulator/compiler.ts
 function compile(parsed) {
@@ -3633,9 +3660,9 @@ function process_step_result(result, steps) {
   update_views();
 }
 function update_views() {
-  const bits = emulator.bits;
   if (memory_update_input.checked) {
-    memory_view.innerText = memoryToString(emulator.memory, 0, emulator.memory.length, bits);
+    memory_view.memory = emulator.memory;
+    memory_view.update();
   }
   register_view.innerText = registers_to_string(emulator);
   const lines = emulator.debug_info.pc_line_nrs;

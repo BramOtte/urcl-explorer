@@ -1,5 +1,6 @@
 import "./editor/editor.js";
 import "./scroll-out/scroll-out.js";
+import "./buffer_view/buffer_view.js";
 
 import { Editor_Window } from "./editor/editor.js";
 import { compile } from "./emulator/compiler.js";
@@ -19,6 +20,7 @@ import { parse } from "./emulator/parser.js";
 import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString, format_int } from "./emulator/util.js";
 import { Scroll_Out } from "./scroll-out/scroll-out.js";
 import { register_count } from "./emulator/instructions.js";
+import { BufferView } from "./buffer_view/buffer_view.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -31,7 +33,7 @@ let clock_count = 0;
 const source_input = document.getElementById("urcl-source") as Editor_Window;
 const output_element = document.getElementById("output") as HTMLElement;
 const debug_output_element = document.getElementById("debug-output") as HTMLElement;
-const memory_view = document.getElementById("memory-view") as HTMLElement;
+const memory_view = document.getElementById("memory-view") as BufferView;
 const register_view = document.getElementById("register-view") as HTMLElement;
 
 const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
@@ -415,9 +417,9 @@ function process_step_result(result: Step_Result, steps: number){
     update_views();
 }
 function update_views(){
-    const bits = emulator.bits;
     if (memory_update_input.checked){
-        memory_view.innerText = memoryToString(emulator.memory as Arr, 0, emulator.memory.length, bits);
+        memory_view.memory = emulator.memory;
+        memory_view.update();
     }
     register_view.innerText = 
         registers_to_string(emulator)
