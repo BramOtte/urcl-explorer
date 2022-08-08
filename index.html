@@ -21,7 +21,7 @@
             create_tab_group("right-tabs", "right-area");
             sync_tabs(["left-tabs", "right-tabs"]);
             on_tab_selected("left-tabs", "left-area", "Source");
-            on_tab_selected("right-tabs", "right-area", "Build Output");
+            on_tab_selected("right-tabs", "right-area", "Examples");
         });
 
         function create_tab_group(group, view)
@@ -136,8 +136,8 @@
         <button id="step-button" class="btn btn-warning col major-button">Step</button>
         <button id="share-button" class="btn btn-info col major-button" style="font-family: codicon;">&#xeb15;</button>
     </div>
-    <main>
-        <div>
+    <main class="row">
+        <div class="col-sm col-push-5">
             <ul id="left-tabs" class="nav nav-tabs">
                 <li class="nav-item">
                     <a class="nav-link">Source</a>
@@ -162,12 +162,12 @@
                 </li>
             </ul>
             <div id="left-area">
-                <div id="source-tab">
+                <div id="source-tab" style="overflow: auto; max-width: 50em; max-height: 50em;">
                     <editor-window id="urcl-source"></editor-window>
                 </div>
             </div>
         </div>
-        <div>
+        <div class="col-sm col-pull-5">
             <ul id="right-tabs" class="nav nav-tabs">
                 <li class="nav-item">
                     <a class="nav-link">Source</a>
@@ -230,8 +230,8 @@
                         </details>
                     </div>
                     <div id="build-output-tab">
-                        <pre id="output"></pre>
-                        <pre id="debug-output"></pre>
+                        <pre id="output" style="white-space: pre-wrap;"></pre>
+                        <pre id="debug-output" style="white-space: pre-wrap;"></pre>
                     </div>
                 </div>
             </div>
