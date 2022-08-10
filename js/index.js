@@ -1,3 +1,5 @@
+"use strict";
+
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -354,7 +356,7 @@ var Opcodes_operants = {
       s.pc = s.a;
   }],
   [40 /* MLT */]: [[SET, GET, GET], (s) => {
-    s.a = s.b * s.c;
+    s.a = Math.imul(s.b, s.c);
   }],
   [41 /* DIV */]: [[SET, GET, GET], (s) => {
     s.a = s.b / s.c;
