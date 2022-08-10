@@ -70,7 +70,6 @@ export class Emu implements Device_Host, Instruction_Ctx {
     program!: Program;
     debug_info!: Debug_Info;
 
-    // TODO: optimize away all the String.replaceAll()
     load_program(program: Program, debug_info: Debug_Info) {
         for (const reset of this.device_resets) {
             reset();
@@ -114,8 +113,9 @@ export class Emu implements Device_Host, Instruction_Ctx {
         this.memory.set(static_data);
 
         const max_duration = "max_duration";
-        const burst_length = 1024 * 8;
+        const burst_length = 1024;
 
+        console.log(program);
         let step = "switch(this.pc) {\n";
         let run = `let i = 0;
 const end = performance.now() + ${max_duration};
@@ -133,6 +133,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
                 const letter = "abc"[j];
                 const prim = prims[j];
                 const value = values[j];
+                console.log("->", prim, value);
                 // TODO: make sure signed and unsigned values are always handled properly
                 if (prim === Operant_Prim.Imm) {
                     inst = inst
@@ -153,25 +154,27 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
             step += `case ${i}: // ${Opcode[opcode]}\n`;
             step += `this.pc = ${i+1};\n`;
             run += `case ${i}: // ${Opcode[opcode]}\n`;
-            run += `this.pc = ${i+1}; i++;\n`;
+            if (inst.includes(".pc =")) {
+                run += `i += ${i+1} - this.pc; this.pc = ${i+1};\n`;
+            }
             if (opcode === Opcode.IN) {
                 step += `return (${inst}) ? ${Step_Result.Input} : ${Step_Result.Continue};\n`;
-                run += `if (${inst}) return [${Step_Result.Input}, i];\n`;
+                run += `if (${inst}) return [${Step_Result.Input}, i];`;
             } else
             if (opcode === Opcode.HLT) {
                 step += `return ${Step_Result.Halt};\n`;
-                run += `return [${Step_Result.Halt}, i];\n`;
+                run += `return [${Step_Result.Halt}, i + ${i+1} - this.pc];\n`;
             } else {
                 step += `${inst}\nreturn ${Step_Result.Continue};\n`;
-                run += `${inst};\n`;
+                run += `${inst}\n`;
             }
             if (inst.includes(".pc =")) {
                 run += `continue;\n`;
             }
         }
         step += `}\nreturn ${Step_Result.Halt};\n`;
-        run += `default: return [${Step_Result.Halt}, i]`;
-        run += `}\nreturn [${Step_Result.Continue}, i]`;
+        run += `default: return [${Step_Result.Halt}, i + ${program.opcodes.length + 1} - this.pc];`;
+        run += `}\nreturn [${Step_Result.Continue}, i];`;
 
         console.log(run);
 
@@ -316,8 +319,10 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
     // this method only needs to be called for the IN instruction
     finish_step_in(port: number, result: number){
         const pc = this.pc++;
+        // console.log("finish", this.program.opcodes[pc], Opcode[this.program.opcodes[pc]]);
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
+        console.log(this.debug_info.lines[this.debug_info.pc_line_nrs[pc]])
         this.write(type, value, result);
         this.options.on_continue?.();
     }

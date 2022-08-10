@@ -1,6 +1,6 @@
 import { IO_Port } from "../instructions";
 
-export type Device_Input = ((callback: (value: number) => void) => void | number) | (() => number);
+export type Device_Input = ((callback: (value: number) => void) => void) | (() => number);
 export type Device_Output = (value: number) => void;
 export type Device_Reset = ()=>void;
 

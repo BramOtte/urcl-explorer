@@ -1,6 +1,6 @@
 import { bound } from "../emulator/util.js";
 
-const max_size = 1_000_000_000
+const max_size = 100_000_000
 export class Scroll_Out extends HTMLElement {
     scroll_div = document.createElement("div");
     content = document.createElement("div");
