@@ -437,7 +437,7 @@ var Opcodes_operants = {
       fail_assert(s, `left = ${s.a}, right = ${s.b}`);
   }],
   [72 /* UMLT */]: [[SET, GET, GET], (s) => {
-    s.a = s.b * s.c / 2 ** s.bits;
+    s.a = s.b * s.c / 2 ** s._bits;
   }]
 };
 var inst_fns = object_map(Opcodes_operants, (key, value) => {
@@ -483,7 +483,7 @@ function hex_size(bits) {
   return Math.ceil(bits / 4);
 }
 function registers_to_string(emulator2) {
-  const nibbles = hex_size(emulator2.bits);
+  const nibbles = hex_size(emulator2._bits);
   return Array.from({ length: register_count }, (_, i) => pad_center(Register[i], nibbles) + " ").join("") + Array.from({ length: emulator2.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" + Array.from(emulator2.registers, (v) => hex(v, nibbles) + " ").join("");
 }
 function memoryToString(view, from = 0, length = 4096, bits = 8) {
@@ -2273,10 +2273,10 @@ var Emulator = class {
     this.options = options;
   }
   signed(v) {
-    if (this.bits === 32) {
+    if (this._bits === 32) {
       return 0 | v;
     }
-    return (v & this.sign_bit) === 0 ? v : v | 4294967295 << this.bits;
+    return (v & this.sign_bit) === 0 ? v : v | 4294967295 << this._bits;
   }
   a = 0;
   b = 0;
@@ -2342,15 +2342,15 @@ var Emulator = class {
     if (bits <= 8) {
       WordArray = Uint8Array;
       IntArray2 = Int8Array;
-      this.bits = 8;
+      this._bits = 8;
     } else if (bits <= 16) {
       WordArray = Uint16Array;
       IntArray2 = Int16Array;
-      this.bits = 16;
+      this._bits = 16;
     } else if (bits <= 32) {
       WordArray = Uint32Array;
       IntArray2 = Int32Array;
-      this.bits = 32;
+      this._bits = 32;
     } else {
       throw new Error(`BITS = ${bits} exceeds 32 bits`);
     }
@@ -2497,7 +2497,7 @@ return [${0 /* Continue */}, i]`;
   set stack_ptr(value) {
     this.registers[1 /* SP */] = value;
   }
-  bits = 8;
+  _bits = 8;
   device_inputs = {};
   device_outputs = {};
   device_resets = [];
@@ -2521,16 +2521,16 @@ return [${0 /* Continue */}, i]`;
     }
   }
   get max_value() {
-    return 4294967295 >>> 32 - this.bits;
+    return 4294967295 >>> 32 - this._bits;
   }
   get max_size() {
     return this.max_value + 1;
   }
   get max_signed() {
-    return (1 << this.bits - 1) - 1;
+    return (1 << this._bits - 1) - 1;
   }
   get sign_bit() {
-    return 1 << this.bits - 1;
+    return 1 << this._bits - 1;
   }
   push(value) {
     if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
@@ -3452,9 +3452,9 @@ var storage_loads = 0;
 function load_array_buffer(buffer) {
   storage_uploaded = new Uint8Array(buffer);
   const bytes = storage_uploaded.slice();
-  emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+  emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
   storage_device.set_bytes(bytes);
-  storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+  storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words`;
 }
 storage_little.oninput = storage_input.oninput = async (e) => {
   storage_msg.classList.remove("error");
@@ -3646,11 +3646,11 @@ function compile_and_reset() {
     emulator.load_program(program, debug_info);
     if (storage_uploaded) {
       const bytes = storage_uploaded.slice();
-      emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+      emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
       storage_device.set_bytes(bytes);
-      storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+      storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
-    const bits = emulator.bits;
+    const bits = emulator._bits;
     const total_register_count = emulator.registers.length;
     const memory_size = emulator.memory.length;
     const instruction_count = emulator.program.opcodes.length;

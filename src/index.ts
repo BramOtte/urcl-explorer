@@ -89,9 +89,9 @@ let storage_loads = 0;
 function load_array_buffer(buffer: ArrayBuffer) {
     storage_uploaded = new Uint8Array(buffer);
     const bytes = storage_uploaded.slice();
-    emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+    emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
     storage_device.set_bytes(bytes);
-    storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words`;
+    storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words`;
 }
 
 storage_little.oninput =
@@ -304,12 +304,12 @@ try {
 
     if (storage_uploaded){
         const bytes = storage_uploaded.slice();
-        emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+        emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
         storage_device.set_bytes(bytes);
-        storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+        storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 
-    const bits = emulator.bits
+    const bits = emulator._bits
     const total_register_count = emulator.registers.length
     const memory_size = emulator.memory.length
     const instruction_count = emulator.program.opcodes.length;

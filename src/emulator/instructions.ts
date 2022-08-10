@@ -106,7 +106,8 @@ export enum IO_Port {
 }
 
 export interface Instruction_Ctx {
-    readonly bits: number,
+    // starting with an _ for the JIT
+    readonly _bits: number,
     readonly max_value: number,
     readonly max_signed: number,
     readonly sign_bit: number,
@@ -270,7 +271,7 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
 
     //----- Experimental Instructions
-    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2**s.bits);}]
+    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}]
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 

@@ -17,10 +17,10 @@ interface Emu_Options {
 
 export class Emulator implements Instruction_Ctx, Device_Host {
     private signed(v: number){
-        if (this.bits === 32){
+        if (this._bits === 32){
             return 0| v;
         }
-        return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this.bits);
+        return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this._bits);
     }
     a = 0;
     b = 0;
@@ -88,15 +88,15 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (bits <= 8){
             WordArray = Uint8Array;
             IntArray = Int8Array;
-            this.bits = 8;
+            this._bits = 8;
         } else if (bits <= 16){
             WordArray = Uint16Array;
             IntArray = Int16Array;
-            this.bits = 16;
+            this._bits = 16;
         } else if (bits <= 32){
             WordArray = Uint32Array;
             IntArray = Int32Array;
-            this.bits = 32;
+            this._bits = 32;
         } else {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
         }
@@ -245,7 +245,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
     set stack_ptr(value: Word){
         this.registers[Register.SP] = value;
     }
-    bits = 8;
+    _bits = 8;
     private device_inputs: {[K in IO_Port]?: Device_Input} = {};
     private device_outputs: {[K in IO_Port]?: Device_Output} = {};
     private device_resets: Device_Reset[] = [];
@@ -271,16 +271,16 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
     
 
     get max_value(){
-        return 0xff_ff_ff_ff >>> (32 - this.bits);
+        return 0xff_ff_ff_ff >>> (32 - this._bits);
     }
     get max_size(){
         return this.max_value + 1;
     }
     get max_signed(){
-        return (1 << (this.bits-1)) - 1;
+        return (1 << (this._bits-1)) - 1;
     }
     get sign_bit(){
-        return (1 << (this.bits-1));
+        return (1 << (this._bits-1));
     }
     push(value: Word): void {
         if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size){

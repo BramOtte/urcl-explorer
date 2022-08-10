@@ -103,7 +103,7 @@ function discord_emu(){
         }
         std_info += "\nregisters:\n" + registers_to_string(emulator);
         if (argv_res.flags.__mem_start !== argv_res.flags.__mem_end){
-            std_info += `\n\nmemory:\n` +memoryToString(emulator.memory as Arr, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator.bits) + "\n\n";
+            std_info += `\n\nmemory:\n` +memoryToString(emulator.memory as Arr, argv_res.flags.__mem_start, argv_res.flags.__mem_end, emulator._bits) + "\n\n";
         }
     }
     function reset(){

@@ -42,7 +42,7 @@ export function hex_size(bits: number){
     return Math.ceil(bits / 4);
 }
 export function registers_to_string(emulator: Emulator) {
-    const nibbles = hex_size(emulator.bits);
+    const nibbles = hex_size(emulator._bits);
     return Array.from({ length: register_count }, (_,i) => pad_center(Register[i], nibbles) + " ").join("") +
         Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
         Array.from(emulator.registers, (v)=> hex(v, nibbles) + " ").join("");
