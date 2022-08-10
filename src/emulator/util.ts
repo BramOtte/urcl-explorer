@@ -53,9 +53,9 @@ export function memoryToString(view: Arr, from = 0x0, length = 0x1000, bits = 8)
     const end = Math.min(from + length, view.length);
     const hexes = hex_size(bits);
     let lines: string[] = [
-        " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
-            return pad_left(hex(i, 1), hexes);
-        }).join(" ")
+        // " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
+        //     return pad_left(hex(i, 1), hexes);
+        // }).join(" ")
     ];
 
     for (let i = from; i < end;) {
@@ -66,7 +66,7 @@ export function memoryToString(view: Arr, from = 0x0, length = 0x1000, bits = 8)
             subs.push(hex(view[i], hexes));
         }
         const line = subs.join(" ");
-        lines.push(addr + " ".repeat(hexes - addr.length) + line);
+        lines.push(addr + ":" + " ".repeat(hexes - addr.length) + line);
     }
     return lines.join("\n");
 }
