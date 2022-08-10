@@ -272,7 +272,7 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
 
     //----- Experimental Instructions
     [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}],
-    [Opcode.SUMLT]: [[SET, GET, GET], (s) => {s.sa = (s.sb * s.sc) / (2 ** s._bits);}]
+    [Opcode.SUMLT]: [[SET, GET, GET], (s) => {s.sa = Math.floor((s.sb * s.sc) / (2 ** s._bits));}]
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 

@@ -441,7 +441,7 @@ var Opcodes_operants = {
     s.a = s.b * s.c / 2 ** s._bits;
   }],
   [73 /* SUMLT */]: [[SET, GET, GET], (s) => {
-    s.sa = s.sb * s.sc / 2 ** s._bits;
+    s.sa = Math.floor(s.sb * s.sc / 2 ** s._bits);
   }]
 };
 var inst_fns = object_map(Opcodes_operants, (key, value) => {
