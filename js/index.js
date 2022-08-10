@@ -72,6 +72,7 @@ var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["__ASSERT0"] = 69] = "__ASSERT0";
   Opcode3[Opcode3["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
   Opcode3[Opcode3["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
+  Opcode3[Opcode3["UMLT"] = 72] = "UMLT";
   return Opcode3;
 })(Opcode || {});
 var Register = /* @__PURE__ */ ((Register2) => {
@@ -434,6 +435,9 @@ var Opcodes_operants = {
   [71 /* __ASSERT_NEQ */]: [[GET, GET], (s) => {
     if (s.a === s.b)
       fail_assert(s, `left = ${s.a}, right = ${s.b}`);
+  }],
+  [72 /* UMLT */]: [[SET, GET, GET], (s) => {
+    s.a = s.b * s.c / 2 ** s.bits;
   }]
 };
 var inst_fns = object_map(Opcodes_operants, (key, value) => {

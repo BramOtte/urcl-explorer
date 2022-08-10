@@ -26,7 +26,10 @@ export enum Opcode {
     __ASSERT,
     __ASSERT0,
     __ASSERT_EQ,
-    __ASSERT_NEQ
+    __ASSERT_NEQ,
+
+    //----- experimental instructions
+    UMLT 
 }
 
 export enum Register {
@@ -265,6 +268,9 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s, `value = ${s.a}`) }],
     [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
+
+    //----- Experimental Instructions
+    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2**s.bits);}]
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 
