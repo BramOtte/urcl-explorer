@@ -100,6 +100,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         } else {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
         }
+
         if (registers > this.max_size){
             throw new Error(`Too many registers ${registers}, must be <= ${this.max_size}`)
         }
@@ -122,9 +123,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
 
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-        this.registers_s = new IntArray(this.registers);
+        this.registers_s = new IntArray(this.registers.buffer, this.registers.byteOffset, this.registers.length);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
-        this.memory_s = new IntArray(this.memory);
+        this.memory_s = new IntArray(this.memory.buffer, this.memory.byteOffset, this.memory.length);
 
         for (let i = 0; i < static_data.length; i++){
             this.memory[i] = static_data[i];
@@ -198,8 +199,6 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
         step += `}\nreturn ${Step_Result.Halt};\n`;
         run += `default: return [${Step_Result.Halt}, i]`;
         run += `}\nreturn [${Step_Result.Continue}, i]`;
-
-        console.log(run);
 
         this.jit_step = new Function(step) as Step;
         this.jit_run = new Function(max_duration, run) as Run;
@@ -330,6 +329,11 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
             this.a = res;
             if (this.do_debug_ports && this.debug_info.port_breaks[port] & Break.ONREAD){
                 this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
+            }
+            if (this.compiled) {
+                const type = this.program.operant_prims[this.pc-1][0];
+                const value = this.program.operant_values[this.pc-1][0];
+                this.write(type, value, res);
             }
             return false;
         }

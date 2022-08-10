@@ -1132,7 +1132,6 @@ var BufferView = class extends HTMLElement {
   }
   update() {
     const ch = this.char.clientHeight;
-    console.log(ch);
     const H = Math.ceil(this.memory.length / this.width);
     const height2 = H * ch;
     this.scroll_div.style.height = `${height2}px`;
@@ -2374,9 +2373,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
       }
     }
     this.registers = new WordArray(this.buffer, 0, registers).fill(0);
-    this.registers_s = new IntArray2(this.registers);
+    this.registers_s = new IntArray2(this.registers.buffer, this.registers.byteOffset, this.registers.length);
     this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
-    this.memory_s = new IntArray2(this.memory);
+    this.memory_s = new IntArray2(this.memory.buffer, this.memory.byteOffset, this.memory.length);
     for (let i = 0; i < static_data.length; i++) {
       this.memory[i] = static_data[i];
     }
@@ -2453,7 +2452,6 @@ return ${1 /* Halt */};
     run += `default: return [${1 /* Halt */}, i]`;
     run += `}
 return [${0 /* Continue */}, i]`;
-    console.log(run);
     this.jit_step = new Function(step2);
     this.jit_run = new Function(max_duration, run);
     this.compiled = true;
@@ -2575,6 +2573,11 @@ return [${0 /* Continue */}, i]`;
         this.a = res;
         if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
+        }
+        if (this.compiled) {
+          const type = this.program.operant_prims[this.pc - 1][0];
+          const value = this.program.operant_values[this.pc - 1][0];
+          this.write(type, value, res);
         }
         return false;
       }
