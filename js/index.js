@@ -73,6 +73,7 @@ var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
   Opcode3[Opcode3["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
   Opcode3[Opcode3["UMLT"] = 72] = "UMLT";
+  Opcode3[Opcode3["SUMLT"] = 73] = "SUMLT";
   return Opcode3;
 })(Opcode || {});
 var Register = /* @__PURE__ */ ((Register2) => {
@@ -438,6 +439,9 @@ var Opcodes_operants = {
   }],
   [72 /* UMLT */]: [[SET, GET, GET], (s) => {
     s.a = s.b * s.c / 2 ** s._bits;
+  }],
+  [73 /* SUMLT */]: [[SET, GET, GET], (s) => {
+    s.sa = s.sb * s.sc / 2 ** s._bits;
   }]
 };
 var inst_fns = object_map(Opcodes_operants, (key, value) => {

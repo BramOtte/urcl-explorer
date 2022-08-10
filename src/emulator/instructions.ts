@@ -29,7 +29,7 @@ export enum Opcode {
     __ASSERT_NEQ,
 
     //----- experimental instructions
-    UMLT 
+    UMLT, SUMLT 
 }
 
 export enum Register {
@@ -271,7 +271,8 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
 
     //----- Experimental Instructions
-    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}]
+    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}],
+    [Opcode.SUMLT]: [[SET, GET, GET], (s) => {s.sa = (s.sb * s.sc) / (2 ** s._bits);}]
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 
