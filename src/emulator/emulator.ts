@@ -3,11 +3,10 @@ import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_C
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
 import { Break } from "./breaks.js"; 
+import { Step_Result, IntArray, Run, Step, UintArray } from "./IEmu.js";
+export { Step_Result } from "./IEmu.js"
 
-export enum Step_Result {
-    Continue, Halt, Input, Debug
-}
-type WordArray = Uint8Array | Uint16Array | Uint32Array;
+type WordArray = UintArray;
 
 interface Emu_Options {
     error?: (a: string) => never;
@@ -54,8 +53,15 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     private do_debug_ports = false;
     private do_debug_program = false;
 
+    private jit_run?: Run;
+    private jit_step?: Step;
+
 
     load_program(program: Program, debug_info: Debug_Info){
+        if (this.compiled) {
+            this.jit_delete();
+        }
+
         this._debug_message = undefined;
         this.program = program, this.debug_info = debug_info;
         this.pc_counters = Array.from({length: program.opcodes.length}, () => 0);
@@ -78,14 +84,18 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             throw new Error("emulator currently doesn't support running in ram");
         }
         let WordArray;
+        let IntArray;
         if (bits <= 8){
             WordArray = Uint8Array;
+            IntArray = Int8Array;
             this.bits = 8;
         } else if (bits <= 16){
             WordArray = Uint16Array;
+            IntArray = Int16Array;
             this.bits = 16;
         } else if (bits <= 32){
             WordArray = Uint32Array;
+            IntArray = Int32Array;
             this.bits = 32;
         } else {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
@@ -112,7 +122,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         }
 
         this.registers = new WordArray(this.buffer, 0, registers).fill(0);
+        this.registers_s = new IntArray(this.registers);
         this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
+        this.memory_s = new IntArray(this.memory);
 
         for (let i = 0; i < static_data.length; i++){
             this.memory[i] = static_data[i];
@@ -123,6 +135,85 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             device.bits = bits;
         }
     }
+
+    compiled = false;
+    jit_init(){
+        if (this.compiled) {
+            return;
+        }
+        const program = this.program;
+
+        const max_duration = "max_duration";
+        const burst_length = 1024 * 8;
+
+        let step = "switch(this.pc) {\n";
+        let run = `let i = 0;
+const end = performance.now() + ${max_duration};
+while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch(this.pc) {\n`;
+        for (let i = 0; i < program.opcodes.length; i++) {
+            const opcode = program.opcodes[i];
+            const [_, alu] = Opcodes_operants[opcode];
+            let inst = alu.toString();
+            const start = inst.indexOf("=>") + 2;
+            inst = inst.substring(start);
+
+            const prims = program.operant_prims[i];
+            const values = program.operant_values[i];
+            for (let j = 0; j < values.length; j++) {
+                const letter = "abc"[j];
+                const prim = prims[j];
+                const value = values[j];
+                // TODO: make sure signed and unsigned values are always handled properly
+                if (prim === Operant_Prim.Imm) {
+                    inst = inst
+                        .replaceAll(`s.${letter}`, `${value}`)
+                        .replaceAll(`s.s${letter}`, `${value}`);
+                } else {
+                    inst = inst
+                        .replaceAll(`s.${letter}`, `s.registers[${value}]`)
+                        .replaceAll(`s.s${letter}`, `s.registers_s[${value}]`);
+                }
+            }
+            inst = inst.replaceAll("s.", "this.");
+
+            step += `case ${i}: // ${Opcode[opcode]}\n`;
+            step += `this.pc = ${i+1};\n`;
+            run += `case ${i}: // ${Opcode[opcode]}\n`;
+            run += `this.pc = ${i+1}; i++;\n`;
+            if (opcode === Opcode.IN) {
+                step += `return (${inst}) ? ${Step_Result.Input} : ${Step_Result.Continue};\n`;
+                run += `if (${inst}) return [${Step_Result.Input}, i];\n`;
+            } else
+            if (opcode === Opcode.HLT) {
+                step += `return ${Step_Result.Halt};\n`;
+                run += `return [${Step_Result.Halt}, i];\n`;
+            } else {
+                step += `${inst}\nreturn ${Step_Result.Continue};\n`;
+                run += `${inst};\n`;
+            }
+            if (inst.includes(".pc =")) {
+                run += `continue;\n`;
+            }
+        }
+        step += `}\nreturn ${Step_Result.Halt};\n`;
+        run += `default: return [${Step_Result.Halt}, i]`;
+        run += `}\nreturn [${Step_Result.Continue}, i]`;
+
+        console.log(run);
+
+        this.jit_step = new Function(step) as Step;
+        this.jit_run = new Function(max_duration, run) as Run;
+
+        this.compiled = true;
+    }
+
+    jit_delete() {
+        this.jit_run = undefined;
+        this.jit_step = undefined;
+        this.compiled = false;
+    }
+
+
     reset(){
         this.stack_ptr = this.memory.length;
         this.pc = 0;
@@ -136,7 +227,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
     buffer = new ArrayBuffer(1024*1024);
     registers: WordArray = new Uint8Array(32);
+    registers_s: IntArray = new Int8Array(this.registers);
     memory: WordArray = new Uint8Array(256);
+    memory_s: IntArray = new Int8Array(this.registers);
     pc_counters: number[] = [];
     // FIXME: if pc is ever set as a register this code will fail
     pc_full = 0;
@@ -298,6 +391,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         return [Step_Result.Continue, start_length];
     }
     run(max_duration: number): [Step_Result, number] {
+        if (this.compiled && this.jit_run) {
+            return this.jit_run(max_duration);
+        }
         const burst_length = 1024;
         const end = performance.now() + max_duration;
         let j = 0;
@@ -314,6 +410,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
     private debug_reached = false;
 step(): Step_Result {
+    if (this.compiled && this.jit_step) {
+        return this.jit_step();
+    }
     const pc = this.pc++;
     if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached){
         this.debug_reached = true;

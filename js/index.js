@@ -2309,7 +2309,12 @@ var Emulator = class {
   do_debug_registers = false;
   do_debug_ports = false;
   do_debug_program = false;
+  jit_run;
+  jit_step;
   load_program(program, debug_info) {
+    if (this.compiled) {
+      this.jit_delete();
+    }
     this._debug_message = void 0;
     this.program = program, this.debug_info = debug_info;
     this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
@@ -2330,14 +2335,18 @@ var Emulator = class {
       throw new Error("emulator currently doesn't support running in ram");
     }
     let WordArray;
+    let IntArray2;
     if (bits <= 8) {
       WordArray = Uint8Array;
+      IntArray2 = Int8Array;
       this.bits = 8;
     } else if (bits <= 16) {
       WordArray = Uint16Array;
+      IntArray2 = Int16Array;
       this.bits = 16;
     } else if (bits <= 32) {
       WordArray = Uint32Array;
+      IntArray2 = Int32Array;
       this.bits = 32;
     } else {
       throw new Error(`BITS = ${bits} exceeds 32 bits`);
@@ -2365,7 +2374,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
       }
     }
     this.registers = new WordArray(this.buffer, 0, registers).fill(0);
+    this.registers_s = new IntArray2(this.registers);
     this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
+    this.memory_s = new IntArray2(this.memory);
     for (let i = 0; i < static_data.length; i++) {
       this.memory[i] = static_data[i];
     }
@@ -2373,6 +2384,84 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     for (const device of this.devices) {
       device.bits = bits;
     }
+  }
+  compiled = false;
+  jit_init() {
+    if (this.compiled) {
+      return;
+    }
+    const program = this.program;
+    const max_duration = "max_duration";
+    const burst_length = 1024 * 8;
+    let step2 = "switch(this.pc) {\n";
+    let run = `let i = 0;
+const end = performance.now() + ${max_duration};
+while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch(this.pc) {
+`;
+    for (let i = 0; i < program.opcodes.length; i++) {
+      const opcode = program.opcodes[i];
+      const [_, alu] = Opcodes_operants[opcode];
+      let inst = alu.toString();
+      const start = inst.indexOf("=>") + 2;
+      inst = inst.substring(start);
+      const prims = program.operant_prims[i];
+      const values = program.operant_values[i];
+      for (let j = 0; j < values.length; j++) {
+        const letter = "abc"[j];
+        const prim = prims[j];
+        const value = values[j];
+        if (prim === 1 /* Imm */) {
+          inst = inst.replaceAll(`s.${letter}`, `${value}`).replaceAll(`s.s${letter}`, `${value}`);
+        } else {
+          inst = inst.replaceAll(`s.${letter}`, `s.registers[${value}]`).replaceAll(`s.s${letter}`, `s.registers_s[${value}]`);
+        }
+      }
+      inst = inst.replaceAll("s.", "this.");
+      step2 += `case ${i}: // ${Opcode[opcode]}
+`;
+      step2 += `this.pc = ${i + 1};
+`;
+      run += `case ${i}: // ${Opcode[opcode]}
+`;
+      run += `this.pc = ${i + 1}; i++;
+`;
+      if (opcode === 57 /* IN */) {
+        step2 += `return (${inst}) ? ${2 /* Input */} : ${0 /* Continue */};
+`;
+        run += `if (${inst}) return [${2 /* Input */}, i];
+`;
+      } else if (opcode === 36 /* HLT */) {
+        step2 += `return ${1 /* Halt */};
+`;
+        run += `return [${1 /* Halt */}, i];
+`;
+      } else {
+        step2 += `${inst}
+return ${0 /* Continue */};
+`;
+        run += `${inst};
+`;
+      }
+      if (inst.includes(".pc =")) {
+        run += `continue;
+`;
+      }
+    }
+    step2 += `}
+return ${1 /* Halt */};
+`;
+    run += `default: return [${1 /* Halt */}, i]`;
+    run += `}
+return [${0 /* Continue */}, i]`;
+    console.log(run);
+    this.jit_step = new Function(step2);
+    this.jit_run = new Function(max_duration, run);
+    this.compiled = true;
+  }
+  jit_delete() {
+    this.jit_run = void 0;
+    this.jit_step = void 0;
+    this.compiled = false;
   }
   reset() {
     this.stack_ptr = this.memory.length;
@@ -2388,7 +2477,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   buffer = new ArrayBuffer(1024 * 1024);
   registers = new Uint8Array(32);
+  registers_s = new Int8Array(this.registers);
   memory = new Uint8Array(256);
+  memory_s = new Int8Array(this.registers);
   pc_counters = [];
   pc_full = 0;
   get pc() {
@@ -2544,6 +2635,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     return [0 /* Continue */, start_length];
   }
   run(max_duration) {
+    if (this.compiled && this.jit_run) {
+      return this.jit_run(max_duration);
+    }
     const burst_length = 1024;
     const end = performance.now() + max_duration;
     let j = 0;
@@ -2560,6 +2654,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   debug_reached = false;
   step() {
+    if (this.compiled && this.jit_step) {
+      return this.jit_step();
+    }
     const pc = this.pc++;
     if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached) {
       this.debug_reached = true;
@@ -3316,6 +3413,7 @@ var storage_download = document.getElementById("storage-download");
 var clock_speed_input = document.getElementById("clock-speed-input");
 var clock_speed_output = document.getElementById("clock-speed-output");
 var memory_update_input = document.getElementById("update-mem-input");
+var JIT_box = document.getElementById("jit-box");
 var url = new URL(location.href, location.origin);
 var srcurl = url.searchParams.get("srcurl");
 var storage_url = url.searchParams.get("storage");
@@ -3323,7 +3421,7 @@ var width = parseInt(url.searchParams.get("width") ?? "");
 var height = parseInt(url.searchParams.get("height") ?? "");
 var color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
 memory_update_input.oninput = () => update_views();
-var max_clock_speed = 4e7;
+var max_clock_speed = 1e10;
 var max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed;
 function change_clockspeed() {
@@ -3577,6 +3675,11 @@ instruction-count: ${instruction_count} /256
 function frame() {
   if (running) {
     try {
+      if (JIT_box.checked) {
+        emulator.jit_init();
+      } else {
+        emulator.jit_delete();
+      }
       if (clock_speed > 0) {
         const start_time = performance.now();
         const dt = start_time - last_step;

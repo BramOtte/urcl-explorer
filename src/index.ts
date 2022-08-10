@@ -51,6 +51,8 @@ const clock_speed_output = document.getElementById("clock-speed-output") as HTML
 
 const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
 
+const JIT_box = document.getElementById("jit-box") as HTMLInputElement;
+
 const url = new URL(location.href, location.origin)
 const srcurl = url.searchParams.get("srcurl");
 const storage_url = url.searchParams.get("storage");
@@ -60,7 +62,7 @@ const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "")
 
 memory_update_input.oninput = () => update_views();
 
-const max_clock_speed = 40_000_000;
+const max_clock_speed = 10_000_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed
 function change_clockspeed() {
@@ -342,6 +344,12 @@ instruction-count: ${instruction_count} /256
 function frame(){
     if (running){
         try {
+            if (JIT_box.checked) {
+                emulator.jit_init();
+            } else {
+                emulator.jit_delete();
+            }
+
         if (clock_speed > 0){
             const start_time = performance.now();
             const dt = start_time - last_step;
