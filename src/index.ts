@@ -51,6 +51,8 @@ const clock_speed_output = document.getElementById("clock-speed-output") as HTML
 
 const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
 
+const JIT_box = document.getElementById("jit-box") as HTMLInputElement;
+
 const url = new URL(location.href, location.origin)
 const srcurl = url.searchParams.get("srcurl");
 const storage_url = url.searchParams.get("storage");
@@ -60,7 +62,7 @@ const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "")
 
 memory_update_input.oninput = () => update_views();
 
-const max_clock_speed = 40_000_000;
+const max_clock_speed = 10_000_000_000;
 const max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed
 function change_clockspeed() {
@@ -87,9 +89,9 @@ let storage_loads = 0;
 function load_array_buffer(buffer: ArrayBuffer) {
     storage_uploaded = new Uint8Array(buffer);
     const bytes = storage_uploaded.slice();
-    emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+    emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
     storage_device.set_bytes(bytes);
-    storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words`;
+    storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words`;
 }
 
 storage_little.oninput =
@@ -302,12 +304,12 @@ try {
 
     if (storage_uploaded){
         const bytes = storage_uploaded.slice();
-        emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+        emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
         storage_device.set_bytes(bytes);
-        storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+        storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 
-    const bits = emulator.bits
+    const bits = emulator._bits
     const total_register_count = emulator.registers.length
     const memory_size = emulator.memory.length
     const instruction_count = emulator.program.opcodes.length;
@@ -342,6 +344,12 @@ instruction-count: ${instruction_count} /256
 function frame(){
     if (running){
         try {
+            if (JIT_box.checked) {
+                emulator.jit_init();
+            } else {
+                emulator.jit_delete();
+            }
+
         if (clock_speed > 0){
             const start_time = performance.now();
             const dt = start_time - last_step;

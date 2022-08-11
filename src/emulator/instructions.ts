@@ -26,7 +26,10 @@ export enum Opcode {
     __ASSERT,
     __ASSERT0,
     __ASSERT_EQ,
-    __ASSERT_NEQ
+    __ASSERT_NEQ,
+
+    //----- experimental instructions
+    UMLT, SUMLT 
 }
 
 export enum Register {
@@ -103,7 +106,8 @@ export enum IO_Port {
 }
 
 export interface Instruction_Ctx {
-    readonly bits: number,
+    // starting with an _ for the JIT
+    readonly _bits: number,
     readonly max_value: number,
     readonly max_signed: number,
     readonly sign_bit: number,
@@ -217,7 +221,7 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
 
     //----- Complex Instructions
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1
-    [Opcode.MLT  ]: [[SET, GET, GET], (s) => {s.a = s.b * s.c}],
+    [Opcode.MLT  ]: [[SET, GET, GET], (s) => {s.a = Math.imul(s.b, s.c);}],
     // Unsigned division of Op2 by Op3 then put answer into Op1
     [Opcode.DIV  ]: [[SET, GET, GET], (s) => {s.a = s.b / s.c}],
     [Opcode.SDIV  ]: [[SET, GET, GET], (s) => {s.a = s.sb / s.sc}],
@@ -265,6 +269,10 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s, `value = ${s.a}`) }],
     [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
+
+    //----- Experimental Instructions
+    [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}],
+    [Opcode.SUMLT]: [[SET, GET, GET], (s) => {s.sa = Math.floor((s.sb * s.sc) / (2 ** s._bits));}]
 };
 
 export const inst_fns: Record<Opcode, Instruction_Callback> 

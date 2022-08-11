@@ -1,3 +1,5 @@
+"use strict";
+
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -72,6 +74,8 @@ var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["__ASSERT0"] = 69] = "__ASSERT0";
   Opcode3[Opcode3["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
   Opcode3[Opcode3["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
+  Opcode3[Opcode3["UMLT"] = 72] = "UMLT";
+  Opcode3[Opcode3["SUMLT"] = 73] = "SUMLT";
   return Opcode3;
 })(Opcode || {});
 var Register = /* @__PURE__ */ ((Register2) => {
@@ -352,7 +356,7 @@ var Opcodes_operants = {
       s.pc = s.a;
   }],
   [40 /* MLT */]: [[SET, GET, GET], (s) => {
-    s.a = s.b * s.c;
+    s.a = Math.imul(s.b, s.c);
   }],
   [41 /* DIV */]: [[SET, GET, GET], (s) => {
     s.a = s.b / s.c;
@@ -434,6 +438,12 @@ var Opcodes_operants = {
   [71 /* __ASSERT_NEQ */]: [[GET, GET], (s) => {
     if (s.a === s.b)
       fail_assert(s, `left = ${s.a}, right = ${s.b}`);
+  }],
+  [72 /* UMLT */]: [[SET, GET, GET], (s) => {
+    s.a = s.b * s.c / 2 ** s._bits;
+  }],
+  [73 /* SUMLT */]: [[SET, GET, GET], (s) => {
+    s.sa = Math.floor(s.sb * s.sc / 2 ** s._bits);
   }]
 };
 var inst_fns = object_map(Opcodes_operants, (key, value) => {
@@ -479,7 +489,7 @@ function hex_size(bits) {
   return Math.ceil(bits / 4);
 }
 function registers_to_string(emulator2) {
-  const nibbles = hex_size(emulator2.bits);
+  const nibbles = hex_size(emulator2._bits);
   return Array.from({ length: register_count }, (_, i) => pad_center(Register[i], nibbles) + " ").join("") + Array.from({ length: emulator2.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" + Array.from(emulator2.registers, (v) => hex(v, nibbles) + " ").join("");
 }
 function memoryToString(view, from = 0, length = 4096, bits = 8) {
@@ -1132,7 +1142,6 @@ var BufferView = class extends HTMLElement {
   }
   update() {
     const ch = this.char.clientHeight;
-    console.log(ch);
     const H = Math.ceil(this.memory.length / this.width);
     const height2 = H * ch;
     this.scroll_div.style.height = `${height2}px`;
@@ -2270,10 +2279,10 @@ var Emulator = class {
     this.options = options;
   }
   signed(v) {
-    if (this.bits === 32) {
+    if (this._bits === 32) {
       return 0 | v;
     }
-    return (v & this.sign_bit) === 0 ? v : v | 4294967295 << this.bits;
+    return (v & this.sign_bit) === 0 ? v : v | 4294967295 << this._bits;
   }
   a = 0;
   b = 0;
@@ -2309,7 +2318,12 @@ var Emulator = class {
   do_debug_registers = false;
   do_debug_ports = false;
   do_debug_program = false;
+  jit_run;
+  jit_step;
   load_program(program, debug_info) {
+    if (this.compiled) {
+      this.jit_delete();
+    }
     this._debug_message = void 0;
     this.program = program, this.debug_info = debug_info;
     this.pc_counters = Array.from({ length: program.opcodes.length }, () => 0);
@@ -2330,15 +2344,19 @@ var Emulator = class {
       throw new Error("emulator currently doesn't support running in ram");
     }
     let WordArray;
+    let IntArray2;
     if (bits <= 8) {
       WordArray = Uint8Array;
-      this.bits = 8;
+      IntArray2 = Int8Array;
+      this._bits = 8;
     } else if (bits <= 16) {
       WordArray = Uint16Array;
-      this.bits = 16;
+      IntArray2 = Int16Array;
+      this._bits = 16;
     } else if (bits <= 32) {
       WordArray = Uint32Array;
-      this.bits = 32;
+      IntArray2 = Int32Array;
+      this._bits = 32;
     } else {
       throw new Error(`BITS = ${bits} exceeds 32 bits`);
     }
@@ -2365,7 +2383,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
       }
     }
     this.registers = new WordArray(this.buffer, 0, registers).fill(0);
+    this.registers_s = new IntArray2(this.registers.buffer, this.registers.byteOffset, this.registers.length);
     this.memory = new WordArray(this.buffer, registers * WordArray.BYTES_PER_ELEMENT, memory_size).fill(0);
+    this.memory_s = new IntArray2(this.memory.buffer, this.memory.byteOffset, this.memory.length);
     for (let i = 0; i < static_data.length; i++) {
       this.memory[i] = static_data[i];
     }
@@ -2373,6 +2393,83 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     for (const device of this.devices) {
       device.bits = bits;
     }
+  }
+  compiled = false;
+  jit_init() {
+    if (this.compiled) {
+      return;
+    }
+    const program = this.program;
+    const max_duration = "max_duration";
+    const burst_length = 1024 * 8;
+    let step2 = "switch(this.pc) {\n";
+    let run = `let i = 0;
+const end = performance.now() + ${max_duration};
+while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch(this.pc) {
+`;
+    for (let i = 0; i < program.opcodes.length; i++) {
+      const opcode = program.opcodes[i];
+      const [_, alu] = Opcodes_operants[opcode];
+      let inst = alu.toString();
+      const start = inst.indexOf("=>") + 2;
+      inst = inst.substring(start);
+      const prims = program.operant_prims[i];
+      const values = program.operant_values[i];
+      for (let j = 0; j < values.length; j++) {
+        const letter = "abc"[j];
+        const prim = prims[j];
+        const value = values[j];
+        if (prim === 1 /* Imm */) {
+          inst = inst.replaceAll(`s.${letter}`, `${value}`).replaceAll(`s.s${letter}`, `${value}`);
+        } else {
+          inst = inst.replaceAll(`s.${letter}`, `s.registers[${value}]`).replaceAll(`s.s${letter}`, `s.registers_s[${value}]`);
+        }
+      }
+      inst = inst.replaceAll("s.", "this.");
+      step2 += `case ${i}: // ${Opcode[opcode]}
+`;
+      step2 += `this.pc = ${i + 1};
+`;
+      run += `case ${i}: // ${Opcode[opcode]}
+`;
+      run += `this.pc = ${i + 1}; i++;
+`;
+      if (opcode === 57 /* IN */) {
+        step2 += `return (${inst}) ? ${2 /* Input */} : ${0 /* Continue */};
+`;
+        run += `if (${inst}) return [${2 /* Input */}, i];
+`;
+      } else if (opcode === 36 /* HLT */) {
+        step2 += `return ${1 /* Halt */};
+`;
+        run += `return [${1 /* Halt */}, i];
+`;
+      } else {
+        step2 += `${inst}
+return ${0 /* Continue */};
+`;
+        run += `${inst};
+`;
+      }
+      if (inst.includes(".pc =")) {
+        run += `continue;
+`;
+      }
+    }
+    step2 += `}
+return ${1 /* Halt */};
+`;
+    run += `default: return [${1 /* Halt */}, i]`;
+    run += `}
+return [${0 /* Continue */}, i]`;
+    this.jit_step = new Function(step2);
+    this.jit_run = new Function(max_duration, run);
+    this.compiled = true;
+  }
+  jit_delete() {
+    this.jit_run = void 0;
+    this.jit_step = void 0;
+    this.compiled = false;
   }
   reset() {
     this.stack_ptr = this.memory.length;
@@ -2388,7 +2485,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   buffer = new ArrayBuffer(1024 * 1024);
   registers = new Uint8Array(32);
+  registers_s = new Int8Array(this.registers);
   memory = new Uint8Array(256);
+  memory_s = new Int8Array(this.registers);
   pc_counters = [];
   pc_full = 0;
   get pc() {
@@ -2404,7 +2503,7 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   set stack_ptr(value) {
     this.registers[1 /* SP */] = value;
   }
-  bits = 8;
+  _bits = 8;
   device_inputs = {};
   device_outputs = {};
   device_resets = [];
@@ -2428,16 +2527,16 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     }
   }
   get max_value() {
-    return 4294967295 >>> 32 - this.bits;
+    return 4294967295 >>> 32 - this._bits;
   }
   get max_size() {
     return this.max_value + 1;
   }
   get max_signed() {
-    return (1 << this.bits - 1) - 1;
+    return (1 << this._bits - 1) - 1;
   }
   get sign_bit() {
-    return 1 << this.bits - 1;
+    return 1 << this._bits - 1;
   }
   push(value) {
     if (this.stack_ptr !== 0 && this.stack_ptr <= this.heap_size) {
@@ -2484,6 +2583,11 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
         this.a = res;
         if (this.do_debug_ports && this.debug_info.port_breaks[port] & 1 /* ONREAD */) {
           this.debug(`Read from port ${port} (${IO_Port[port]}) value=0x${res.toString(16)}`);
+        }
+        if (this.compiled) {
+          const type = this.program.operant_prims[this.pc - 1][0];
+          const value = this.program.operant_values[this.pc - 1][0];
+          this.write(type, value, res);
         }
         return false;
       }
@@ -2544,6 +2648,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
     return [0 /* Continue */, start_length];
   }
   run(max_duration) {
+    if (this.compiled && this.jit_run) {
+      return this.jit_run(max_duration);
+    }
     const burst_length = 1024;
     const end = performance.now() + max_duration;
     let j = 0;
@@ -2560,6 +2667,9 @@ ${buffer_size} bytes exceeds the maximum of ${max_size2}bytes`);
   }
   debug_reached = false;
   step() {
+    if (this.compiled && this.jit_step) {
+      return this.jit_step();
+    }
     const pc = this.pc++;
     if (this.do_debug_program && this.debug_info.program_breaks[pc] && !this.debug_reached) {
       this.debug_reached = true;
@@ -3316,6 +3426,7 @@ var storage_download = document.getElementById("storage-download");
 var clock_speed_input = document.getElementById("clock-speed-input");
 var clock_speed_output = document.getElementById("clock-speed-output");
 var memory_update_input = document.getElementById("update-mem-input");
+var JIT_box = document.getElementById("jit-box");
 var url = new URL(location.href, location.origin);
 var srcurl = url.searchParams.get("srcurl");
 var storage_url = url.searchParams.get("storage");
@@ -3323,7 +3434,7 @@ var width = parseInt(url.searchParams.get("width") ?? "");
 var height = parseInt(url.searchParams.get("height") ?? "");
 var color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
 memory_update_input.oninput = () => update_views();
-var max_clock_speed = 4e7;
+var max_clock_speed = 1e10;
 var max_its = 1.2 * max_clock_speed / 16;
 clock_speed_input.oninput = change_clockspeed;
 function change_clockspeed() {
@@ -3347,9 +3458,9 @@ var storage_loads = 0;
 function load_array_buffer(buffer) {
   storage_uploaded = new Uint8Array(buffer);
   const bytes = storage_uploaded.slice();
-  emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+  emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
   storage_device.set_bytes(bytes);
-  storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words`;
+  storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words`;
 }
 storage_little.oninput = storage_input.oninput = async (e) => {
   storage_msg.classList.remove("error");
@@ -3541,11 +3652,11 @@ function compile_and_reset() {
     emulator.load_program(program, debug_info);
     if (storage_uploaded) {
       const bytes = storage_uploaded.slice();
-      emulator.add_io_device(storage_device = new Storage(emulator.bits, storage_little.checked, bytes.length));
+      emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
       storage_device.set_bytes(bytes);
-      storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator.bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+      storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
-    const bits = emulator.bits;
+    const bits = emulator._bits;
     const total_register_count = emulator.registers.length;
     const memory_size = emulator.memory.length;
     const instruction_count = emulator.program.opcodes.length;
@@ -3577,6 +3688,11 @@ instruction-count: ${instruction_count} /256
 function frame() {
   if (running) {
     try {
+      if (JIT_box.checked) {
+        emulator.jit_init();
+      } else {
+        emulator.jit_delete();
+      }
       if (clock_speed > 0) {
         const start_time = performance.now();
         const dt = start_time - last_step;

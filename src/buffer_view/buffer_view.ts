@@ -25,7 +25,6 @@ export class BufferView extends HTMLElement {
     
     public update(){
         const ch = this.char.clientHeight;
-        console.log(ch);
         const H = Math.ceil(this.memory.length / this.width);
         const height = H * ch;
         this.scroll_div.style.height = `${height}px`;
