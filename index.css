@@ -11,32 +11,12 @@ a:visited {
 a:hover {
   color: white;
 }
-
 html, body {
   margin: 0;
-  overflow: hidden;
-}
-body {
-  --padding: 3ch;
-  width: calc(100vw - var(--padding)*2);
-  height: calc(100vh - var(--padding)*2);
-  padding: var(--padding);
-}
-main {
-  display: flex;
-  gap: 2rem;
-  flex-grow: 1;
   width: 100%;
-  height: 100%;
 }
 main > * {
-  display: flex;
-  flex-direction: column;
   width: max-content;
-  height: 100%;
-  flex-basis: 100%;
-  overflow-x: hidden;
-  overflow-y: auto;
 }
 canvas {
   background-color: black;
@@ -47,11 +27,17 @@ canvas {
 canvas:fullscreen {
   border: none;
 }
-
-
+editor-window {
+  overflow-x: hidden !important;
+  min-width: 45em;
+  width: max-content !important;
+}
+editor-window > div > textarea {
+  outline: none;
+}
 html {
   font-family: "unscii";
-  background: #111;
+  background: #303030;
   color: #EEE;
 }
 
@@ -128,22 +114,6 @@ select {
   font-family: unscii;
   border: 0px;
 }
-
-#compile-and-run-button {
-  background: #0D0;
-  color: #111;
-}
-
-#compile-and-reset-button {
-  background: #F00;
-  color: #111;
-}
-
-#pause-button {
-  background: #66B6FF;
-  color: #111;
-}
-
-:disabled {
-  color: #AAA;
+.major-button {
+  margin: 0.5em;
 }
