@@ -1,5 +1,3 @@
-"use strict";
-
 // src/emulator/instructions.ts
 var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["ADD"] = 0] = "ADD";
@@ -2409,7 +2407,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
 `;
     for (let i = 0; i < program.opcodes.length; i++) {
       const opcode = program.opcodes[i];
-      const [_, alu] = Opcodes_operants[opcode];
+      const [operations, alu] = Opcodes_operants[opcode];
       let inst = alu.toString();
       const start = inst.indexOf("=>") + 2;
       inst = inst.substring(start);
@@ -2420,7 +2418,11 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
         const prim = prims[j];
         const value = values[j];
         if (prim === 1 /* Imm */) {
-          inst = inst.replaceAll(`s.${letter}`, `${value}`).replaceAll(`s.s${letter}`, `${value}`);
+          if (operations[j] === 0 /* SET */) {
+            inst = inst.replaceAll(`s.${letter}`, `s.a`).replaceAll(`s.s${letter}`, `s.a`);
+          } else {
+            inst = inst.replaceAll(`s.${letter}`, `${value}`).replaceAll(`s.s${letter}`, `${value}`);
+          }
         } else {
           inst = inst.replaceAll(`s.${letter}`, `s.registers[${value}]`).replaceAll(`s.s${letter}`, `s.registers_s[${value}]`);
         }
