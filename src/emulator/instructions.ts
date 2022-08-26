@@ -21,6 +21,7 @@ export enum Opcode {
     
     // Signed Instructions
     SDIV, SBRL, SBRG, SBLE , SBGE, SSETL, SSETG, SSETLE, SSETGE,
+    ABS,
 
     //----- Debug Instructions
     __ASSERT,
@@ -218,6 +219,8 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.BRC ]: [[GET, GET, GET], (s) => {if (s.b + s.c > s.max_value) s.pc = s.a}],
     // Branch to Op1 if Op2 + Op3 does not give a carry out
     [Opcode.BNC ]: [[GET, GET, GET], (s) => {if (s.b + s.c <= s.max_value) s.pc = s.a}],
+    // Take the absolute value of op2 and put it in op 1
+    [Opcode.ABS]: [[SET, GET], (s) => {s.sa = Math.abs(s.sb)}],
 
     //----- Complex Instructions
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1

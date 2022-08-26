@@ -68,12 +68,13 @@ var Opcode = /* @__PURE__ */ ((Opcode3) => {
   Opcode3[Opcode3["SSETG"] = 65] = "SSETG";
   Opcode3[Opcode3["SSETLE"] = 66] = "SSETLE";
   Opcode3[Opcode3["SSETGE"] = 67] = "SSETGE";
-  Opcode3[Opcode3["__ASSERT"] = 68] = "__ASSERT";
-  Opcode3[Opcode3["__ASSERT0"] = 69] = "__ASSERT0";
-  Opcode3[Opcode3["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
-  Opcode3[Opcode3["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
-  Opcode3[Opcode3["UMLT"] = 72] = "UMLT";
-  Opcode3[Opcode3["SUMLT"] = 73] = "SUMLT";
+  Opcode3[Opcode3["ABS"] = 68] = "ABS";
+  Opcode3[Opcode3["__ASSERT"] = 69] = "__ASSERT";
+  Opcode3[Opcode3["__ASSERT0"] = 70] = "__ASSERT0";
+  Opcode3[Opcode3["__ASSERT_EQ"] = 71] = "__ASSERT_EQ";
+  Opcode3[Opcode3["__ASSERT_NEQ"] = 72] = "__ASSERT_NEQ";
+  Opcode3[Opcode3["UMLT"] = 73] = "UMLT";
+  Opcode3[Opcode3["SUMLT"] = 74] = "SUMLT";
   return Opcode3;
 })(Opcode || {});
 var Register = /* @__PURE__ */ ((Register2) => {
@@ -353,6 +354,9 @@ var Opcodes_operants = {
     if (s.b + s.c <= s.max_value)
       s.pc = s.a;
   }],
+  [68 /* ABS */]: [[SET, GET], (s) => {
+    s.sa = Math.abs(s.sb);
+  }],
   [40 /* MLT */]: [[SET, GET, GET], (s) => {
     s.a = Math.imul(s.b, s.c);
   }],
@@ -421,26 +425,26 @@ var Opcodes_operants = {
   [58 /* OUT */]: [[GET, GET], (s) => {
     s.out(s.a, s.b);
   }],
-  [68 /* __ASSERT */]: [[GET], (s) => {
+  [69 /* __ASSERT */]: [[GET], (s) => {
     if (!s.a)
       fail_assert(s, `value = ${s.a}`);
   }],
-  [69 /* __ASSERT0 */]: [[GET], (s) => {
+  [70 /* __ASSERT0 */]: [[GET], (s) => {
     if (s.a)
       fail_assert(s, `value = ${s.a}`);
   }],
-  [70 /* __ASSERT_EQ */]: [[GET, GET], (s) => {
+  [71 /* __ASSERT_EQ */]: [[GET, GET], (s) => {
     if (s.a !== s.b)
       fail_assert(s, `left = ${s.a}, right = ${s.b}`);
   }],
-  [71 /* __ASSERT_NEQ */]: [[GET, GET], (s) => {
+  [72 /* __ASSERT_NEQ */]: [[GET, GET], (s) => {
     if (s.a === s.b)
       fail_assert(s, `left = ${s.a}, right = ${s.b}`);
   }],
-  [72 /* UMLT */]: [[SET, GET, GET], (s) => {
+  [73 /* UMLT */]: [[SET, GET, GET], (s) => {
     s.a = s.b * s.c / 2 ** s._bits;
   }],
-  [73 /* SUMLT */]: [[SET, GET, GET], (s) => {
+  [74 /* SUMLT */]: [[SET, GET, GET], (s) => {
     s.sa = Math.floor(s.sb * s.sc / 2 ** s._bits);
   }]
 };
