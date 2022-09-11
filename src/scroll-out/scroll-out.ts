@@ -22,6 +22,10 @@ export class Scroll_Out extends HTMLElement {
         this.char.style.visibility = "hidden";
         this.appendChild(this.char);
     }
+    public get_text() {
+        return this.lines.join("\n");
+    }
+
     update(){
         const {ceil: c, floor: f} = Math;
         const {clientWidth: cw, clientHeight: ch} = this.char;

@@ -39,6 +39,7 @@ const register_view = document.getElementById("register-view") as HTMLElement;
 const console_input = document.getElementById("stdin") as HTMLTextAreaElement;
 const console_output = document.getElementById("stdout") as Scroll_Out;
 const null_terminate_input = document.getElementById("null-terminate") as HTMLInputElement;
+const console_copy = document.getElementById("copy-console") as HTMLButtonElement;
 const share_button = document.getElementById("share-button") as HTMLButtonElement;
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
 const storage_input = document.getElementById("storage-input") as HTMLInputElement;
@@ -152,6 +153,10 @@ console_input.addEventListener("keydown", e => {
         input_callback();
     }
 })
+
+console_copy.addEventListener("click", e => {
+    navigator.clipboard.writeText(console_output.get_text());
+});
 
 const console_io = new Console_IO({
         read(callback){
