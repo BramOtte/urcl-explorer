@@ -3482,7 +3482,7 @@ var curcl_inst = {
   [31 /* BRP */]: (s) => `if (${s.sb} >= 0) {${s.pc} = ${s.a}; continue;}`,
   [32 /* PSH */]: (s) => `memory[--${s.sp}] = ${s.a};`,
   [33 /* POP */]: (s) => `${s.a} = memory[${s.sp}++];`,
-  [32 /* PSH */]: (s) => `memory[--${s.sp}] = ${s.pc}; ${s.pc} = ${s.a}; continue;`,
+  [34 /* CAL */]: (s) => `memory[--${s.sp}] = ${s.pc}; ${s.pc} = ${s.a}; continue;`,
   [35 /* RET */]: (s) => `${s.pc} = memory[${s.sp}++]; continue;`,
   [36 /* HLT */]: (s) => `${s.pc} = -1; continue;`,
   [37 /* CPY */]: (s) => `memory[${s.a}] = memory[${s.b}];`,
