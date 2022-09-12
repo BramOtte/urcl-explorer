@@ -49,7 +49,7 @@ const curcl_inst: {[K in Opcode]?: (s: Context) => string} = {
     [Opcode.BRP]: s => `if (${s.sb} >= 0) {${s.pc} = ${s.a}; continue;}`,
     [Opcode.PSH]: s => `memory[--${s.sp}] = ${s.a};`,
     [Opcode.POP]: s => `${s.a} = memory[${s.sp}++];`,
-    [Opcode.PSH]: s => `memory[--${s.sp}] = ${s.pc}; ${s.pc} = ${s.a}; continue;`,
+    [Opcode.CAL]: s => `memory[--${s.sp}] = ${s.pc}; ${s.pc} = ${s.a}; continue;`,
     [Opcode.RET]: s => `${s.pc} = memory[${s.sp}++]; continue;`,
     [Opcode.HLT]: s => `${s.pc} = -1; continue;`,
     [Opcode.CPY]: s => `memory[${s.a}] = memory[${s.b}];`,
