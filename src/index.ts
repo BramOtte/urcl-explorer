@@ -21,6 +21,7 @@ import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, 
 import { Scroll_Out } from "./scroll-out/scroll-out.js";
 import { register_count } from "./emulator/instructions.js";
 import { BufferView } from "./buffer_view/buffer_view.js";
+import { urcl2c } from "./emulator/urcl2c.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -49,6 +50,9 @@ const storage_update = document.getElementById("storage-update") as HTMLInputEle
 const storage_download = document.getElementById("storage-download") as HTMLInputElement;
 const clock_speed_input = document.getElementById("clock-speed-input") as HTMLInputElement;
 const clock_speed_output = document.getElementById("clock-speed-output") as HTMLInputElement;
+
+const cout = document.getElementById("c-out") as HTMLElement;
+const cout_check = document.getElementById("c-out-check") as HTMLInputElement;
 
 const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
 
@@ -306,6 +310,15 @@ try {
     output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines)+"\n").join("");
     const [program, debug_info] = compile(parsed);
     emulator.load_program(program, debug_info);
+    if (cout_check.checked) {
+        try {
+            cout.innerText = urcl2c(program, debug_info);
+        } catch (e) {
+            cout.innerText = "" + e;
+        }
+    } else {
+        cout.innerHTML = "";
+    }
 
     if (storage_uploaded){
         const bytes = storage_uploaded.slice();

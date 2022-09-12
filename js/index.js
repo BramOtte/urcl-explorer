@@ -3442,6 +3442,146 @@ function str_until(string, sub_string) {
   return string.slice(0, end);
 }
 
+// src/emulator/urcl2c.ts
+var curcl_inst = {
+  [0 /* ADD */]: (s) => `${s.a} = ${s.b} + ${s.c};`,
+  [1 /* RSH */]: (s) => `${s.a} = ${s.b} >> 1;`,
+  [2 /* LOD */]: (s) => `${s.a} = memory[${s.b}];`,
+  [3 /* STR */]: (s) => `memory[${s.a}] = ${s.b};`,
+  [4 /* BGE */]: (s) => `if (${s.b} >= ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [63 /* SBGE */]: (s) => `if (${s.sb} >= ${s.sc}) {${s.pc} = ${s.a}; continue;}`,
+  [5 /* NOR */]: (s) => `${s.a} = ~(${s.b} | ${s.c});`,
+  [6 /* IMM */]: (s) => `${s.a} = ${s.b};`,
+  [7 /* SUB */]: (s) => `${s.a} = ${s.b} - ${s.c};`,
+  [8 /* JMP */]: (s) => `${s.pc} = ${s.a}; continue;`,
+  [9 /* MOV */]: (s) => `${s.a} = ${s.b};`,
+  [10 /* NOP */]: (s) => ``,
+  [11 /* LSH */]: (s) => `${s.a} = ${s.b} << 1;`,
+  [12 /* INC */]: (s) => `${s.a} = ${s.b} + 1;`,
+  [13 /* DEC */]: (s) => `${s.a} = ${s.b} - 1;`,
+  [14 /* NEG */]: (s) => `${s.a} = -${s.b};`,
+  [15 /* AND */]: (s) => `${s.a} = ${s.b} & ${s.c};`,
+  [16 /* OR */]: (s) => `${s.a} = ${s.b} | ${s.c};`,
+  [17 /* NOT */]: (s) => `${s.a} = ~${s.b};`,
+  [18 /* XNOR */]: (s) => `${s.a} = ~(${s.b} ^ ${s.c});`,
+  [19 /* XOR */]: (s) => `${s.a} = ${s.b} ^ ${s.c};`,
+  [20 /* NAND */]: (s) => `${s.a} = ~(${s.b} & ${s.c});`,
+  [21 /* BRL */]: (s) => `if (${s.b} < ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [60 /* SBRL */]: (s) => `if (${s.sb} < ${s.sc}) {${s.pc} = ${s.a}; continue;}`,
+  [22 /* BRG */]: (s) => `if (${s.b} > ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [61 /* SBRG */]: (s) => `if (${s.sb} > ${s.sc}) {${s.pc} = ${s.a}; continue;}`,
+  [23 /* BRE */]: (s) => `if (${s.b} == ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [24 /* BNE */]: (s) => `if (${s.b} != ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [25 /* BOD */]: (s) => `if (${s.b} & 1 == 1) {${s.pc} = ${s.a}; continue;}`,
+  [26 /* BEV */]: (s) => `if (${s.b} & 1 == 0) {${s.pc} = ${s.a}; continue;}`,
+  [27 /* BLE */]: (s) => `if (${s.b} <= ${s.c}) {${s.pc} = ${s.a}; continue;}`,
+  [62 /* SBLE */]: (s) => `if (${s.sb} <= ${s.sc}) {${s.pc} = ${s.a}; continue;}`,
+  [28 /* BRZ */]: (s) => `if (${s.b} == 0) {${s.pc} = ${s.a}; continue;}`,
+  [29 /* BNZ */]: (s) => `if (${s.b} != 0) {${s.pc} = ${s.a}; continue;}`,
+  [30 /* BRN */]: (s) => `if (${s.sb} < 0) {${s.pc} = ${s.a}; continue;}`,
+  [31 /* BRP */]: (s) => `if (${s.sb} >= 0) {${s.pc} = ${s.a}; continue;}`,
+  [32 /* PSH */]: (s) => `memory[--${s.sp}] = ${s.a};`,
+  [33 /* POP */]: (s) => `${s.a} = memory[${s.sp}++];`,
+  [32 /* PSH */]: (s) => `memory[--${s.sp}] = ${s.pc}; ${s.pc} = ${s.a}; continue;`,
+  [35 /* RET */]: (s) => `${s.pc} = memory[${s.sp}++]; continue;`,
+  [36 /* HLT */]: (s) => `${s.pc} = -1; continue;`,
+  [37 /* CPY */]: (s) => `memory[${s.a}] = memory[${s.b}];`,
+  [38 /* BRC */]: (s) => `if (${s.b} + ${s.c} < ${s.b}) {${s.pc} = ${s.a}; continue;}`,
+  [39 /* BNC */]: (s) => `if (${s.b} + ${s.c} >= ${s.b}) {${s.pc} = ${s.a}; continue;}`,
+  [68 /* ABS */]: (s) => `${s.a} = ${s.b} < 0 ? -${s.b} : ${s.b};`,
+  [40 /* MLT */]: (s) => `${s.a} = ${s.b} * ${s.c};`,
+  [41 /* DIV */]: (s) => `${s.a} = ${s.b} / ${s.c};`,
+  [42 /* MOD */]: (s) => `${s.a} = ${s.b} % ${s.c};`,
+  [43 /* BSR */]: (s) => `${s.a} = ${s.b} >> ${s.c};`,
+  [45 /* SRS */]: (s) => `${s.a} = ${s.sb} >> 1;`,
+  [46 /* BSS */]: (s) => `${s.a} = ${s.sb} >> ${s.c};`,
+  [47 /* SETE */]: (s) => `${s.a} = ${s.b} === ${s.c} ? ${s.max_value} : 0;`,
+  [48 /* SETNE */]: (s) => `${s.a} = ${s.b} !== ${s.c} ? ${s.max_value} : 0;`,
+  [49 /* SETG */]: (s) => `${s.a} = ${s.b} > ${s.c} ? ${s.max_value} : 0;`,
+  [65 /* SSETG */]: (s) => `${s.a} = ${s.sb} > ${s.sc} ? ${s.max_value} : 0;`,
+  [50 /* SETL */]: (s) => `${s.a} = ${s.b} < ${s.c} ? ${s.max_value} : 0;`,
+  [64 /* SSETL */]: (s) => `${s.a} = ${s.sb} < ${s.sc} ? ${s.max_value} : 0;`,
+  [51 /* SETGE */]: (s) => `${s.a} = ${s.b} >= ${s.c} ? ${s.max_value} : 0;`,
+  [67 /* SSETGE */]: (s) => `${s.a} = ${s.sb} >= s.sc ? ${s.max_value} : 0;`,
+  [52 /* SETLE */]: (s) => `${s.a} = ${s.b} <= ${s.c} ? ${s.max_value} : 0;`,
+  [66 /* SSETLE */]: (s) => `${s.a} = ${s.sb} <= ${s.sc} ? ${s.max_value} : 0;`,
+  [53 /* SETC */]: (s) => `${s.a} = ${s.b} + ${s.c} > ${s.max_value} ? ${s.max_value} : 0;`,
+  [54 /* SETNC */]: (s) => `${s.a} = ${s.b} + ${s.c} > ${s.b} ? ${s.max_value} : 0;`,
+  [55 /* LLOD */]: (s) => `${s.a} = memory[${s.b} + ${s.c}];`,
+  [56 /* LSTR */]: (s) => `memory[${s.a} + ${s.b}] = ${s.c};`,
+  [58 /* OUT */]: (s) => {
+    switch (parseInt(s.a)) {
+      case 1 /* TEXT */:
+        return `fprintf(cout, "%c", ${s.b});`;
+      case 2 /* NUMB */:
+        return `fprintf(cout, "%${s.fint}", ${s.b});`;
+    }
+    return ``;
+  }
+};
+function urcl2c(program, debug_info) {
+  const bits = program.headers[0 /* BITS */].value;
+  const register_count2 = program.headers[1 /* MINREG */].value + 2;
+  const heap_size = program.headers[2 /* MINHEAP */].value;
+  const stack_size = program.headers[4 /* MINSTACK */].value;
+  const memory_size = program.data.length + heap_size + stack_size;
+  const ctx = {
+    a: "0",
+    b: "0",
+    c: "0",
+    sa: "0",
+    sb: "0",
+    sc: "0",
+    pc: `r${0 /* PC */}`,
+    sp: `r${1 /* SP */}`,
+    max_value: "" + (2 ** bits - 1),
+    fint: "d"
+  };
+  let c = `#include "stdint.h"
+#include "stdio.h"
+typedef uint${bits}_t uword;
+typedef int${bits}_t sword;
+
+uword memory[${memory_size}] = {${program.data.join(", "), 0}};
+
+int main() {
+FILE* cout = stdout;
+int out_p = -1;
+int out_v = -1;
+register uword${Array.from({ length: register_count2 }, (_, i) => ` r${i} = 0`).join(",\n")};
+while (1) switch (${ctx.pc}) {
+`;
+  for (let i = 0; i < program.opcodes.length; ++i) {
+    const prims = program.operant_prims[i];
+    const values = program.operant_values[i];
+    for (let j = 0; j < prims.length; ++j) {
+      const op = prims[j] == 0 /* Reg */ ? "r" + values[j] : "" + values[j];
+      if (j == 0) {
+        ctx.a = op;
+        ctx.sa = "(sword)" + op;
+      } else if (j == 1) {
+        ctx.b = op;
+        ctx.sb = "(sword)" + op;
+      } else if (j == 2) {
+        ctx.c = op;
+        ctx.sc = "(sword)" + op;
+      } else {
+        throw new Error("inst can't have more than 3 operants");
+      }
+    }
+    const opcode = program.opcodes[i];
+    const inst = curcl_inst[opcode];
+    if (inst === void 0) {
+      throw new Error(`unimplemented opcode ${opcode} (${Opcode[opcode]})`);
+    }
+    c += `case ${i}: {${inst(ctx)}} ${ctx.pc} = ${i + 1};
+`;
+  }
+  return c + `default: printf("done %d %d", out_p, out_v);
+;return 0;
+}}`;
+}
+
 // src/index.ts
 var animation_frame;
 var running = false;
@@ -3468,6 +3608,8 @@ var storage_update = document.getElementById("storage-update");
 var storage_download = document.getElementById("storage-download");
 var clock_speed_input = document.getElementById("clock-speed-input");
 var clock_speed_output = document.getElementById("clock-speed-output");
+var cout = document.getElementById("c-out");
+var cout_check = document.getElementById("c-out-check");
 var memory_update_input = document.getElementById("update-mem-input");
 var JIT_box = document.getElementById("jit-box");
 var url = new URL(location.href, location.origin);
@@ -3700,6 +3842,15 @@ function compile_and_reset() {
     output_element.innerText += parsed.warnings.map((v) => expand_warning(v, parsed.lines) + "\n").join("");
     const [program, debug_info] = compile(parsed);
     emulator.load_program(program, debug_info);
+    if (cout_check.checked) {
+      try {
+        cout.innerText = urcl2c(program, debug_info);
+      } catch (e) {
+        cout.innerText = "" + e;
+      }
+    } else {
+      cout.innerHTML = "";
+    }
     if (storage_uploaded) {
       const bytes = storage_uploaded.slice();
       emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
