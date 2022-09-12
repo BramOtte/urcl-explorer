@@ -1,5 +1,5 @@
 import { Debug_Info, Program } from "./compiler.js";
-import { IO_Port, Opcode, Operant_Prim, Register, URCL_Header, urcl_headers } from "./instructions.js";
+import { IO_Port, Opcode, Opcodes_operants, Operant_Operation, Operant_Prim, Register, URCL_Header, urcl_headers } from "./instructions.js";
 
 interface Context {
     a: string, b: string, c: string,
@@ -113,6 +113,7 @@ int main() {
 FILE* cout = stdout;
 int out_p = -1;
 int out_v = -1;
+uword zero = 0;
 register uword${
     Array.from({length: register_count}, (_, i) => ` r${i} = 0`).join(",\n")
 };
@@ -122,9 +123,15 @@ while (1) switch (${ctx.pc}) {
     for (let i = 0; i < program.opcodes.length; ++i) {
         const prims = program.operant_prims[i];
         const values = program.operant_values[i];
+        const opcode = program.opcodes[i];
         for (let j = 0; j < prims.length; ++j) {
-            const op = prims[j] == Operant_Prim.Reg ? "r" + values[j] : "" + values[j];
+            let op = prims[j] == Operant_Prim.Reg ? "r" + values[j] : "" + values[j];
             if (j == 0) {
+                if (prims[j] === Operant_Prim.Imm && values[j] === 0 
+                    && Opcodes_operants[opcode][0][0] === Operant_Operation.SET
+                ) {
+                    op = "zero";
+                }
                 ctx.a = op;
                 ctx.sa = "(sword)" + op;
             } else if (j == 1) {
@@ -137,7 +144,6 @@ while (1) switch (${ctx.pc}) {
                 throw new Error("inst can't have more than 3 operants");
             }
         }
-        const opcode = program.opcodes[i];
         const inst = curcl_inst[opcode];
         if (inst === undefined) {
             throw new Error(`unimplemented opcode ${opcode} (${Opcode[opcode]})`);

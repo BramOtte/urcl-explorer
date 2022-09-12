@@ -3548,15 +3548,20 @@ int main() {
 FILE* cout = stdout;
 int out_p = -1;
 int out_v = -1;
+uword zero = 0;
 register uword${Array.from({ length: register_count2 }, (_, i) => ` r${i} = 0`).join(",\n")};
 while (1) switch (${ctx.pc}) {
 `;
   for (let i = 0; i < program.opcodes.length; ++i) {
     const prims = program.operant_prims[i];
     const values = program.operant_values[i];
+    const opcode = program.opcodes[i];
     for (let j = 0; j < prims.length; ++j) {
-      const op = prims[j] == 0 /* Reg */ ? "r" + values[j] : "" + values[j];
+      let op = prims[j] == 0 /* Reg */ ? "r" + values[j] : "" + values[j];
       if (j == 0) {
+        if (prims[j] === 1 /* Imm */ && values[j] === 0 && Opcodes_operants[opcode][0][0] === 0 /* SET */) {
+          op = "zero";
+        }
         ctx.a = op;
         ctx.sa = "(sword)" + op;
       } else if (j == 1) {
@@ -3569,7 +3574,6 @@ while (1) switch (${ctx.pc}) {
         throw new Error("inst can't have more than 3 operants");
       }
     }
-    const opcode = program.opcodes[i];
     const inst = curcl_inst[opcode];
     if (inst === void 0) {
       throw new Error(`unimplemented opcode ${opcode} (${Opcode[opcode]})`);
