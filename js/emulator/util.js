@@ -30,7 +30,7 @@ export function hex_size(bits) {
     return Math.ceil(bits / 4);
 }
 export function registers_to_string(emulator) {
-    const nibbles = hex_size(emulator.bits);
+    const nibbles = hex_size(emulator._bits);
     return Array.from({ length: register_count }, (_, i) => pad_center(Register[i], nibbles) + " ").join("") +
         Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
         Array.from(emulator.registers, (v) => hex(v, nibbles) + " ").join("");
@@ -40,9 +40,9 @@ export function memoryToString(view, from = 0x0, length = 0x1000, bits = 8) {
     const end = Math.min(from + length, view.length);
     const hexes = hex_size(bits);
     let lines = [
-        " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
-            return pad_left(hex(i, 1), hexes);
-        }).join(" ")
+    // " ".repeat(hexes) + Array.from({ length: width }, (_, i) => {
+    //     return pad_left(hex(i, 1), hexes);
+    // }).join(" ")
     ];
     for (let i = from; i < end;) {
         const sub_end = Math.min(i + width, end);
@@ -52,7 +52,7 @@ export function memoryToString(view, from = 0x0, length = 0x1000, bits = 8) {
             subs.push(hex(view[i], hexes));
         }
         const line = subs.join(" ");
-        lines.push(addr + " ".repeat(hexes - addr.length) + line);
+        lines.push(addr + ":" + " ".repeat(hexes - addr.length) + line);
     }
     return lines.join("\n");
 }

@@ -75,11 +75,15 @@ export var Opcode;
     Opcode[Opcode["SSETG"] = 65] = "SSETG";
     Opcode[Opcode["SSETLE"] = 66] = "SSETLE";
     Opcode[Opcode["SSETGE"] = 67] = "SSETGE";
+    Opcode[Opcode["ABS"] = 68] = "ABS";
     //----- Debug Instructions
-    Opcode[Opcode["__ASSERT"] = 68] = "__ASSERT";
-    Opcode[Opcode["__ASSERT0"] = 69] = "__ASSERT0";
-    Opcode[Opcode["__ASSERT_EQ"] = 70] = "__ASSERT_EQ";
-    Opcode[Opcode["__ASSERT_NEQ"] = 71] = "__ASSERT_NEQ";
+    Opcode[Opcode["__ASSERT"] = 69] = "__ASSERT";
+    Opcode[Opcode["__ASSERT0"] = 70] = "__ASSERT0";
+    Opcode[Opcode["__ASSERT_EQ"] = 71] = "__ASSERT_EQ";
+    Opcode[Opcode["__ASSERT_NEQ"] = 72] = "__ASSERT_NEQ";
+    //----- experimental instructions
+    Opcode[Opcode["UMLT"] = 73] = "UMLT";
+    Opcode[Opcode["SUMLT"] = 74] = "SUMLT";
 })(Opcode || (Opcode = {}));
 export var Register;
 (function (Register) {
@@ -331,9 +335,11 @@ export const Opcodes_operants = {
     // Branch to Op1 if Op2 + Op3 does not give a carry out
     [Opcode.BNC]: [[GET, GET, GET], (s) => { if (s.b + s.c <= s.max_value)
             s.pc = s.a; }],
+    // Take the absolute value of op2 and put it in op 1
+    [Opcode.ABS]: [[SET, GET], (s) => { s.sa = Math.abs(s.sb); }],
     //----- Complex Instructions
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1
-    [Opcode.MLT]: [[SET, GET, GET], (s) => { s.a = s.b * s.c; }],
+    [Opcode.MLT]: [[SET, GET, GET], (s) => { s.a = Math.imul(s.b, s.c); }],
     // Unsigned division of Op2 by Op3 then put answer into Op1
     [Opcode.DIV]: [[SET, GET, GET], (s) => { s.a = s.b / s.c; }],
     [Opcode.SDIV]: [[SET, GET, GET], (s) => { s.a = s.sb / s.sc; }],
@@ -383,6 +389,9 @@ export const Opcodes_operants = {
             fail_assert(s, `left = ${s.a}, right = ${s.b}`); }],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => { if (s.a === s.b)
             fail_assert(s, `left = ${s.a}, right = ${s.b}`); }],
+    //----- Experimental Instructions
+    [Opcode.UMLT]: [[SET, GET, GET], (s) => { s.a = (s.b * s.c) / (2 ** s._bits); }],
+    [Opcode.SUMLT]: [[SET, GET, GET], (s) => { s.sa = Math.floor((s.sb * s.sc) / (2 ** s._bits)); }]
 };
 export const inst_fns = object_map(Opcodes_operants, (key, value) => {
     if (value === undefined) {

@@ -19,6 +19,9 @@ export class Scroll_Out extends HTMLElement {
         this.char.style.visibility = "hidden";
         this.appendChild(this.char);
     }
+    get_text() {
+        return this.lines.join("\n");
+    }
     update() {
         const { ceil: c, floor: f } = Math;
         const { clientWidth: cw, clientHeight: ch } = this.char;
@@ -61,10 +64,24 @@ export class Scroll_Out extends HTMLElement {
             const line = this.buf.substring(j, i - 1);
             const full_line = this.lines[this.lines.length - 1] += line;
             this.text_width = Math.max(full_line.length, this.text_width);
+            const clear_escape = "\x1b[2J";
+            const escape_index = full_line.lastIndexOf(clear_escape);
+            if (escape_index >= 0) {
+                const escaped = full_line.substring(escape_index + clear_escape.length);
+                this.lines = [escaped];
+                this.size = escaped.length;
+            }
             this.size += line.length;
             this.lines.push("");
         }
         const full_line = this.lines[this.lines.length - 1] += this.buf.substring(j, this.buf.length);
+        const clear_escape = "\x1b[2J";
+        const escape_index = full_line.lastIndexOf(clear_escape);
+        if (escape_index >= 0) {
+            const escaped = full_line.substring(escape_index + clear_escape.length);
+            this.lines = [escaped];
+            this.size = escaped.length;
+        }
         this.text_width = Math.max(full_line.length, this.text_width);
         this.size += this.buf.length - j;
         this.buf = "";

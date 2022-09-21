@@ -1,6 +1,8 @@
 import { createProgram } from "../../webgl/shader.js";
 import { IO_Port } from "../instructions.js";
-import { Color_Mode, pico8 } from "./display.js";
+import { Color_Mode } from "./display.js";
+import frag from "./gl-display.frag";
+import vert from "./gl-display.vert";
 export class Gl_Display {
     color_mode;
     gl;
@@ -16,90 +18,8 @@ export class Gl_Display {
     y = 0;
     pref_display = globalThis?.document?.getElementById?.("pref-display");
     bits = 8;
-    vert_src = /*vert*/ `#version 300 es
-    precision mediump float;
-    in vec2 a_uv;
-    in vec2 a_pos;
-
-    out vec2 v_uv;
-
-    void main(){
-        gl_Position = vec4(a_pos, 0., 1.);
-        v_uv = a_uv;
-    }
-    `;
-    frag_src = /*frag*/ `#version 300 es
-    precision mediump float;
-    in vec2 v_uv;
-    out vec4 color;
-
-    uniform sampler2D u_image;
-    uniform uint u_color_mode;
-
-    vec4 rgb(vec4 v, uint bits){
-        uint color = uint(v.x * 255.) + (uint(v.y * 255.) << 8u) + (uint(v.z * 255.) << 16u);
-        uint blue_bits = bits / 3u;
-        uint blue_mask = (1u << blue_bits) - 1u;
-        uint red_bits = (bits - blue_bits) / 2u;
-        uint red_mask = (1u << red_bits) - 1u;
-        uint green_bits = bits - blue_bits - red_bits;
-        uint green_mask = (1u << green_bits) - 1u;
-        
-        uint green_offset = blue_bits;
-        uint red_offset = green_offset + green_bits;
-        return vec4(
-            float((color >> red_offset   ) & red_mask) / float(red_mask),
-            float((color >> green_offset ) & green_mask) / float(green_mask),
-            float((color                  ) & blue_mask) / float(blue_mask),
-            1
-        );
-    }
-    vec4 rgbi(vec4 v){
-        uint c = uint(v.x * 255.);
-        uint r = (c >> 3u) & 1u;
-        uint g = (c >> 2u) & 1u;
-        uint b = (c >> 1u) & 1u;
-        uint i = ((c >> 0u) & 1u) + 1u;
-        if ((c & 15u) == 1u){
-            return vec4(0.25, 0.25, 0.25, 1.);
-        }
-        return vec4(float(r*i)/2.1, float(g*i)/2.1, float(b*i)/2.1, 1.);
-    }
-    vec4 pallet_pico8[16] = vec4[16](
-        ${pico8.map(v => `vec4(${v.map(n => (n / 255))},1.)`).join(",")}
-    );
-
-    vec4 pico8(vec4 v){
-        return pallet_pico8[uint(v.x * 255.) & 15u];
-    }
-
-    vec4 mono(vec4 c){
-        return vec4(c.x, c.x, c.x, 1);
-    }
-
-    vec4 bin(vec4 c){
-        return c.x > 0. || c.y > 0. || c.z > 0. ? vec4(1,1,1,1) : vec4(0,0,0,1);
-    }
-
-
-    void main(){
-        vec4 c = texture(u_image, v_uv);
-        switch (u_color_mode){
-            case ${Color_Mode.Bin}u: color = bin(c); break;
-            case ${Color_Mode.Mono}u: color = mono(c); break;
-            case ${Color_Mode.PICO8}u: color = pico8(c); break;
-            case ${Color_Mode.RGB}u: color = rgb(c, 8u); break;
-            case ${Color_Mode.RGB6}u: color = rgb(c, 6u); break;
-            case ${Color_Mode.RGB8}u: color = rgb(c, 8u); break;
-            case ${Color_Mode.RGB12}u: color = rgb(c, 12u); break;
-            case ${Color_Mode.RGB16}u: color = rgb(c, 16u); break;
-            case ${Color_Mode.RGB24}u: color = rgb(c, 24u); break;
-            case ${Color_Mode.RGBI}u: color = rgbi(c); break;
-            default: color = pico8(c); break;
-        }
-    }
-    
-    `;
+    vert_src = vert;
+    frag_src = frag;
     inputs = {
         [IO_Port.COLOR]: this.color_in,
         [IO_Port.X]: this.x_in,
@@ -117,6 +37,7 @@ export class Gl_Display {
         this.y = 0;
         this.clear();
         this.buffer_enabled = 0;
+        this.update_display();
     }
     constructor(gl, color_mode = Color_Mode.PICO8) {
         this.color_mode = color_mode;

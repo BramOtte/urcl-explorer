@@ -9,6 +9,7 @@ export function compile(parsed) {
     if (bits === undefined) {
         throw new Error("bits can not exceed 32");
     }
+    parsed.headers[URCL_Header.BITS].value = bits;
     const msb = 1 << (bits - 1);
     const smsb = 1 << (bits - 2);
     const max = 0xFF_FF_FF_FF >>> (32 - bits);
