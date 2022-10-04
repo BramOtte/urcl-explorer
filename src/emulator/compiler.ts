@@ -46,6 +46,15 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
 
     const new_operant_values = operant_values.map(vals=>vals.slice());
     const new_operant_types = operant_types.map((types, i) => types.map((t, j) => {
+        if (t !== Operant_Type.Reg && t !== Operant_Type.Constant && !(j === 0 && t === Operant_Type.Label)) {
+            const num = new_operant_values[i][j]
+            if (num > max) {
+                throw new Error(`Immediate value ${num} exceeds the maximum of ${max}`);
+            }
+            if (num < -smax-1) {
+                throw new Error(`Immediate value ${num} exceeds the minimum of ${-smax-1}`);
+            }
+        }
         switch (t){
             case Operant_Type.Reg: {
                 const num = new_operant_values[i][j] + 1 - register_count;
