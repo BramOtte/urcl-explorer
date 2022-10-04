@@ -226,7 +226,7 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     // Multiply Op2 by Op3 then put the lower half of the answer into Op1
     [Opcode.MLT  ]: [[SET, GET, GET], (s) => {s.a = Math.imul(s.b, s.c);}],
     // Unsigned division of Op2 by Op3 then put answer into Op1
-    [Opcode.DIV  ]: [[SET, GET, GET], (s) => {s.a = s.b / s.c}],
+    [Opcode.DIV  ]: [[SET, GET, GET], (s) => {s.a = s.c !== 0 ? s.b / s.c : s.max_value}],
     [Opcode.SDIV  ]: [[SET, GET, GET], (s) => {s.a = s.sb / s.sc}],
     // Unsigned modulus of Op2 by Op3 then put answer into Op1
     [Opcode.MOD  ]: [[SET, GET, GET], (s) => {s.a = s.b % s.c}],

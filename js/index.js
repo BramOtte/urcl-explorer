@@ -361,7 +361,7 @@ var Opcodes_operants = {
     s.a = Math.imul(s.b, s.c);
   }],
   [41 /* DIV */]: [[SET, GET, GET], (s) => {
-    s.a = s.b / s.c;
+    s.a = s.c !== 0 ? s.b / s.c : s.max_value;
   }],
   [59 /* SDIV */]: [[SET, GET, GET], (s) => {
     s.a = s.sb / s.sc;
