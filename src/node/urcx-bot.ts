@@ -79,7 +79,8 @@ function code_block(str: string, max: number){
     return "```\n" + str + "```";
 }
 
-const channels = ["bots", "urcl-bot", "counting", "chains"];
+const channels = new Set(["bots", "urcl-bot", "counting", "chains"]);
+const filter_servers = new Set(["758395778376532059", "921425770293911573"]);
 const urcl_start = "```urcx\n";
 const ansi_start = "```ansi\n";
 const code_block_end = "```";
@@ -154,7 +155,7 @@ async function onmessage (msg: Message) {
         }
     }
     if (msg.author.bot || !(msg.channel instanceof ds.TextChannel)) return;
-    if (!channels.includes(msg.channel.name)) return;
+    if (filter_servers.has(msg.channelId) && !channels.has(msg.channel.name)) return;
     const {content} = msg;
     if (content.startsWith("!urclpp")){
         let source = parse_code_block(content);
