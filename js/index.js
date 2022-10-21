@@ -2969,7 +2969,7 @@ function parse(source, options = {}) {
         }
         const [name, value] = parts;
         if (out.constants[name.toUpperCase()] !== void 0) {
-          out.warnings.push(warn(line_nr, `Redefinition of macro ${name}`));
+          out.errors.push(warn(line_nr, `Redefinition of macro ${name}`));
         }
         out.constants[name.toUpperCase()] = value;
         continue;
