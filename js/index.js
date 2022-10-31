@@ -586,19 +586,27 @@ function f16_encode(float) {
   const fraction = float / 2 ** exponent - 1;
   return (sign < 0 ? 1 : 0) << 15 | (exponent + 15 & 31) << 10 | fraction * 1024 & 1023;
 }
-function read16(buf, little_endian, size) {
-  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  const out = new Uint16Array(Math.floor(Math.max(size, buf.byteLength) / 2));
-  for (let i = 0; i < Math.floor(buf.byteLength / 2); i++) {
+function read16(data, little_endian, size) {
+  size = Math.max(data.byteLength, size);
+  const word_size = Math.ceil(size / 2);
+  const buffer = new ArrayBuffer(word_size * 2);
+  new Uint8Array(buffer).set(data);
+  const view = new DataView(buffer);
+  const out = new Uint16Array(word_size);
+  for (let i = 0; i < word_size; i++) {
     out[i] = view.getUint16(i * 2, little_endian);
   }
   return out;
 }
-function read32(buf, littleEndian, size) {
-  const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-  const out = new Uint32Array(Math.floor(Math.max(size, buf.byteLength) / 4));
-  for (let i = 0; i < Math.floor(buf.byteLength / 4); i++) {
-    out[i] = view.getUint32(i * 4, littleEndian);
+function read32(data, little_endian, size) {
+  size = Math.max(data.byteLength, size);
+  const word_size = Math.ceil(size / 4);
+  const buffer = new ArrayBuffer(word_size * 4);
+  new Uint8Array(buffer).set(data);
+  const view = new DataView(buffer);
+  const out = new Uint32Array(word_size);
+  for (let i = 0; i < word_size; i++) {
+    out[i] = view.getUint32(i * 4, little_endian);
   }
   return out;
 }
@@ -2244,6 +2252,9 @@ var Storage = class {
         throw new Error(`${bits} is not a supported word length for a Storage device`);
     }
   }
+  get word_count() {
+    return this.data.length;
+  }
   get_bytes() {
     if (this.data instanceof Uint8Array) {
       return new Uint8Array(this.data.buffer, this.data.byteOffset, this.data.byteLength);
@@ -3619,6 +3630,7 @@ var share_button = document.getElementById("share-button");
 var auto_run_input = document.getElementById("auto-run-input");
 var storage_input = document.getElementById("storage-input");
 var storage_msg = document.getElementById("storage-msg");
+var storage_size = document.getElementById("storage-size");
 var storage_little = document.getElementById("storage-little");
 var storage_update = document.getElementById("storage-update");
 var storage_download = document.getElementById("storage-download");
@@ -3659,26 +3671,30 @@ var storage_loads = 0;
 function load_array_buffer(buffer) {
   storage_uploaded = new Uint8Array(buffer);
   const bytes = storage_uploaded.slice();
-  emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
+  emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, (Number(storage_size.value) || 0) * emulator._bits / 8));
   storage_device.set_bytes(bytes);
-  storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words`;
+  storage_msg.innerText = `loaded storage device with ${storage_device.word_count} words`;
 }
-storage_little.oninput = storage_input.oninput = async (e) => {
+storage_size.oninput = storage_little.oninput = storage_input.oninput = on_storage_update;
+async function on_storage_update() {
   storage_msg.classList.remove("error");
   const files = storage_input.files;
+  let buffer;
   if (files === null || files.length < 1) {
     storage_msg.classList.add("error");
-    storage_msg.innerText = "No file specified";
-    return;
+    storage_msg.innerText = "No file specified loading empty file";
+    buffer = new ArrayBuffer(0);
+  } else {
+    const file = files[0];
+    buffer = await file.arrayBuffer();
   }
-  const file = files[0];
   try {
-    load_array_buffer(await file.arrayBuffer());
+    load_array_buffer(buffer);
   } catch (error) {
     storage_msg.classList.add("error");
     storage_msg.innerText = "" + error;
   }
-};
+}
 storage_update.onclick = (e) => {
   if (storage_device === void 0) {
     storage_msg.innerText = `No storage to update`;
@@ -3869,9 +3885,9 @@ function compile_and_reset() {
     }
     if (storage_uploaded) {
       const bytes = storage_uploaded.slice();
-      emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
+      emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, (Number(storage_size.value) || 0) * emulator._bits / 8));
       storage_device.set_bytes(bytes);
-      storage_msg.innerText = `loaded storage device with ${0 | bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+      storage_msg.innerText = `loaded storage device with ${storage_device.word_count} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
     const bits = emulator._bits;
     const total_register_count = emulator.registers.length;

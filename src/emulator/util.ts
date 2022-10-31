@@ -186,19 +186,27 @@ export function f16_encode(float: number){
     return ((sign < 0 ? 1 : 0) << 15) | (((exponent + 15) & 31) << 10) | ((fraction * 1024) & 1023);
 }
 
-export function read16(buf: ArrayBufferView, little_endian: boolean, size: number): Uint16Array {
-    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    const out = new Uint16Array(Math.floor( Math.max(size, buf.byteLength) / 2));
-    for (let i = 0; i < Math.floor(buf.byteLength / 2); i++){
+export function read16(data: Uint8Array, little_endian: boolean, size: number): Uint16Array {
+    size = Math.max(data.byteLength, size);
+    const word_size = Math.ceil(size / 2);
+    const buffer =new ArrayBuffer(word_size * 2);
+    new Uint8Array(buffer).set(data);
+    const view = new DataView(buffer);
+    const out = new Uint16Array(word_size);
+    for (let i = 0; i < word_size; i++) {
         out[i] = view.getUint16(i*2, little_endian);
     }
     return out;
 }
-export function read32(buf: ArrayBufferView, littleEndian: boolean, size: number): Uint32Array {
-    const view = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
-    const out = new Uint32Array(Math.floor(Math.max(size, buf.byteLength) / 4));
-    for (let i = 0; i < Math.floor(buf.byteLength / 4); i++){
-        out[i] = view.getUint32(i*4, littleEndian);
+export function read32(data: Uint8Array, little_endian: boolean, size: number): Uint32Array {
+    size = Math.max(data.byteLength, size);
+    const word_size = Math.ceil(size / 4);
+    const buffer = new ArrayBuffer(word_size * 4);
+    new Uint8Array(buffer).set(data);
+    const view = new DataView(buffer);
+    const out = new Uint32Array(word_size);
+    for (let i = 0; i < word_size; i++) {
+        out[i] = view.getUint32(i*4, little_endian);
     }
     return out;
 }

@@ -5,7 +5,7 @@ import { Device, Device_Input, Device_Output } from "./device.js";
 export class Storage implements Device {
     constructor(public bits: number, private little_endian: boolean, private size: number){
     }
-    public set_bytes(data: ArrayBufferView){
+    public set_bytes(data: Uint8Array){
         const {bits, size, little_endian} = this;
         switch (bits){
             case 8: {
@@ -27,6 +27,9 @@ export class Storage implements Device {
             } break;
             default: throw new Error(`${bits} is not a supported word length for a Storage device`);
         }
+    }
+    public get word_count() {
+        return this.data.length;
     }
 
     public get_bytes(){

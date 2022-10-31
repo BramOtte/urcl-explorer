@@ -45,6 +45,7 @@ const share_button = document.getElementById("share-button") as HTMLButtonElemen
 const auto_run_input = document.getElementById("auto-run-input") as HTMLInputElement;
 const storage_input = document.getElementById("storage-input") as HTMLInputElement;
 const storage_msg = document.getElementById("storage-msg") as HTMLInputElement;
+const storage_size = document.getElementById("storage-size") as HTMLInputElement;
 const storage_little = document.getElementById("storage-little") as HTMLInputElement;
 const storage_update = document.getElementById("storage-update") as HTMLInputElement;
 const storage_download = document.getElementById("storage-download") as HTMLInputElement;
@@ -63,7 +64,7 @@ const srcurl = url.searchParams.get("srcurl");
 const storage_url = url.searchParams.get("storage");
 const width = parseInt(url.searchParams.get("width") ?? "");
 const height = parseInt(url.searchParams.get("height") ?? "");
-const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "")
+const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
 
 memory_update_input.oninput = () => update_views();
 
@@ -94,23 +95,28 @@ let storage_loads = 0;
 function load_array_buffer(buffer: ArrayBuffer) {
     storage_uploaded = new Uint8Array(buffer);
     const bytes = storage_uploaded.slice();
-    emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
+    emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, (Number(storage_size.value) || 0) * emulator._bits / 8));
     storage_device.set_bytes(bytes);
-    storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words`;
+    storage_msg.innerText = `loaded storage device with ${storage_device.word_count} words`;
 }
 
+storage_size.oninput =
 storage_little.oninput =
-storage_input.oninput = async e => {
+storage_input.oninput = on_storage_update;
+async function on_storage_update() {
     storage_msg.classList.remove("error");
     const files = storage_input.files;
+    let buffer;
     if (files === null || files.length < 1){
         storage_msg.classList.add("error");
-        storage_msg.innerText = "No file specified";
-        return;
+        storage_msg.innerText = "No file specified loading empty file";
+        buffer = new ArrayBuffer(0);
+    } else {
+        const file = files[0];
+        buffer = await file.arrayBuffer();
     }
-    const file = files[0];
     try {
-        load_array_buffer(await file.arrayBuffer());
+        load_array_buffer(buffer);
     } catch (error: any) {
         storage_msg.classList.add("error");
         storage_msg.innerText = ""+error;
@@ -322,9 +328,9 @@ try {
 
     if (storage_uploaded){
         const bytes = storage_uploaded.slice();
-        emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, bytes.length));
+        emulator.add_io_device(storage_device = new Storage(emulator._bits, storage_little.checked, (Number(storage_size.value) || 0) * emulator._bits / 8));
         storage_device.set_bytes(bytes);
-        storage_msg.innerText = `loaded storage device with ${0| bytes.length / (emulator._bits / 8)} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
+        storage_msg.innerText = `loaded storage device with ${storage_device.word_count} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 
     const bits = emulator._bits
