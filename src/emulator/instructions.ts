@@ -259,9 +259,9 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     // If Op2 + Op3 does not produce a carry out then set Op1 to all ones in binary, else set Op1 to 0
     [Opcode.SETNC]: [[SET, GET, GET], (s) => {s.a = s.b + s.c <= s.max_value ? s.max_value : 0}],
     // Copy RAM value pointed to by (Op2 + Op3) into Op1. Where Op2 is the base pointer is Op3 is the offset.
-    [Opcode.LLOD ]: [[SET, RAO, GAM], (s) => {s.a = s.m_get(s.b + s.c)}],
+    [Opcode.LLOD ]: [[SET, RAO, GAM], (s) => {s.a = s.m_get((s.b + s.c) & s.max_value)}],
     // Copy Op3 into RAM value pointed to by (Op1 + Op2). Where Op1 is the base pointer is Op2 is the offset.
-    [Opcode.LSTR ]: [[RAO, SAM, GET], (s) => s.m_set(s.a + s.b, s.c)],
+    [Opcode.LSTR ]: [[RAO, SAM, GET], (s) => s.m_set((s.a + s.b) & s.max_value, s.c)],
 
     //----- IO Instructions
     [Opcode.IN  ]: [[SET, GET], (s) => s.in(s.b)],
