@@ -4,9 +4,6 @@
   "version": "1.0.0",
   "main": "index.js",
   "license": "MIT",
-  "engines": {
-    "node": "16.x"
-  },
   "scripts": {
     "start": "node js/node/urcx-bot.js",
     "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text"
@@ -16,6 +13,7 @@
     "@types/node": "^16.7.13"
   },
   "dependencies": {
+    "esbuild": "^0.15.16",
     "canvas": "^2.8.0",
     "discord.js": "^13.3.1",
     "gifencoder": "^2.0.1",
