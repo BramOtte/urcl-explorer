@@ -166,6 +166,7 @@ export class Gl_Display implements Device {
             // %BUFFER 0: disable the buffer
             case 0: {
                 this.buffer_enabled = 0;
+                this.is_dirty = true;
             } break;
             // %BUFFER 1: if the buffer disabled enable it leaving the display unchanged (the buffer starts cleared)
             //  otherwise do nothing
