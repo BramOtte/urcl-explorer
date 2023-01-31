@@ -460,6 +460,7 @@ function update_views(){
     source_input.set_pc_line(line);
     source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v] as [number, number]));
     console_output.flush();
+    display.flush();
 }
 change_color_mode();
 

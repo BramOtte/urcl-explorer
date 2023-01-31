@@ -155,9 +155,7 @@ export class Gl_Display implements Device {
             return;
         }
         this.buffer[this.x + this.y * this.width] = color;
-        if (!this.buffer_enabled){
-            this.dirty_display();
-        }
+        this.is_dirty = true;
     }
     buffer_in(): number {
         return this.buffer_enabled;
@@ -165,16 +163,27 @@ export class Gl_Display implements Device {
     start_t = 0;
     buffer_out(value: number){
         switch (value){
+            // %BUFFER 0: disable the buffer
             case 0: {
-                this.update_display();
-                this.clear();
                 this.buffer_enabled = 0;
             } break;
+            // %BUFFER 1: if the buffer disabled enable it leaving the display unchanged (the buffer starts cleared)
+            //  otherwise do nothing
             case 1: {
-                this.start_t = performance.now();
+                if (this.buffer_enabled) {
+                    break
+                }
+                this.update_display();
+                this.clear();
                 this.buffer_enabled = 1;
+                this.start_t = performance.now();
             } break;
+            // %BUFFER 2: if the buffer is enabled update the display
+            //  otherwise clear the display
             case 2: {
+                if (!this.buffer_enabled) {
+                    this.clear();
+                }
                 this.update_display();
                 if (this.pref_display){
                     const end_t = performance.now();
@@ -197,11 +206,9 @@ export class Gl_Display implements Device {
         gl.viewport(0, 0, width, height);
     }
 
-    private dirty_display(){
-        this.update_display();
-    }
+    private is_dirty = true;
 
-    update_display(){
+    public update_display(){
         let {gl, width, height, bytes, uni_mode, color_mode, bits} = this;
         if (color_mode === Color_Mode.RGB){
             if (this.bits >= 24){
@@ -215,6 +222,12 @@ export class Gl_Display implements Device {
         gl.uniform1ui(uni_mode, color_mode)
         gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, width, height, 0, gl.RGBA, gl.UNSIGNED_BYTE, bytes);
         gl.drawElements(gl.TRIANGLES, 6, gl.UNSIGNED_SHORT, 0);
+        this.is_dirty = false;
+    }
+    public flush() {
+        if (!this.buffer_enabled && this.is_dirty) {
+            this.update_display();
+        }
     }
 
     private in_bounds(x: number, y: number){
