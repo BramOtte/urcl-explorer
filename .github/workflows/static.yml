@@ -34,7 +34,7 @@ jobs:
       - name: Setup Node.js environment
         uses: actions/setup-node@v3.5.1
         
-      - run: npm install
+      - run: npm install -g esbuild
       - run: npm run bundle
         
       - name: Setup Pages
