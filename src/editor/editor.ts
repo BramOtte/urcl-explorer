@@ -7,10 +7,15 @@ export class Editor_Window extends HTMLElement {
     private code: HTMLElement;
     private input: HTMLTextAreaElement;
     private colors: HTMLElement;
-    private profile_check = document.createElement("input");
+    private profile_check: HTMLInputElement;
     private profiled: boolean[] = [];
     private profile_present: boolean = false;
     private lines: string[] = [];
+    private saved_marker: HTMLOutputElement;
+    back_button: HTMLButtonElement;
+    forward_button: HTMLButtonElement;
+
+
     tab_width = 4
     constructor(){
         super();
@@ -23,19 +28,41 @@ export class Editor_Window extends HTMLElement {
         );
 
         this.input.addEventListener("input", this.input_cb.bind(this));
-
+        
         this.input.addEventListener("keydown", this.keydown_cb.bind(this));
-        this.profile_check.type = "checkbox";
-        const profile_text = document.createElement("span");
-        this.parentElement?.insertBefore(this.profile_check, this);
-        profile_text.textContent = `Show line-profile`;
-        this.parentElement?.insertBefore(profile_text, this);
+
+        
+        this.saved_marker = l("output", {value: "saved"});
+        this.forward_button = l("button", {disabled: false}, ">");
+        this.back_button = l("button", {disabled: false}, "<");
+
+        
+        this.profile_check = l("input", {type: "checkbox"})
+        const profile_text = l("span", {}, `Show line-profile`);
+        this.parentElement?.insertBefore(l("div", {}, this.back_button, this.forward_button, this.saved_marker, this.profile_check, profile_text), this);
+
+        // this.parentElement?.insertBefore(l("div", {}, this.profile_check, profile_text), this);
+
 
         const resize_observer = new ResizeObserver(() => this.render_lines());
         resize_observer.observe(this);
 
 
         this.onscroll = () => this.render_lines();
+    }
+    get saved() {
+        return this.saved_marker.value == "saved";
+    }
+
+    mark_saved() {
+        this.saved_marker.value = "saved";
+    }
+    mark_modified() {
+        this.saved_marker.value = "modified";
+    }
+    set_value_saved(value: string) {
+        this.input.value = value;
+        this.input_cb(false);
     }
     get value(){
         return this.input.value;
@@ -143,7 +170,12 @@ export class Editor_Window extends HTMLElement {
             this.input_cb();
         }
     }
-    private input_cb(){
+    private input_cb(modified = true) {
+        if (modified) {
+            this.mark_modified();
+        } else {
+            this.mark_saved();
+        }
         this.render_lines();
         this.call_input_listeners();
     }

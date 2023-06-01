@@ -237,18 +237,74 @@ emulator.add_io_device(new Mouse(canvas));
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
 
+let save_timeout: undefined | number;
+let save_timeout_time = 5000;
+
+
 function oninput(){
     if (started){
-        const size = 8;// Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 8));
-        localStorage.setItem("history-size", ""+size)
-        const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % size;
-        localStorage.setItem("history-offset", ""+offset);
-        localStorage.setItem(`history-${offset}`, source_input.value);
+        if (save_timeout) {
+            clearTimeout(save_timeout);
+            save_timeout = undefined;
+        }
+        save_timeout = setTimeout(save, save_timeout_time);
     }
     if (auto_run_input.checked){
         compile_and_run();
     }
 }
+
+document.addEventListener("keydown", e => {
+    console.log(e.key);
+    if (e.ctrlKey && e.key == "s") {
+        save();
+        e.preventDefault();
+    }
+})
+
+const history_size = 8;// Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 8));
+function save() {
+    if (source_input.saved) {
+        return;
+    }
+
+    if (save_timeout) {
+        clearTimeout(save_timeout);
+        save_timeout = undefined;
+    }
+    localStorage.setItem("history-size", ""+history_size);
+    const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % history_size;
+    localStorage.setItem("history-offset", ""+offset);
+    localStorage.setItem(`history-${offset}`, source_input.value);
+    source_input.mark_saved();
+}
+
+source_input.forward_button.addEventListener("click", e => {
+    if (!source_input.saved) {
+        save()
+    }
+
+    const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % history_size;
+    const value = localStorage.getItem(`history-${offset}`);
+    if (value == null) {
+        return;
+    }
+    localStorage.setItem("history-offset", ""+offset);
+    source_input.set_value_saved(value);
+});
+
+source_input.back_button.addEventListener("click", e => {
+    if (!source_input.saved) {
+        save()
+    }
+    const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + history_size - 1)  % history_size;
+    const value = localStorage.getItem(`history-${offset}`);
+    if (value == null) {
+        return;
+    }
+    localStorage.setItem("history-offset", ""+offset);
+    source_input.set_value_saved(value);
+});
 
 const compile_and_run_button = document.getElementById("compile-and-run-button") as HTMLButtonElement;
 const pause_button = document.getElementById("pause-button") as HTMLButtonElement;
@@ -471,6 +527,7 @@ if (srcurl){
         if (source_input.value){
             return;
         }
+        save();
         source_input.value = text;
         compile_and_run();
     });
@@ -482,13 +539,11 @@ autofill:
     if (!Number.isInteger(offset)){
         break autofill;
     }
-    source_input.value = localStorage.getItem(`history-${offset}`) ?? "";
+    source_input.set_value_saved(localStorage.getItem(`history-${offset}`) ?? "");
 }
 
 if (storage_url) {
     fetch(storage_url).then(res => res.arrayBuffer()).then(buffer => {
-        console.log(storage_uploaded, buffer);
-
         if (storage_uploaded != null) {
             return;
         }
