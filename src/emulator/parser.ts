@@ -456,8 +456,15 @@ function parse_operant(
         return undefined;
     }
     for (let i = 0; i < 10; i++){
-        const macro = macro_constants[operant.toUpperCase()];
+        const upper = operant.toUpperCase();
+        const macro = macro_constants[upper];
         if (macro !== undefined){
+            operant = macro;
+        } else if (operant.startsWith("@")) {
+            const macro = macro_constants[upper.substring(1)];
+            if (macro === undefined) {
+                break;
+            }
             operant = macro;
         } else {
             break;
