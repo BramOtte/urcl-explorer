@@ -104,6 +104,7 @@ export enum IO_Port {
     MOUSE_DWHEEL,
     MOUSE_BUTTONS,
     FILE,
+    DBG_INT
 }
 
 export interface Instruction_Ctx {

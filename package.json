@@ -6,7 +6,8 @@
   "license": "MIT",
   "scripts": {
     "start": "node js/node/urcx-bot.js",
-    "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text"
+    "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text",
+    "test-c": "bun run src/node/urcx-c.ts js/test.urcl > js/test.c && gcc js/test.c -g -o js/test && ./js/test"
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.1",
