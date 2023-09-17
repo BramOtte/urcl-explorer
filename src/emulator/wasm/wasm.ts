@@ -1,0 +1,226 @@
+const text_encoder = new TextEncoder();
+export const magic = text_encoder.encode("\0asm");
+export const version = 1;
+
+
+export enum Section_Type {
+    custom = 0,
+    type = 1,
+    import = 2,
+    function = 3,
+    table = 4,
+    memory = 5,
+    global = 6,
+    export = 7,
+    start = 8,
+    element = 9,
+    code = 10,
+    data = 11,
+    data_count = 12,
+}
+
+export enum Export_Type {
+    func, table, memory, global
+}
+
+export enum WASM_Type {
+    f64 = 124, f32 = 125,
+    i64 = 126, i32 = 127,
+}
+export enum RefType {
+    funcref = 0x70,
+    extrenref = 0x6f,
+}
+
+// https://webassembly.github.io/spec/core/binary/instructions.html
+export enum WASM_Opcode {
+    // Control Instructions
+    unreachable = 0x00,
+    nop = 0x01,
+    block = 0x02,
+    loop = 0x03,
+    if = 0x04,
+    else = 0x05,
+    end = 0x0B,
+    br = 0x0C,
+    br_if = 0x0D,
+    br_table = 0x0E,
+    return = 0x0F,
+    call = 0x10,
+    call_indirect =  0x11,
+
+    // Parametric Instructions
+    drop = 0x1A,
+    select = 0x1B,
+    select_t = 0x1C,
+
+    // Variable Instructions
+    local_get = 0x20,
+    local_set = 0x21,
+    local_tee = 0x22,
+    global_get = 0x23,
+    global_set = 0x24,
+
+    // Table Instructions
+    table_get = 0x25,
+    table_set = 0x26,
+
+    // Memory Instructions
+    i32_load = 0x28,
+    i64_load = 0x29,
+    f32_load = 0x2A,
+    f64_load = 0x2B,
+    i32_load8_s = 0x2C,
+    i32_load8_u = 0x2D,
+    i32_load16_s = 0x2E,
+    i32_load16_u = 0x2F,
+    i64_load8_s = 0x30,
+    i64_load8_u = 0x31,
+    i64_load16_s = 0x32,
+    i64_load16_u = 0x33,
+    i64_load32_s = 0x34,
+    i64_load32_u = 0x35,
+    i32_store = 0x36,
+    i64_store = 0x37,
+    f32_store = 0x38,
+    f64_store = 0x39,
+    i32_store8 = 0x3A,
+    i32_store16 = 0x3B,
+    i64_store8 = 0x3C,
+    i64_store16 = 0x3D,
+    i64_store32 = 0x3E,
+    memory_size = 0x3F,
+    memory_grow = 0x40,
+
+    // Numeric Instructions
+    i32_const = 0x41,
+    i64_const = 0x42,
+    f32_const = 0x43,
+    f64_const = 0x44,
+
+    // Numeric operators
+    i32_eqz = 0x45,
+    i32_eq = 0x46,
+    i32_ne = 0x47,
+    i32_lt_s = 0x48,
+    i32_lt_u = 0x49,
+    i32_gt_s = 0x4A,
+    i32_gt_u = 0x4B,
+    i32_le_s = 0x4C,
+    i32_le_u = 0x4D,
+    i32_ge_s = 0x4E,
+    i32_ge_u = 0x4F,
+
+    i64_eqz = 0x50,
+    i64_eq = 0x51,
+    i64_ne = 0x52,
+    i64_lt_s = 0x53,
+    i64_lt_u = 0x54,
+    i64_gt_s = 0x55,
+    i64_gt_u = 0x56,
+    i64_le_s = 0x57,
+    i64_le_u = 0x58,
+    i64_ge_s = 0x59,
+    i64_ge_u = 0x5A,
+
+    f32_eq = 0x5B,
+    f32_ne = 0x5C,
+    f32_lt = 0x5D,
+    f32_gt = 0x5E,
+    f32_le = 0x5F,
+    f32_ge = 0x60,
+
+    f64_eq = 0x61,
+    f64_ne = 0x62,
+    f64_lt = 0x63,
+    f64_gt = 0x64,
+    f64_le = 0x65,
+    f64_ge = 0x66,
+
+    i32_clz = 0x67,
+    i32_ctz = 0x68,
+    i32_popcnt = 0x69,
+    i32_add = 0x6A, i32_sub,
+    i32_mul, i32_div_s, i32_div_u,
+    i32_rem_s, i32_rem_u,
+    i32_and, i32_or, i32_xor,
+    i32_shl, i32_shr_s, i32_shr_u,
+    i32_rotl, i32_rotr,
+    
+    i64_clz = 0x79,
+    i64_ctz = 0x7A,
+    i64_popcnt = 0x7B,
+    i64_add = 0x7C, i64_sub,
+    i64_mul, i64_div_s, i64_div_u,
+    i64_rem_s, i64_rem_u,
+    i64_and, i64_or, i64_xor,
+    i64_shl, i64_shr_s, i64_shr_u,
+    i64_rotl, i64_rotr,
+
+    f32_abs = 0x8B,
+    f32_neg = 0x8C,
+    f32_ceil = 0x8D,
+    f32_floor = 0x8E,
+    f32_trunc = 0x8F,
+    f32_nearest = 0x90,
+    f32_sqrt = 0x91,
+    f32_add = 0x92,
+    f32_sub = 0x93,
+    f32_mul = 0x94,
+    f32_div = 0x95,
+    f32_min = 0x96,
+    f32_max = 0x97,
+    f32_copysign = 0x98,
+
+    f64_abs = 0x99,
+    f64_neg = 0x9A,
+    f64_ceil = 0x9B,
+    f64_floor = 0x9C,
+    f64_trunc = 0x9D,
+    f64_nearest = 0x9E,
+    f64_sqrt = 0x9F,
+    f64_add = 0xA0,
+    f64_sub = 0xA1,
+    f64_mul = 0xA2,
+    f64_div = 0xA3,
+    f64_min = 0xA4,
+    f64_max = 0xA5,
+    f64_copysign = 0xA6,
+
+    i32_wrap_i64 = 0xA7,
+    i32_trunc_f32_s = 0xA8,
+    i32_trunc_f32_u = 0xA9,
+    i32_trunc_f64_s = 0xAA,
+    i32_trunc_f64_u = 0xAB,
+    i64_extend_i32_s = 0xAC,
+    i64_extend_i32_u = 0xAD,
+    i64_trunc_f32_s = 0xAE,
+    i64_trunc_f32_u = 0xAF,
+    i64_trunc_f64_s = 0xB0,
+    i64_trunc_f64_u = 0xB1,
+    f32_convert_i32_s = 0xB2,
+    f32_convert_i32_u = 0xB3,
+    f32_convert_i64_s = 0xB4,
+    f32_convert_i64_u = 0xB5,
+    f32_demote_f64 = 0xB6,
+    f64_convert_i32_s = 0xB7,
+    f64_convert_i32_u = 0xB8,
+    f64_convert_i64_s = 0xB9,
+    f64_convert_i64_u = 0xBA,
+    f64_promote_f32 = 0xBB,
+    i32_reinterpret_f32 = 0xBC,
+    i64_reinterpret_f64 = 0xBD,
+    f32_reinterpret_i32 = 0xBE,
+    f64_reinterpret_i64 = 0xBF,
+
+    i32_extend8_s = 0xC0,
+    i32_extend16_s = 0xC1,
+    i64_extend8_s = 0xC2,
+    i64_extend16_s = 0xC3,
+    i64_extend32_s = 0xC4,
+        
+    // Reference Instructions
+    ref_null = 0xD0,
+    ref_is_null = 0xD1,
+    ref_func = 0xD2,
+}
