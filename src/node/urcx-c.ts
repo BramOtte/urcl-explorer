@@ -38,6 +38,7 @@ function generated_tests(): string {
     let output = `BITS 16\nMINSTACK ${stack}\nMINHEAP ${(1 << bits) - stack}\n`;
     output += "\n";
     let test_count = 0;
+    const max = 0xffffffff >>> (32 - bits);
 
     const inputs: {b: number, c: number}[] = [];
     for (const [key, [ops, func]] of Object.entries(Opcodes_operants)) {
@@ -45,12 +46,22 @@ function generated_tests(): string {
         if (opcode_string.includes("__") || opcode_string === "OUT" || opcode_string === "IN" || opcode_string === "HLT") {
             continue;
         }
+        const is_LMEM = opcode_string === "LLOD" || opcode_string === "LSTR";
+        const is_SHIFT = opcode_string === "BSL" || opcode_string === "BSR" || opcode_string === "BSS";
+
         const then_label = `.then_${opcode_string}`;
         const end_label = `.end_${opcode_string}`;
 
         // sum does not exceed 0xffff to prevent segfault on LLOD and LSTR
-        const b = 0| Math.random() * 0xffff;
-        const c = 0xffff - b;
+        const b = 0| Math.random() * max;
+        let c = 0| Math.random() * max;
+        if (is_LMEM) {
+            c = Math.min(c, max-b);
+        }
+        if (is_SHIFT) {
+            c %= bits;
+        }
+
         inputs.push({b, c});
 
         output += `IMM r1 ${then_label}\nIMM r2 ${b}\nIMM r3 ${c}\n`;

@@ -5,22 +5,23 @@ import { urcl2wasm } from "./urcl2wasm";
 import { WASM_Reader } from "./wasm_reader";
 import fs from "fs"
 
-const example = `
-IMM r1 1
-IMM r2 1
-OUT %NUMB r1
-.loop
-    OUT %NUMB r2
-    ADD r1 r1 r2
-    OUT %NUMB r1
-    ADD r2 r1 r2
-    BGE .loop 40 r1
-`;
+
+const file_name = "examples/urcl/prime-sieve32.urcl";
+// const file_name = "js/test.urcl";
+const example = fs.readFileSync(file_name, {encoding: "utf8"});
+// const example = `
+// OUT %NUMB 10
+// JMP .skip
+// OUT %NUMB 20
+// .skip
+// OUT %NUMB 30
+// `;
 
 console.log(example);
 
 const code = parse(example);
 const [program, debug_info] = compile(code);
+debug_info.file_name = file_name;
 console.log(program);
 const wasm = urcl2wasm(program, debug_info);
 
@@ -32,8 +33,17 @@ new WASM_Reader(new DataView(wasm.buffer, wasm.byteOffset, wasm.byteLength)).was
 
 const module = await WebAssembly.instantiate(wasm, {
     env: {
-        what(port: number, value: number) {
+        in(port: number): number {
+            console.log("in", port);
+            return 0;
+        },
+        out(port: number, value: number) {
             console.log("out", port, value);
+            if (port === 420) {
+                const line_nr = debug_info.pc_line_nrs[value];
+                const line = debug_info.lines[line_nr];
+                console.log(`${debug_info.file_name}:${line_nr + 1}: assert failed\n\t${line}`)
+            }
         }
     }
 });
