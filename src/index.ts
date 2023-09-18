@@ -257,7 +257,6 @@ function oninput(){
 }
 
 document.addEventListener("keydown", e => {
-    console.log(e.key);
     if (e.ctrlKey && e.key == "s") {
         save();
         e.preventDefault();

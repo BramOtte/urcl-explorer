@@ -37,7 +37,6 @@ export class Sound implements Device {
     blocks: NoteBlock[] = [];
     note: number = 0;
     play(note: number, length: number){
-        console.log(this.blocks.length, note, length);
         let block = this.blocks.pop();
         if (!block){
             block = new NoteBlock(this.ctx);

@@ -133,8 +133,6 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             this.memory[i] = static_data[i];
         }
 
-        console.log(this.memory);
-
         this.reset();
         for (const device of this.devices){
             device.bits = bits;
@@ -184,7 +182,6 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             this.jit_step = undefined;
     
             this.compiled = JIT_Type.WASM;
-            console.log("wasm compiled");
         })
     }
 

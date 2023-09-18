@@ -81,6 +81,6 @@ export class Storage implements Device {
         return this.data[this.address];
     }
     reset(){
-        // console.log("storage reset");
+
     }
 }

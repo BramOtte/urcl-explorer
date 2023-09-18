@@ -179,7 +179,6 @@ class Context extends WASM_Writer {
         const min_wasm_memory = (min_reg + min_memory) * (this.bits / 8);
         const memory_block_size = 1024 * 64;
         this.memory_blocks = Math.ceil(min_wasm_memory / memory_block_size);
-        console.log(">>>>", this.memory_blocks);
 
         this.memory_size = this.memory_blocks * memory_block_size;
         this.sp_start = min_memory;

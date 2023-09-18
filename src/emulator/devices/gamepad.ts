@@ -38,7 +38,6 @@ export class Pad implements Device {
 
     private connect = (e: GamepadEvent) => {
         const pad = new ControlPad(e.gamepad);
-        console.log(pad);
         this.gamepads.set(e.gamepad, pad);
         this.add_pad(pad);
     }

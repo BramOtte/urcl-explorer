@@ -102,7 +102,6 @@
 
         function enable_tab(group, link_text)
         {
-            console.log("enable: " + group + ", " + link_text);
             link_text = link_text.toUpperCase();
             const tabs = document.getElementById(group);
             const links = tabs.getElementsByTagName("a");
@@ -118,7 +117,6 @@
 
         function disable_tab(group, link_text)
         {
-            console.log("disable: " + group + ", " + link_text);
             link_text = link_text.toUpperCase();
             const tabs = document.getElementById(group);
             const links = tabs.getElementsByTagName("a");
