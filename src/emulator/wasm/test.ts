@@ -4,6 +4,7 @@ import { parse } from "../parser";
 import { urcl2wasm } from "./urcl2wasm";
 import { WASM_Reader } from "./wasm_reader";
 import fs from "fs"
+import { URCL_Header } from "../instructions";
 
 
 const file_name = "examples/urcl/prime-sieve32.urcl";
@@ -29,10 +30,25 @@ const wasm = urcl2wasm(program, debug_info);
 fs.writeFileSync("js/test.wasm", wasm);
 exec("wasm2wat js/test.wasm -o js/test.wat");
 
-new WASM_Reader(new DataView(wasm.buffer, wasm.byteOffset, wasm.byteLength)).wasm();
+// new WASM_Reader(new DataView(wasm.buffer, wasm.byteOffset, wasm.byteLength)).wasm();
+
+const min_heap = program.headers[URCL_Header.MINHEAP].value;
+const min_stack = program.headers[URCL_Header.MINSTACK].value;
+const min_reg = program.headers[URCL_Header.MINREG].value;
+const bits = program.headers[URCL_Header.BITS].value;
+
+
+const block_size = 1024 * 64;
+const memory_size = min_heap + min_stack + min_reg;
+const wasm_block_count = Math.ceil(memory_size * (bits / 8) / block_size);
+console.log(">>>", wasm_block_count);
+const memory = new WebAssembly.Memory({
+    initial: wasm_block_count
+});
 
 const module = await WebAssembly.instantiate(wasm, {
     env: {
+        memory,
         in(port: number): number {
             console.log("in", port);
             return 0;

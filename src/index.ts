@@ -58,6 +58,8 @@ const cout_check = document.getElementById("c-out-check") as HTMLInputElement;
 const memory_update_input = document.getElementById("update-mem-input") as HTMLInputElement;
 
 const JIT_box = document.getElementById("jit-box") as HTMLInputElement;
+const WASM_box = document.getElementById("wasm-box") as HTMLInputElement;
+
 
 const url = new URL(location.href, location.origin)
 const srcurl = url.searchParams.get("srcurl");
@@ -425,7 +427,11 @@ function frame(){
     if (running){
         try {
             if (JIT_box.checked) {
-                emulator.jit_init();
+                if (WASM_box.checked) {
+                    emulator.jit_init_wasm();
+                } else {
+                    emulator.jit_init();
+                }
             } else {
                 emulator.jit_delete();
             }

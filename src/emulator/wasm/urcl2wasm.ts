@@ -4,23 +4,36 @@ import { Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../
 import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } from "./wasm";
 import { WASM_Writer } from "./wasm_writer";
 
-export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
+export interface WASM_Exports {
+    run(): number,
+}
 
+export type WASM_Imports = WebAssembly.Imports & {
+    env: {
+        in(port: number): void,
+        out(port: number, value: number): void;
+        memory: WebAssembly.Memory
+    }
+}
+
+enum Locals {
+    Registers
+}
+
+export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
     const s = new Context(program, debug);
     s.bytes(magic).u32(version)
         .u8(Section_Type.type)
             .size_start() // section size
             .uvar(3)    // type count
                 .u8(0x60)   // function
-                    .uvar(1)    // argument count
-                        .uvar(WASM_Type.i32)
+                    .uvar(0)    // argument count
                     .uvar(1)    // result count
                         .uvar(WASM_Type.i32)
                 .u8(0x60)   // function
                     .uvar(1)    // argument count
                         .uvar(WASM_Type.i32)
-                    .uvar(1)    // result count
-                        .uvar(WASM_Type.i32)
+                    .uvar(0)    // result count
                 .u8(0x60)   // function
                     .uvar(2)    // argument count
                         .uvar(WASM_Type.i32)
@@ -29,7 +42,7 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
             .size_end()
         .u8(Section_Type.import)
             .size_start()
-            .uvar(2)
+            .uvar(3)
                 .str("env")
                     .str("in")
                     .u8(Export_Type.func)
@@ -38,17 +51,21 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
                     .str("out")
                     .u8(Export_Type.func)
                     .uvar(2)
+                .str("env")
+                    .str("memory")
+                    .u8(Export_Type.memory)
+                    .uvar(0).uvar(s.memory_blocks)
             .size_end()
         .u8(Section_Type.function)
             .size_start()   // section size
             .uvar(1)        // function count
                 .uvar(0)    // function type
             .size_end()
-        .u8(Section_Type.memory)
-            .size_start()
-            .u8(1).u8(0)
-            .uvar(s.memory_blocks)
-            .size_end()
+        // .u8(Section_Type.memory)
+        //     .size_start()
+        //     .u8(1).u8(0)
+        //     .uvar(s.memory_blocks)
+        //     .size_end()
         .u8(Section_Type.export)
             .size_start()
             .uvar(1)        // export count
@@ -71,10 +88,12 @@ function generate_run(s: Context) {
     const program_length = s.program.opcodes.length;
     const min_reg = s.program.headers[URCL_Header.MINREG].value;
     s.uvar(1) // local count
-        .uvar(min_reg + register_count - 1) // local repeat
+        .uvar(min_reg + register_count + Locals.Registers) // local repeat
         .u8(WASM_Type.i32);             // local type
     
-    s.const(s.sp_start).write_reg(Register.SP);
+    for (let i = 0; i < min_reg + register_count; i++) {
+        s.const(i << (s.size_shift ?? 0)).load_u().write_reg(i);
+    }
 
     s.u8(WASM_Opcode.loop).uvar(64);
     for (let i = 0; i < program_length; ++i) {
@@ -95,10 +114,13 @@ function generate_run(s: Context) {
         s.u8(WASM_Opcode.end);
         s.pc += 1;
     }
-    s.read_reg(1);
-    s.u8(WASM_Opcode.return);
+    
     s.end();
-    s.read_reg(1);
+
+    for (let i = 0; i < min_reg + register_count; i++) {
+        s.const(i << (s.size_shift ?? 0)).read_reg(i).store();
+    }
+    s.const(Step_Result.Halt);
     s.end();
     s.size_end()
 }
@@ -112,7 +134,7 @@ class Context extends WASM_Writer {
     private load_opcode_u: number;
     private load_opcode_s: number;
     private store_opcode: number;
-    private size_shift?: number;
+    size_shift: number;
     private get should_mask() {
         return this.bits < 32;
     }
@@ -147,28 +169,33 @@ class Context extends WASM_Writer {
     ) {
         super();
 
+        this.bits = this.program.headers[URCL_Header.BITS].value;
+
+        const min_reg = program.headers[URCL_Header.MINREG].value;
         const min_heap = program.headers[URCL_Header.MINHEAP].value;
         const min_stack = program.headers[URCL_Header.MINSTACK].value;
         const min_memory = min_heap + min_stack;
 
-        const min_wasm_memory = min_memory * 4;
+        const min_wasm_memory = (min_reg + min_memory) * (this.bits / 8);
         const memory_block_size = 1024 * 64;
         this.memory_blocks = Math.ceil(min_wasm_memory / memory_block_size);
+        console.log(">>>>", this.memory_blocks);
+
         this.memory_size = this.memory_blocks * memory_block_size;
         this.sp_start = min_memory;
 
         
-        this.bits = this.program.headers[URCL_Header.BITS].value;
         if (this.bits == 8) {
+            this.size_shift = 0;
             this.allign = 0;
             this.load_opcode_u = WASM_Opcode.i32_load8_u;
             this.load_opcode_s = WASM_Opcode.i32_load8_s;
-            this.store_opcode = WASM_Opcode.i32_store;
+            this.store_opcode = WASM_Opcode.i32_store8;
         } else if (this.bits == 16) {
             this.allign = 1;
             this.load_opcode_u = WASM_Opcode.i32_load16_u;
             this.load_opcode_s = WASM_Opcode.i32_load16_s;
-            this.store_opcode = WASM_Opcode.i32_store;
+            this.store_opcode = WASM_Opcode.i32_store16;
             this.size_shift = 1;
         } else if (this.bits == 32) {
             this.allign = 2;
@@ -199,9 +226,21 @@ class Context extends WASM_Writer {
         return this;
     }
     read_reg_s(index: number) {
-        return this.read_reg(index).sign_extend();
+        return this.read_reg(index + Locals.Registers).sign_extend();
     }
     read_reg(index: number) {
+        return this.u8(WASM_Opcode.local_get).uvar(index + Locals.Registers);
+    }
+    write_reg(index: number) {
+        return this.mask_u().u8(WASM_Opcode.local_set).uvar(index + Locals.Registers);
+    }
+    tee_reg(index: number) {
+        return this.mask_u().u8(WASM_Opcode.local_tee).uvar(index + Locals.Registers);
+    }
+    write_local(index: number) {
+        return this.u8(WASM_Opcode.local_set).uvar(index);
+    }
+    get_local(index: number) {
         return this.u8(WASM_Opcode.local_get).uvar(index);
     }
 
@@ -221,12 +260,6 @@ class Context extends WASM_Writer {
                 .u8(WASM_Opcode.i32_and);
         }
         return this;
-    }
-    write_reg(index: number) {
-        return this.mask_u().u8(WASM_Opcode.local_set).uvar(index);
-    }
-    tee_reg(index: number) {
-        return this.mask_u().u8(WASM_Opcode.local_tee).uvar(index);
     }
 
     write_arg(index: number) {
@@ -302,6 +335,9 @@ class Context extends WASM_Writer {
         return this;
     }
 
+    break_ret(offset: number) {
+        return this.u8(WASM_Opcode.return);
+    }
     jump(offset: number) {
         return this.write_reg(Register.PC).u8(WASM_Opcode.br)
             .uvar(this.depth + offset);
@@ -375,7 +411,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
         s.read_reg(Register.SP).const(1).u8(WASM_Opcode.i32_add).write_reg(Register.SP)
         s.jump(0);
     },
-    [Opcode.HLT]: s => {s.const(Step_Result.Halt).u8(WASM_Opcode.return)},
+    [Opcode.HLT]: s => {s.const(Step_Result.Halt).break_ret(0)},
     [Opcode.CPY]: s => {s.a().address().b().address().load_u().store()},
     [Opcode.BRC]: s => {s.b().c().u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_lt_u).branch()},
     [Opcode.BNC]: s => {s.b().c().u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_ge_u).branch()},
@@ -396,7 +432,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.SETNC]: s => {s.const(-1).const(0).b().c()   .u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_ge_u)   .u8(WASM_Opcode.select).wa()},
     [Opcode.LLOD]: s => {s.b().c().u8(WASM_Opcode.i32_add).address().load_u().wa()},
     [Opcode.LSTR]: s => {s.a().b().u8(WASM_Opcode.i32_add).address().c().store()},
-    [Opcode.IN]: s => {s.b().u8(WASM_Opcode.call).uvar(s.in_func).const(1).u8(WASM_Opcode.i32_eq).if().end()},
+    [Opcode.IN]: s => {throw new Error("IN instruction is not implemented for WASM backend")},
     [Opcode.OUT]: s => {s.a().b().u8(WASM_Opcode.call).uvar(s.out_func)},
     [Opcode.SDIV]: s => {s.sbin(WASM_Opcode.i32_div_s)},
     [Opcode.SBRL]: s => {s.sbbranch(WASM_Opcode.i32_lt_s)},
