@@ -21,11 +21,13 @@
             <editor-window id="urcl-source"></editor-window>
         </div>
         <div>
-            <div>
+            <div style="display: grid; grid-template-columns: 10rem 10rem; position: sticky; top: 0px; width: fit-content; padding: 0.5rem; background-color: #111; z-index: 10;">
                 <button id="compile-and-reset-button">Compile</button>
-                <button id="pause-button">Pause</button><br>
+                <button id="pause-button">Pause</button>
                 <button id="compile-and-run-button">Compile and run</button>
-                <button id=step-button disabled>Step</button><br>
+                <button id=step-button disabled>Step</button>
+            </div>
+            <div>
                 <span style="padding-right: 0.5em;">Clock Speed Hz</span><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
                 <span style="padding-right: 0.5em;">Auto Run</span><input type="checkbox" id="auto-run-input" checked> <br>
                 <span style="padding-right: 0.5em;">JIT compilation</span><input type="checkbox" id="jit-box">
