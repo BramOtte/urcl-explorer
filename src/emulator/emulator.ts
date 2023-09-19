@@ -75,7 +75,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const static_data = program.data;
         const heap = program.headers[URCL_Header.MINHEAP].value;
         const stack = program.headers[URCL_Header.MINSTACK].value;
-        const registers = program.headers[URCL_Header.MINREG].value + register_count;
+        const register_file_length = program.headers[URCL_Header.MINREG].value + register_count;
         const run = program.headers[URCL_Header.RUN].value;
         this.heap_size = heap;
         this.debug_reached = false;
@@ -107,27 +107,28 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
         }
 
-        if (registers > this.max_size){
-            throw new Error(`Too many registers ${registers}, must be <= ${this.max_size}`)
+        if (register_file_length > this.max_size){
+            throw new Error(`Too many registers ${register_file_length}, must be <= ${this.max_size}`)
         }
         const memory_size = heap + stack + static_data.length
         if (memory_size > this.max_size){
             throw new Error(`Too much memory heap:${heap} + stack:${stack} + dws:${static_data.length} = ${memory_size}, must be <= ${this.max_size}`);
         }
-        const buffer_size = (memory_size + registers) * WordArray.BYTES_PER_ELEMENT;
+        const buffer_size = (memory_size + register_file_length) * WordArray.BYTES_PER_ELEMENT;
         const block_size = 1024 * 64;
         const block_count = Math.ceil(buffer_size / block_size);
         this.wasm_memory = new WebAssembly.Memory({initial: block_count});
         this.buffer = this.wasm_memory.buffer;
 
         const memory_offset = 0;
-        const register_offset = memory_offset + memory_size*WordArray.BYTES_PER_ELEMENT;
-
-        this.registers = new WordArray(this.buffer, register_offset, registers);
-        this.registers_s = new IntArray(this.registers.buffer, this.registers.byteOffset, this.registers.length);
 
         this.memory = new WordArray(this.buffer, memory_offset, memory_size);
         this.memory_s = new IntArray(this.memory.buffer, this.memory.byteOffset, this.memory.length);
+        
+        const register_offset = this.memory.byteOffset + this.memory.byteLength;
+        
+        this.registers = new WordArray(this.buffer, register_offset, register_file_length);
+        this.registers_s = new IntArray(this.registers.buffer, this.registers.byteOffset, this.registers.length);
 
         for (let i = 0; i < static_data.length; i++){
             this.memory[i] = static_data[i];
@@ -148,22 +149,32 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (this.compiled !== JIT_Type.None) {
             this.jit_delete();
         }
+        this.compiled = JIT_Type.WASM;
+
+        this.jit_step = () => Step_Result.Continue;
+        this.jit_run = () => [Step_Result.Continue, 0];
+
         const emulator = this;
         const memory = this.wasm_memory;
 
         const byte_code = urcl2wasm(this.program, this.debug_info);
         const imports: WASM_Imports = {
             env: {
-                // TODO make in work
-                in(port: number) {
+                in(port: number, pc: number): Step_Result {
                     const device = emulator.device_inputs[port as IO_Port];
                     if (!device) {
                         throw new Error();
                     }
-                    const value = device(emulator.finish_step_in.bind(memory, port));
+                    const value = device(value => {
+                        emulator.write_reg(emulator.program.operant_values[pc][0], value);
+                        emulator.pc = pc + 1;
+                        emulator.options.on_continue?.();
+                    });
                     if (value !== undefined) {
-                        emulator.finish_step_in(port, value);
-                    }                    
+                        emulator.write_reg(emulator.program.operant_values[pc][0], value);
+                        return Step_Result.Continue;
+                    }
+                    return Step_Result.Input;
                 },
                 out(port: number, value: number) {
                     emulator.out(port, value);
@@ -177,11 +188,11 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             const exports = module.instance.exports as unknown as WASM_Exports;
     
             this.jit_run = () => {
-               return [exports.run(), 0];
+                const result = exports.run();
+                return [result, 0];
             };
             this.jit_step = undefined;
-    
-            this.compiled = JIT_Type.WASM;
+            console.log("wasm compile finished");
         })
     }
 
@@ -283,13 +294,11 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
     memory_s: IntArray = new Int8Array(this.memory.buffer, this.memory.byteOffset, this.memory.length);
     pc_counters: number[] = [];
     // FIXME: if pc is ever set as a register this code will fail
-    pc_full = 0;
     get pc(){
-        return this.pc_full;
+        return this.registers[Register.PC];
     }
     set pc(value: Word){
         this.registers[Register.PC] = value;
-        this.pc_full = value;
     }
     get stack_ptr(){
         return this.registers[Register.SP];
