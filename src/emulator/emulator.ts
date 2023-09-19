@@ -193,6 +193,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
             };
             this.jit_step = undefined;
             console.log("wasm compile finished");
+        }) .catch((error: Error) => {
+            this.warn(error.message);
+            this.error(error.message);
         })
     }
 

@@ -247,7 +247,7 @@ class Context extends WASM_Writer {
         return this;
     }
     read_reg_s(index: number) {
-        return this.read_reg(index + Locals.Registers).sign_extend();
+        return this.read_reg(index).sign_extend();
     }
     read_reg(index: number) {
         if (index === Register.PC) {
@@ -362,7 +362,7 @@ class Context extends WASM_Writer {
     }
     extend_s() {
         if (this.bits > 16) {
-            this.u8(WASM_Opcode.i64_extend32_s);
+            this.u8(WASM_Opcode.i64_extend_i32_s);
         }
 
         return this;
@@ -497,7 +497,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.__ASSERT_NEQ]: s => {s.a().b().u8(WASM_Opcode.i32_eq); panic_if(s)},
     [Opcode.UMLT]: s => {
         s.b().extend_u().c().extend_u().u8(s.bits <= 16 ? WASM_Opcode.i32_mul : WASM_Opcode.i64_mul)
-            .const64(s.bits).u8(s.bits <= 16 ? WASM_Opcode.i32_shr_u : WASM_Opcode.i32_shr_u)
+            .const64(s.bits).u8(s.bits <= 16 ? WASM_Opcode.i32_shr_u : WASM_Opcode.i64_shr_u)
             .wrap().wa();
     },
     [Opcode.SUMLT]: s => {

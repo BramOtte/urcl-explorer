@@ -2,6 +2,11 @@
   font-family: "unscii";
   src: url("unscii-16.ttf") format("ttf") url("unscii-16.woff") format("woff");
 }
+
+pre {
+  white-space: pre-wrap;
+}
+
 a {
   color: lightgrey;
 }
