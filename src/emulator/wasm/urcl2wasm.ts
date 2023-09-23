@@ -460,7 +460,15 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.BRC]: s => {s.b().c().u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_lt_u).branch()},
     [Opcode.BNC]: s => {s.b().c().u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_ge_u).branch()},
     [Opcode.MLT]: s => {s.bin(WASM_Opcode.i32_mul)},
-    [Opcode.DIV]: s => {s.bin(WASM_Opcode.i32_div_u)},
+    [Opcode.DIV]: s => {
+        // TODO: make proper error reporting system for wasm
+        s.b().u8(WASM_Opcode.i32_eqz).if()
+            s.const(420).const(1).u8(WASM_Opcode.call).uvar(s.out_func)
+            s.const(0).wa()
+        .else()
+            s.bin(WASM_Opcode.i32_div_u)
+        .end()
+    },
     [Opcode.MOD]: s => {s.bin(WASM_Opcode.i32_rem_u)},
     [Opcode.BSR]: s => {s.bin(WASM_Opcode.i32_shr_u)},
     [Opcode.BSL]: s => {s.bin(WASM_Opcode.i32_shl)},
@@ -474,8 +482,8 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.SETLE]: s => {s.const(-1).const(0).b().c()  .u8(WASM_Opcode.i32_le_u)   .u8(WASM_Opcode.select).wa()},
     [Opcode.SETC]: s => {s.const(-1).const(0).b().c()   .u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_lt_u)   .u8(WASM_Opcode.select).wa()},
     [Opcode.SETNC]: s => {s.const(-1).const(0).b().c()   .u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_ge_u)   .u8(WASM_Opcode.select).wa()},
-    [Opcode.LLOD]: s => {s.b().c().u8(WASM_Opcode.i32_add).address().load_u().wa()},
-    [Opcode.LSTR]: s => {s.a().b().u8(WASM_Opcode.i32_add).address().c().store()},
+    [Opcode.LLOD]: s => {s.b().c().u8(WASM_Opcode.i32_add).address().mask_u().load_u().wa()},
+    [Opcode.LSTR]: s => {s.a().b().u8(WASM_Opcode.i32_add).address().mask_u().c().store()},
     [Opcode.IN]: s => {
         s.b().read_reg(Register.PC).u8(WASM_Opcode.call).uvar(s.in_func)
             .const(Step_Result.Input).u8(WASM_Opcode.i32_eq).if()
@@ -487,7 +495,14 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
         }
     },
     [Opcode.OUT]: s => {s.a().b().u8(WASM_Opcode.call).uvar(s.out_func)},
-    [Opcode.SDIV]: s => {s.sbin(WASM_Opcode.i32_div_s)},
+    [Opcode.SDIV]: s => {
+        s.b().u8(WASM_Opcode.i32_eqz).if()
+            s.const(420).const(1).u8(WASM_Opcode.call).uvar(s.out_func)
+            s.const(0).wa()
+        .else()
+            s.sbin(WASM_Opcode.i32_div_s)
+        .end();
+    },
     [Opcode.SBRL]: s => {s.sbbranch(WASM_Opcode.i32_lt_s)},
     [Opcode.SBRG]: s => {s.sbbranch(WASM_Opcode.i32_gt_s)},
     [Opcode.SBLE]: s => {s.sbbranch(WASM_Opcode.i32_le_s)},
