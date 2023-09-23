@@ -302,8 +302,14 @@ class Context extends WASM_Writer {
     }
 
     write_arg(index: number) {
+        const prim = this.program.operant_prims[this.pc][index];
         const value = this.program.operant_values[this.pc][index];
-        return this.write_reg(value);        
+        if (prim == Operant_Prim.Reg) {
+            this.write_reg(value)
+        } else {
+            this.u8(WASM_Opcode.drop)
+        }
+        return this;
     }
     address() {
         if (this.size_shift) {
