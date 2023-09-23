@@ -179,6 +179,9 @@ export class Emulator implements Instruction_Ctx, Device_Host {
                 out(port: number, value: number) {
                     emulator.out(port, value);
                 },
+                now(): number {
+                    return performance.now();
+                },
                 memory
             }
         };
@@ -187,9 +190,10 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         WebAssembly.instantiate(byte_code, imports).then(module => {
             const exports = module.instance.exports as unknown as WASM_Exports;
     
-            this.jit_run = () => {
-                const result = exports.run();
-                return [result, 0];
+            this.jit_run = max_duration => {
+                const end = performance.now() + max_duration;
+                const result = exports.run(end);
+                return result;
             };
             this.jit_step = undefined;
             console.log("wasm compile finished");
@@ -206,7 +210,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const program = this.program;
 
         const max_duration = "max_duration";
-        const burst_length = 1024 * 8;
+        const burst_length = 1024 * 64;
 
         let step = "switch(this.pc) {\n";
         let run = `let i = 0;

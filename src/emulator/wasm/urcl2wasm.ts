@@ -5,31 +5,38 @@ import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } fro
 import { WASM_Writer } from "./wasm_writer";
 
 export interface WASM_Exports {
-    run(): number,
+    run(max: number): [Step_Result, number],
 }
 
 export type WASM_Imports = WebAssembly.Imports & {
     env: {
         in(port: number, pc: number): number,
         out(port: number, value: number): void;
+        now(): number;
         memory: WebAssembly.Memory
     }
 }
 
 enum Locals {
+    MAX_TIME,
+    COUNTER,
     Registers
 }
+
+const burst_length = 1024 * 1024 * 4;
 
 export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
     const s = new Context(program, debug);
     s.bytes(magic).u32(version)
         .u8(Section_Type.type)
             .size_start() // section size
-            .uvar(3)    // type count
+            .uvar(4)    // type count
                 .u8(0x60)   // function
-                    .uvar(0)    // argument count
-                    .uvar(1)    // result count
-                        .uvar(WASM_Type.i32)
+                    .uvar(1)    // argument count
+                        .uvar(WASM_Type.i32) // max time
+                    .uvar(2)    // result count
+                        .uvar(WASM_Type.i32) // instruction count
+                        .uvar(WASM_Type.i32) // step result
                 .u8(0x60)   // function
                     .uvar(2)    // argument count
                         .uvar(WASM_Type.i32)
@@ -41,10 +48,14 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
                         .uvar(WASM_Type.i32)
                         .uvar(WASM_Type.i32)
                     .uvar(0)    // result count
+                .u8(0x60)
+                    .uvar(0)
+                    .uvar(1)
+                        .uvar(WASM_Type.i32)
             .size_end()
         .u8(Section_Type.import)
             .size_start()
-            .uvar(3)
+            .uvar(4)
                 .str("env")
                     .str("in")
                     .u8(Export_Type.func)
@@ -53,6 +64,10 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
                     .str("out")
                     .u8(Export_Type.func)
                     .uvar(2)
+                .str("env")
+                    .str("now")
+                    .u8(Export_Type.func)
+                    .uvar(3)
                 .str("env")
                     .str("memory")
                     .u8(Export_Type.memory)
@@ -63,17 +78,12 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
             .uvar(1)        // function count
                 .uvar(0)    // function type
             .size_end()
-        // .u8(Section_Type.memory)
-        //     .size_start()
-        //     .u8(1).u8(0)
-        //     .uvar(s.memory_blocks)
-        //     .size_end()
         .u8(Section_Type.export)
             .size_start()
             .uvar(1)        // export count
                 .str("run")             // export name
                 .u8(Export_Type.func)   // export type
-                .uvar(2)                // export value
+                .uvar(3)                // export value
             .size_end()
         .u8(Section_Type.code)
             .size_start()
@@ -100,7 +110,17 @@ function generate_run(s: Context) {
         s.u8(WASM_Opcode.block).uvar(64);
     }
     s.u8(WASM_Opcode.block).uvar(64);
+    s.pc = -1;
+    
+    s.get_local(Locals.COUNTER).const(burst_length).u8(WASM_Opcode.i32_gt_u).if()
+        s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
+            s.const(Step_Result.Continue).break_ret()
+        .end()
+    .end()
+
     s._read_reg(Register.PC);
+
+    s.pc = 0;
     s.u8(WASM_Opcode.br_table)
         .uvar(program_length);
     for (let i = program_length; i >= 1; --i) {
@@ -110,6 +130,7 @@ function generate_run(s: Context) {
     s.u8(WASM_Opcode.end);
     s.pc = 0;
     for (let i = 0; i < program_length; ++i) {
+        s.get_local(Locals.COUNTER).const(1).u8(WASM_Opcode.i32_add).set_local(Locals.COUNTER);
         stuff[s.program.opcodes[i]]?.(s);
         s.u8(WASM_Opcode.end);
         s.pc += 1;
@@ -119,7 +140,8 @@ function generate_run(s: Context) {
 
     s.store_regfile();
     s.const(Step_Result.Halt);
-    
+    s.get_local(Locals.COUNTER);
+
     s.end();
     s.size_end()
 }
@@ -250,7 +272,7 @@ class Context extends WASM_Writer {
         return this.read_reg(index).sign_extend();
     }
     read_reg(index: number) {
-        if (index === Register.PC) {
+        if (index === Register.PC && this.pc >= 0) {
             return this.const(this.pc);
         }
 
@@ -281,6 +303,9 @@ class Context extends WASM_Writer {
     }
     get_local(index: number) {
         return this.u8(WASM_Opcode.local_get).uvar(index);
+    }
+    set_local(index: number) {
+        return this.u8(WASM_Opcode.local_set).uvar(index);
     }
 
     sign_extend() {
@@ -381,7 +406,7 @@ class Context extends WASM_Writer {
     }
 
     break_ret() {
-        return this.store_regfile().u8(WASM_Opcode.return);
+        return this.store_regfile().get_local(Locals.COUNTER).u8(WASM_Opcode.return);
     }
     jump(offset: number) {
         return this._write_reg(Register.PC).u8(WASM_Opcode.br).uvar(this.depth + offset);
