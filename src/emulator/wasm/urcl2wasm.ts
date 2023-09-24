@@ -20,10 +20,11 @@ export type WASM_Imports = WebAssembly.Imports & {
 enum Locals {
     MAX_TIME,
     COUNTER,
+    MAX_COUNTER,
     Registers
 }
 
-const burst_length = 1024 * 1024 * 4;
+const burst_length = 1024 * 64;
 
 export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
     const s = new Context(program, debug);
@@ -103,7 +104,8 @@ function generate_run(s: Context) {
         .uvar(min_reg + register_count + Locals.Registers) // local repeat
         .u8(WASM_Type.i32);             // local type
     
-    s.load_regfile();    
+    s.load_regfile();
+    s.const(burst_length).set_local(Locals.MAX_COUNTER);
 
     s.u8(WASM_Opcode.loop).uvar(64);
     for (let i = 0; i < program_length; ++i) {
@@ -112,7 +114,8 @@ function generate_run(s: Context) {
     s.u8(WASM_Opcode.block).uvar(64);
     s.pc = -1;
     
-    s.get_local(Locals.COUNTER).const(burst_length).u8(WASM_Opcode.i32_gt_u).if()
+    s.get_local(Locals.COUNTER).get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
+        s.get_local(Locals.MAX_COUNTER).const(burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
         s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
             s.const(Step_Result.Continue).break_ret()
         .end()
