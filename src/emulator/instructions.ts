@@ -104,7 +104,9 @@ export enum IO_Port {
     MOUSE_DWHEEL,
     MOUSE_BUTTONS,
     FILE,
-    DBG_INT
+    DBG_INT,
+    
+    BENCHMARK,
 }
 
 export interface Instruction_Ctx {
@@ -273,7 +275,7 @@ export const Opcodes_operants: Record<Opcode, [Operant_Operation[], Instruction_
     [Opcode.__ASSERT0]: [[GET], (s) => {if (s.a) fail_assert(s, `value = ${s.a}`) }],
     [Opcode.__ASSERT_EQ]: [[GET, GET], (s) => {if (s.a !== s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
     [Opcode.__ASSERT_NEQ]: [[GET, GET], (s) => {if (s.a === s.b) fail_assert(s, `left = ${s.a}, right = ${s.b}`)}],
-
+    
     //----- Experimental Instructions
     [Opcode.UMLT]: [[SET, GET, GET], (s) => {s.a = (s.b * s.c) / (2 ** s._bits);}],
     [Opcode.SUMLT]: [[SET, GET, GET], (s) => {s.sa = Math.floor((s.sb * s.sc) / (2 ** s._bits));}]

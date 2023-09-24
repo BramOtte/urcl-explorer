@@ -4,12 +4,20 @@ import { Device } from "./device.js";
 export class Clock implements Device {
     wait_end = 0;
     time_out?: any;
+    last_mark = 0;
+
     inputs = {
         [IO_Port.WAIT]: this.wait_in,
     }
     outputs = {
         [IO_Port.WAIT]: this.wait_out,
+        [IO_Port.BENCHMARK]: (value: number) => {
+            const mark = performance.now();
+            document.title = `URCX ${mark - this.last_mark}`
+            this.last_mark = mark;
+        }
     }
+    
     wait_out(time: number){
         if (time === 0){
             this.wait_end = -1;
