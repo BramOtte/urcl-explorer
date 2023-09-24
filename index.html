@@ -198,8 +198,17 @@
                 <div id="configuration-tab">
                     <span style="padding-right: 0.5em;">Clock Speed Hz</span><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
                     <span style="padding-right: 0.5em;">Auto Run</span><input type="checkbox" id="auto-run-input" checked> <br>
-                    <span style="padding-right: 0.5em;">JIT compilation</span><input type="checkbox" id="jit-box">
-                    <span style="padding-right: 0.5em;">WASM (experimental)</span><input type="checkbox" id="wasm-box"><br>
+                    <div>
+                        <input type="radio" name="jit-radio" id="jit-radio-none" checked>Interpret
+                        <input type="radio" name="jit-radio" id="jit-radio-js">JS JIT
+                        <input type="radio" name="jit-radio" id="jit-radio-wasm">WASM JIT
+                    </div>
+                    <div>
+                        <input type="radio" name="count-radio" id="count-radio-inst" checked>Count instructions
+                        <input type="radio" name="count-radio" id="count-radio-jumps">Count jumps
+                        <input type="radio" name="count-radio" id="count-radio-none">Uninterrupted
+                    </div>
+                    <br>
                     <span style="padding-right: 0.5em;">Storage File</span><input id="storage-input" type="file"><span id="storage-msg"></span><br>
                     <span style="padding-right: 0.5em;">Minimum storage size</span><input id="storage-size" type="number" step="1"> words<br>
                     <span style="padding-right: 0.5em;">Little Endian</span><input id="storage-little" type="checkbox"><br>

@@ -17,6 +17,12 @@ export type WASM_Imports = WebAssembly.Imports & {
     }
 }
 
+export enum Run_Type {
+    Uninterrupted,
+    Count_Instrutions,
+    Count_Jumps,
+}
+
 enum Locals {
     MAX_TIME,
     COUNTER,
@@ -25,8 +31,9 @@ enum Locals {
 }
 
 const burst_length = 1024 * 64;
+const jump_burst_length = 1024 * 64;
 
-export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
+export function urcl2wasm(program: Program, run_type: Run_Type, debug?: Debug_Info): Uint8Array {
     const s = new Context(program, debug);
     s.bytes(magic).u32(version)
         .u8(Section_Type.type)
@@ -89,13 +96,13 @@ export function urcl2wasm(program: Program, debug?: Debug_Info): Uint8Array {
         .u8(Section_Type.code)
             .size_start()
             .uvar(1)    // function count
-                generate_run(s);
+                generate_run(s, run_type);
             s.size_end();
 
     return s.finish();
 }
 
-function generate_run(s: Context) {
+function generate_run(s: Context, run_type: Run_Type) {
     s.size_start();  // function length
     
     const program_length = s.program.opcodes.length;
@@ -105,7 +112,12 @@ function generate_run(s: Context) {
         .u8(WASM_Type.i32);             // local type
     
     s.load_regfile();
-    s.const(burst_length).set_local(Locals.MAX_COUNTER);
+    if (run_type === Run_Type.Count_Instrutions) {
+        s.const(burst_length).set_local(Locals.MAX_COUNTER);
+    } 
+    if (run_type === Run_Type.Count_Jumps) {
+        s.const(jump_burst_length).set_local(Locals.MAX_COUNTER);
+    }
 
     s.u8(WASM_Opcode.loop).uvar(64);
     for (let i = 0; i < program_length; ++i) {
@@ -114,12 +126,23 @@ function generate_run(s: Context) {
     s.u8(WASM_Opcode.block).uvar(64);
     s.pc = -1;
     
-    s.get_local(Locals.COUNTER).get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
-        s.get_local(Locals.MAX_COUNTER).const(burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
-        s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
-            s.const(Step_Result.Continue).break_ret()
+    if (run_type === Run_Type.Count_Instrutions) {
+        s.get_local(Locals.COUNTER).get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
+            s.get_local(Locals.MAX_COUNTER).const(burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
+            s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
+                s.const(Step_Result.Continue).break_ret()
+            .end()
         .end()
-    .end()
+    }
+    if (run_type === Run_Type.Count_Jumps) {
+        s.get_local(Locals.COUNTER).const(1).u8(WASM_Opcode.i32_add).tee_local(Locals.COUNTER)
+        s.get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
+            s.get_local(Locals.MAX_COUNTER).const(jump_burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
+            s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
+                s.const(Step_Result.Continue).break_ret()
+            .end()
+        .end()
+    }
 
     s._read_reg(Register.PC);
 
@@ -133,7 +156,9 @@ function generate_run(s: Context) {
     s.u8(WASM_Opcode.end);
     s.pc = 0;
     for (let i = 0; i < program_length; ++i) {
-        s.get_local(Locals.COUNTER).const(1).u8(WASM_Opcode.i32_add).set_local(Locals.COUNTER);
+        if (run_type === Run_Type.Count_Instrutions) {
+            s.get_local(Locals.COUNTER).const(1).u8(WASM_Opcode.i32_add).set_local(Locals.COUNTER);
+        }
         stuff[s.program.opcodes[i]]?.(s);
         s.u8(WASM_Opcode.end);
         s.pc += 1;
@@ -309,6 +334,9 @@ class Context extends WASM_Writer {
     }
     set_local(index: number) {
         return this.u8(WASM_Opcode.local_set).uvar(index);
+    }
+    tee_local(index: number) {
+        return this.u8(WASM_Opcode.local_tee).uvar(index);
     }
 
     sign_extend() {

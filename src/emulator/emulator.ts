@@ -4,7 +4,7 @@ import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
 import { Break } from "./breaks.js"; 
 import { Step_Result, IntArray, Run, Step, UintArray } from "./IEmu.js";
-import { WASM_Exports, WASM_Imports, urcl2wasm } from "./wasm/urcl2wasm.js";
+import { Run_Type, WASM_Exports, WASM_Imports, urcl2wasm } from "./wasm/urcl2wasm.js";
 export { Step_Result } from "./IEmu.js"
 
 type WordArray = UintArray;
@@ -141,15 +141,17 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     }
 
     compiled = JIT_Type.None;
+    run_type = Run_Type.Count_Instrutions;
 
-    jit_init_wasm() {
-        if (this.compiled === JIT_Type.WASM) {
+    jit_init_wasm(run_type: Run_Type) {
+        if (this.compiled === JIT_Type.WASM && this.run_type === run_type) {
             return;
         }
         if (this.compiled !== JIT_Type.None) {
             this.jit_delete();
         }
         this.compiled = JIT_Type.WASM;
+        this.run_type = run_type;
 
         this.jit_step = () => Step_Result.Continue;
         this.jit_run = () => [Step_Result.Continue, 0];
@@ -157,7 +159,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const emulator = this;
         const memory = this.wasm_memory;
 
-        const byte_code = urcl2wasm(this.program, this.debug_info);
+        const byte_code = urcl2wasm(this.program, run_type, this.debug_info);
         const imports: WASM_Imports = {
             env: {
                 in(port: number, pc: number): Step_Result {
