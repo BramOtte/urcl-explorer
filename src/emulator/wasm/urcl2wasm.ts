@@ -174,12 +174,9 @@ function generate_run(s: Context, run_type: Run_Type) {
         .u8(WASM_Type.i32);             // local type
     
     s.load_regfile();
-    if (run_type === Run_Type.Count_Instrutions) {
+    if (run_type !== Run_Type.Uninterrupted) {
         s.const(burst_length).set_local(Locals.MAX_COUNTER);
     } 
-    if (run_type === Run_Type.Count_Jumps) {
-        s.const(jump_burst_length).set_local(Locals.MAX_COUNTER);
-    }
 
     s.u8(WASM_Opcode.loop).uvar(64);
     for (let i = 0; i < program_length; ++i) {
@@ -188,18 +185,9 @@ function generate_run(s: Context, run_type: Run_Type) {
     s.u8(WASM_Opcode.block).uvar(64);
     s.pc = -1;
     
-    if (run_type === Run_Type.Count_Instrutions) {
+    if (run_type !== Run_Type.Uninterrupted) {
         s.get_local(Locals.COUNTER).get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
             s.get_local(Locals.MAX_COUNTER).const(burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
-            s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
-                s.const(Step_Result.Continue).break_ret()
-            .end()
-        .end()
-    }
-    if (run_type === Run_Type.Count_Jumps) {
-        s.get_local(Locals.COUNTER).const(1).u8(WASM_Opcode.i32_add).tee_local(Locals.COUNTER)
-        s.get_local(Locals.MAX_COUNTER).u8(WASM_Opcode.i32_ge_u).if()
-            s.get_local(Locals.MAX_COUNTER).const(jump_burst_length).u8(WASM_Opcode.i32_add).set_local(Locals.MAX_COUNTER);
             s.u8(WASM_Opcode.call).uvar(2).get_local(Locals.MAX_TIME).u8(WASM_Opcode.i32_gt_u).if()
                 s.const(Step_Result.Continue).break_ret()
             .end()
@@ -216,15 +204,17 @@ function generate_run(s: Context, run_type: Run_Type) {
     }
     s.uvar(program_length);
     s.u8(WASM_Opcode.end);
-    s.pc = 0;
-    for (let i = 0; i < program_length; ++i) {
-        stuff[s.program.opcodes[i]]?.(s);
+    for (s.pc = 0; s.pc < program_length; ++s.pc) {
+        stuff[s.program.opcodes[s.pc]]?.(s);
         s.after_instruction();
         s.u8(WASM_Opcode.end);
-        s.pc += 1;
     }
     
     s.end();
+    
+    s.pc = program_length - 1;
+    s.add_pc_delta();
+
 
     s.store_regfile();
     s.const(Step_Result.Halt);
@@ -508,11 +498,19 @@ class Context extends WASM_Writer {
         return this;
     }
 
+    add_pc_delta() {
+        if (this.run_type === Run_Type.Count_Jumps) {
+            this.const(this.pc+1)._read_reg(Register.PC).u8(WASM_Opcode.i32_sub)
+                .get_local(Locals.COUNTER).u8(WASM_Opcode.i32_add).set_local(Locals.COUNTER);
+        }
+        return this;
+    }
+
     break_ret() {
-        return this.after_instruction().store_regfile().get_local(Locals.COUNTER).u8(WASM_Opcode.return);
+        return this.add_pc_delta().after_instruction().store_regfile().get_local(Locals.COUNTER).u8(WASM_Opcode.return);
     }
     jump(offset: number) {
-        return this._write_reg(Register.PC).after_instruction().u8(WASM_Opcode.br).uvar(this.depth + offset);
+        return this.add_pc_delta()._write_reg(Register.PC).after_instruction().u8(WASM_Opcode.br).uvar(this.depth + offset);
     }
     bin(code: WASM_Opcode) {
         return this.b().c().u8(code).wa();
