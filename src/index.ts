@@ -33,6 +33,7 @@ let clock_speed = 0;
 let clock_count = 0;
 
 const source_input = document.getElementById("urcl-source") as Editor_Window;
+source_input.profile_check.addEventListener("change", update_views);
 const output_element = document.getElementById("output") as HTMLElement;
 const debug_output_element = document.getElementById("debug-output") as HTMLElement;
 const memory_view = document.getElementById("memory-view") as BufferView;
