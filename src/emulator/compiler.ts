@@ -71,10 +71,7 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
             case Operant_Type.Imm: return Operant_Prim.Imm;
             case Operant_Type.Label: return Operant_Prim.Imm;
             case Operant_Type.String: return Operant_Prim.Reg;
-            case Operant_Type.Memory: {
-                new_operant_values[i][j] += heap_offset;
-                return Operant_Prim.Imm;
-            }
+            case Operant_Type.Memory: return Operant_Prim.Imm;
             case Operant_Type.Data_Label: return Operant_Prim.Imm;
             case Operant_Type.Constant: {
                 const vals = new_operant_values[i];

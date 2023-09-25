@@ -50,6 +50,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
     readonly errors: Warning[] = [];
     readonly warnings: Warning[] = [];
     readonly data: number[] = [];
+    heap_offset: number = 0;
 
     lines                      : string[] = [];
     readonly headers           : Header_Obj = {} as Header_Obj;
@@ -159,7 +160,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             labeled = Labeled.DW;
             let i = 0;
             while (i < value_strs.length){
-                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out.data, [], []);
+                const res = parse_operant(()=>value_strs[i++], line_nr, -1, out.labels, out.constants, out, [], []);
                 if (res?.[0] !== Operant_Type.String){
                     out.data.push(res ? res[1] : -1);
                 }
@@ -168,6 +169,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         }
         out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
     }
+    out.heap_offset = out.data.length;
     out.data.length = 0;
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++){
         parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
@@ -184,7 +186,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             }
             let i = 0;
             while (i < parts.length){
-                const res = parse_operant(()=>parts[i++], line_nr, -1, out.labels, out.constants, out.data, out.errors, out.warnings);
+                const res = parse_operant(()=>parts[i++], line_nr, -1, out.labels, out.constants, out, out.errors, out.warnings);
                 if (res?.[0] !== Operant_Type.String){
                     out.data.push(res ? res[1] : -1);
                 }
@@ -400,7 +402,7 @@ function parse_instructions(line_nr: number, inst_i: number, out: Parser_output,
     let i = 0;
     const strings = out.operant_strings[inst_i];
     while (i < strings.length){
-        const [type, value] = parse_operant(()=>strings[i++], line_nr, inst_i, out.labels, out.constants, out.data, errors, warnings) ?? [];
+        const [type, value] = parse_operant(()=>strings[i++], line_nr, inst_i, out.labels, out.constants, out, errors, warnings) ?? [];
         if (type === Operant_Type.String){
             errors.push(warn(line_nr, "Strings are not allowed in instructions"));
         } else if (type !== undefined){
@@ -446,11 +448,12 @@ function resolve_port(operant: string, line_nr: number, errors: Warning[]): unde
 
 function parse_operant(
     get_operant: ()=> undefined|string, line_nr: number, inst_i: number, labels: {[K in string]?: Label},
-    macro_constants: Record<string, string>, data: Word[],
+    macro_constants: Record<string, string>, out: Parser_output,
     errors: Warning[], warnings: Warning[]
 ):
     undefined | [type: Operant_Type, value: Word]
 {
+    const {data, heap_offset} = out;
     let operant = get_operant() as string;
     if (operant === undefined){
         return undefined;
@@ -513,7 +516,7 @@ function parse_operant(
             if (!Number.isInteger(value)){
                 errors.push(warn(line_nr, `Invalid memory address ${operant}`)); return undefined;
             }
-            return [Operant_Type.Memory, value];
+            return [Operant_Type.Memory, value + heap_offset];
         }
         case '%': {
             const port = resolve_port(operant, line_nr, errors) ?? NaN;
