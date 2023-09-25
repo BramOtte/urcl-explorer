@@ -512,7 +512,7 @@ class Context extends WASM_Writer {
         return this.after_instruction().store_regfile().get_local(Locals.COUNTER).u8(WASM_Opcode.return);
     }
     jump(offset: number) {
-        return this._write_reg(Register.PC).u8(WASM_Opcode.br).uvar(this.depth + offset);
+        return this._write_reg(Register.PC).after_instruction().u8(WASM_Opcode.br).uvar(this.depth + offset);
     }
     bin(code: WASM_Opcode) {
         return this.b().c().u8(code).wa();
