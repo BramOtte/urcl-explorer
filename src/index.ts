@@ -527,7 +527,7 @@ function update_views(){
     const lines = emulator.debug_info.pc_line_nrs
     const line = lines[Math.min(emulator.pc, lines.length-1)];
     source_input.set_pc_line(line);
-    source_input.set_line_profile(emulator.pc_counters.map((v, i) => [lines[i], v] as [number, number]));
+    source_input.set_line_profile(lines, emulator.pc_counters);
     console_output.flush();
     display.flush();
 }

@@ -27,7 +27,7 @@ export class Editor_Window extends HTMLElement {
             ),
         );
 
-        this.input.addEventListener("input", this.input_cb.bind(this));
+        this.input.addEventListener("input", () => this.input_cb());
         
         this.input.addEventListener("keydown", this.keydown_cb.bind(this));
 
@@ -84,7 +84,8 @@ export class Editor_Window extends HTMLElement {
         }
         this.pc_line = line;
     }
-    public set_line_profile(counts: [number, number][]){
+    public set_line_profile(pc_to_line: ArrayLike<number>, counts: ArrayLike<number>){
+        const length = pc_to_line.length;
         if (!this.profile_check.checked){
             if (!this.profile_present){
                 return;
@@ -93,7 +94,9 @@ export class Editor_Window extends HTMLElement {
         } 
         const children = this.line_nrs.children;
         let last = 0;
-        for (const [line_nr, executed] of counts){
+        for (let pc = 0; pc < length; ++pc){
+            const executed = counts[pc];
+            const line_nr = pc_to_line[pc]
             for (; last < line_nr; last++){
                 if (this.profiled[last]){
                     const child = children[line_nr];

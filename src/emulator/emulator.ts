@@ -4,7 +4,7 @@ import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
 import { Break } from "./breaks.js"; 
 import { Step_Result, IntArray, Run, Step, UintArray } from "./IEmu.js";
-import { Run_Type, WASM_Exports, WASM_Imports, urcl2wasm } from "./wasm/urcl2wasm.js";
+import { Run_Type, URCL_Memory, WASM_Exports, WASM_Imports, create_urcl_memory, urcl2wasm } from "./wasm/urcl2wasm.js";
 export { Step_Result } from "./IEmu.js"
 
 type WordArray = UintArray;
@@ -20,7 +20,7 @@ export enum JIT_Type {
     None, JS, WASM
 }
 
-export class Emulator implements Instruction_Ctx, Device_Host {
+export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
     private signed(v: number){
         if (this._bits === 32){
             return 0| v;
@@ -57,7 +57,8 @@ export class Emulator implements Instruction_Ctx, Device_Host {
     private do_debug_registers = false;
     private do_debug_ports = false;
     private do_debug_program = false;
-    private wasm_memory = new WebAssembly.Memory({initial: 2});
+    block_count: number = 0;
+    wasm_memory = new WebAssembly.Memory({initial: this.block_count});
 
     private jit_run?: Run;
     private jit_step?: Step;
@@ -70,7 +71,6 @@ export class Emulator implements Instruction_Ctx, Device_Host {
 
         this._debug_message = undefined;
         this.program = program, this.debug_info = debug_info;
-        this.pc_counters = Array.from({length: program.opcodes.length}, () => 0);
         const bits = program.headers[URCL_Header.BITS].value;
         const static_data = program.data;
         const heap = program.headers[URCL_Header.MINHEAP].value;
@@ -89,19 +89,11 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (run === Header_Run.RAM){
             throw new Error("emulator currently doesn't support running in ram");
         }
-        let WordArray;
-        let IntArray;
         if (bits <= 8){
-            WordArray = Uint8Array;
-            IntArray = Int8Array;
             this._bits = 8;
         } else if (bits <= 16){
-            WordArray = Uint16Array;
-            IntArray = Int16Array;
             this._bits = 16;
         } else if (bits <= 32){
-            WordArray = Uint32Array;
-            IntArray = Int32Array;
             this._bits = 32;
         } else {
             throw new Error(`BITS = ${bits} exceeds 32 bits`);
@@ -114,21 +106,8 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         if (memory_size > this.max_size){
             throw new Error(`Too much memory heap:${heap} + stack:${stack} + dws:${static_data.length} = ${memory_size}, must be <= ${this.max_size}`);
         }
-        const buffer_size = (memory_size + register_file_length) * WordArray.BYTES_PER_ELEMENT;
-        const block_size = 1024 * 64;
-        const block_count = Math.ceil(buffer_size / block_size);
-        this.wasm_memory = new WebAssembly.Memory({initial: block_count});
-        this.buffer = this.wasm_memory.buffer;
 
-        const memory_offset = 0;
-
-        this.memory = new WordArray(this.buffer, memory_offset, memory_size);
-        this.memory_s = new IntArray(this.memory.buffer, this.memory.byteOffset, this.memory.length);
-        
-        const register_offset = this.memory.byteOffset + this.memory.byteLength;
-        
-        this.registers = new WordArray(this.buffer, register_offset, register_file_length);
-        this.registers_s = new IntArray(this.registers.buffer, this.registers.byteOffset, this.registers.length);
+        Object.assign(this, create_urcl_memory(program));
 
         for (let i = 0; i < static_data.length; i++){
             this.memory[i] = static_data[i];
@@ -159,7 +138,7 @@ export class Emulator implements Instruction_Ctx, Device_Host {
         const emulator = this;
         const memory = this.wasm_memory;
 
-        const byte_code = urcl2wasm(this.program, run_type, this.debug_info);
+        const byte_code = urcl2wasm(this.program, this, run_type, this.debug_info);
         const imports: WASM_Imports = {
             env: {
                 in(port: number, pc: number): Step_Result {
@@ -293,16 +272,16 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
             reset();
         }
     }
-    shrink_buffer(){
-        this.buffer = new ArrayBuffer(1024*1024);
+    
+    get buffer() {
+        return this.wasm_memory.buffer
     }
-    buffer = new ArrayBuffer(1024*1024);
-    registers: WordArray = new Uint8Array(32);
-    registers_s: IntArray = new Int8Array(this.registers.buffer, this.registers.byteOffset, this.registers.length);
-    memory: WordArray = new Uint8Array(256);
-    memory_s: IntArray = new Int8Array(this.memory.buffer, this.memory.byteOffset, this.memory.length);
-    pc_counters: number[] = [];
-    // FIXME: if pc is ever set as a register this code will fail
+    registers: WordArray = new Uint8Array(this.buffer);
+    registers_s: IntArray = new Int8Array(this.buffer);
+    memory: WordArray = new Uint8Array(this.buffer);
+    memory_s: IntArray = new Int8Array(this.buffer);
+    pc_counters: Uint32Array = new Uint32Array(this.buffer);
+
     get pc(){
         return this.registers[Register.PC];
     }
