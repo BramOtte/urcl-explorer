@@ -370,6 +370,8 @@ try {
         ]),
     });
 
+    source_input.set_errors(parsed.errors);
+
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines)+"\n").join("");
         output_element.innerText += parsed.warnings.map(v => expand_warning(v, parsed.lines)+"\n").join("");

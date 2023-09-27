@@ -105,3 +105,7 @@ editor-window textarea {
 .square-open, .square-close {
     color: white;
 }
+
+.error-text {
+    color: #f33;
+}

@@ -1,4 +1,4 @@
-import { pad_left } from "../emulator/util.js";
+import { pad_left, Warning } from "../emulator/util.js";
 import { l } from "../l.js";
 import { regex_end, Token, tokenize } from "./tokenizer.js";
 
@@ -50,6 +50,24 @@ export class Editor_Window extends HTMLElement {
 
         this.onscroll = () => this.render_lines();
     }
+
+    _errors: string[] = [];
+    set_errors(errors: Warning[]) {
+        this._errors.length = 0;
+        for (const error of errors) {
+            this.add_error(error);
+        }
+        this.render_lines();
+    }
+    add_error(error: Warning) {
+        if (this._errors[error.line_nr]) {
+            this._errors[error.line_nr] += "; " + error.message;
+        } else {
+            this._errors[error.line_nr] = "\t" + error.message;
+        }
+        
+    }
+
     get saved() {
         return this.saved_marker.value == "saved";
     }
@@ -250,6 +268,18 @@ export class Editor_Window extends HTMLElement {
                     span.className = type;
 
                     span = span.nextElementSibling;
+                }
+                {
+                    const error_mesage = this._errors[i];
+                    if (span === null){
+                        span = document.createElement("span");
+                        div.appendChild(span);
+                    }
+                    span.textContent = error_mesage;
+                    span.className = "error-text";
+
+                    span = span.nextElementSibling;
+
                 }
             }
 
