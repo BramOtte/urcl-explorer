@@ -229,7 +229,31 @@ function resize_display(){
     display.resize(width, height);
 }
 
-const emulator = new Emulator({on_continue: frame, warn: (msg) => output_element.innerText += `${msg}\n`});
+const emulator = new Emulator({
+    on_continue: frame,
+    warn: (msg) => {
+        const line_nr = emulator.get_line_nr();
+        if (line_nr >= 0) {
+            const end = msg.indexOf("\n");
+            if (end >= 0) {
+                msg = msg.substring(0, end);
+            }
+            source_input.add_error(line_nr, msg);
+        }
+        output_element.innerText += `${msg}\n`
+    },
+    error: (msg) => {
+        const line_nr = emulator.get_line_nr();
+        if (line_nr >= 0) {
+            const end = msg.indexOf("\n");
+            if (end >= 0) {
+                msg = msg.substring(0, end);
+            }
+            source_input.add_error(line_nr, msg);
+        }
+        throw new Error(msg);
+    }
+});
 emulator.add_io_device(new Sound())
 emulator.add_io_device(console_io);
 emulator.add_io_device(display);
@@ -370,7 +394,7 @@ try {
         ]),
     });
 
-    source_input.set_errors(parsed.errors);
+    source_input.set_errors([...parsed.errors, ...parsed.warnings]);
 
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines)+"\n").join("");

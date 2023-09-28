@@ -55,17 +55,22 @@ export class Editor_Window extends HTMLElement {
     set_errors(errors: Warning[]) {
         this._errors.length = 0;
         for (const error of errors) {
-            this.add_error(error);
+            this._add_error(error.line_nr, error.message);
         }
         this.render_lines();
     }
-    add_error(error: Warning) {
-        if (this._errors[error.line_nr]) {
-            this._errors[error.line_nr] += "; " + error.message;
+
+    add_error(line_nr: number, msg: string) {
+        this._add_error(line_nr, msg);
+        this.render_lines();
+    } 
+
+    private _add_error(line_nr: number, message: string) {
+        if (this._errors[line_nr]) {
+            this._errors[line_nr] += "; " + message;
         } else {
-            this._errors[error.line_nr] = "\t" + error.message;
-        }
-        
+            this._errors[line_nr] = "\t" + message;
+        } 
     }
 
     get saved() {
