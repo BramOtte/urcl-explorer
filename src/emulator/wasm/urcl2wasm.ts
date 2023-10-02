@@ -588,7 +588,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.MLT]: s => {s.bin(WASM_Opcode.i32_mul)},
     [Opcode.DIV]: s => {
         // TODO: make proper error reporting system for wasm
-        s.b().u8(WASM_Opcode.i32_eqz).if()
+        s.c().u8(WASM_Opcode.i32_eqz).if()
             s.const(420).const(1).u8(WASM_Opcode.call).uvar(s.out_func)
             s.const(0).wa()
         .else()
@@ -622,7 +622,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     },
     [Opcode.OUT]: s => {s.a().b().u8(WASM_Opcode.call).uvar(s.out_func)},
     [Opcode.SDIV]: s => {
-        s.b().u8(WASM_Opcode.i32_eqz).if()
+        s.c().u8(WASM_Opcode.i32_eqz).if()
             s.const(420).const(1).u8(WASM_Opcode.call).uvar(s.out_func)
             s.const(0).wa()
         .else()
