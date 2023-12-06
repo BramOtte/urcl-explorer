@@ -32,11 +32,18 @@ const {args, flags} = parse_argv(process.argv, {
     __storage: "",
     __storage_size: 0,
     __text_file: "",
-    __little_endian: false
+    __little_endian: false,
+    __help: false,
 });
 const {__storage, __storage_size, __text_file, __little_endian} = flags;
 if (args.length < 1){
-    throw new Error("Not enough arguments");
+    console.log("missing sourcefile argument");
+    console.log(usage);
+    exit(1);
+}
+if (flags.__help) {
+    console.log(usage);
+    exit(0);
 }
 
 const urcl = (await fs.readFile(args[0])).toString();

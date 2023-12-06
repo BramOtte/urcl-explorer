@@ -35,8 +35,24 @@ http-server -p 8000
 Finally, open your browser and visit http://localhost:8000.
 
 ### Node.js
+Download dependencies
+```sh
+npm install
 ```
-node js/node/urcx-emu.js [<...options>] <sourcefile>
+
+Build the emulator
+```sh
+npm run bundle-node
+```
+
+And finally run the emulator
+```sh
+node js/urcx-emu.js [<...options>] <sourcefile>
+```
+
+example
+```
+node js/urcx-emu.js examples/urcl/text-io.urcl
 ```
 
 ## Install 🔩

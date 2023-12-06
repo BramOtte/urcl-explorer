@@ -7,7 +7,8 @@
   "scripts": {
     "start": "node js/node/urcx-bot.js",
     "bundle": "esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text",
-    "test-c": "bun run src/node/urcx-c.ts js/test.urcl > js/test.c && gcc js/test.c -g -o js/test && ./js/test"
+    "test-c": "bun run src/node/urcx-c.ts js/test.urcl > js/test.c && gcc js/test.c -g -o js/test && ./js/test",
+    "bundle-node": "esbuild --platform=node src/node/urcx-emu.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text"
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.1",
@@ -15,9 +16,6 @@
   },
   "dependencies": {
     "esbuild": "^0.15.16",
-    "canvas": "^2.8.0",
-    "discord.js": "^13.3.1",
-    "gifencoder": "^2.0.1",
     "node-fetch": "^3.1.0"
   },
   "description": "An IDE for URCL",
