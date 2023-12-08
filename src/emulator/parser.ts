@@ -118,7 +118,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
         if (split_instruction(line, line_nr, inst_i, out, out.errors)){
             if (last_label && labeled === Labeled.DW){
-                out.warnings.push(warn(label_line_nr, `Label at boundary, add DW before or instruction after it`));
+                out.warnings.push(warn(label_line_nr, `Label at boundary, add DW after or instruction before it`));
             }
             labeled = Labeled.INST;
             inst_i++; continue;
