@@ -216,9 +216,6 @@ export class Editor_Window extends HTMLElement {
         this.input.style.height = "0px";
         const height = this.input.scrollHeight
         this.input.style.height = height + "px";
-
-        this.input.style.width = "0px";
-        this.input.style.width = this.input.scrollWidth + "px";
         
         const lines = this.input.value.split("\n");
         this.lines = lines;
@@ -301,6 +298,10 @@ export class Editor_Window extends HTMLElement {
             this.colors.removeChild(div);
             div = next;
         }
+
+
+        this.input.style.width = "0px";
+        this.input.style.width = this.code.scrollWidth + "px";
     }
 
     private call_input_listeners(){

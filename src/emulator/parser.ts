@@ -101,6 +101,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         out.headers[i as URCL_Header] = {value: urcl_headers[i as URCL_Header].def};
         out.headers[i as URCL_Header].operant = urcl_headers[i as URCL_Header].def_operant;
     }
+    let label_line_nr = 0;
     let label: undefined | Label;
     let last_label: undefined | Label;
     let labeled = Labeled.None as Labeled;
@@ -110,11 +111,14 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         const line = out.lines[line_nr];
         if (line === ""){continue;};
         last_label = label;
-        if (label = parse_label(line, line_nr, inst_i, out, out.warnings)){continue;}
+        if (label = parse_label(line, line_nr, inst_i, out, out.warnings)){
+            label_line_nr = line_nr;
+            continue;
+        }
         if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
         if (split_instruction(line, line_nr, inst_i, out, out.errors)){
             if (last_label && labeled === Labeled.DW){
-                // out.warnings.push(warn(line_nr, `Label at data->instruction boundary`));
+                out.warnings.push(warn(label_line_nr, `Label at boundary, add DW before or instruction after it`));
             }
             labeled = Labeled.INST;
             inst_i++; continue;
