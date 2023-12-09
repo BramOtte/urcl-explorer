@@ -36,7 +36,7 @@ enum Label_Type {
 }
 
 interface Label {
-    type: Label_Type, index: i53
+    type: Label_Type, index: i53, prev?: Label
 }
 
 interface Header_Value {
@@ -112,6 +112,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         if (line === ""){continue;};
         last_label = label;
         if (label = parse_label(line, line_nr, inst_i, out, out.warnings)){
+            label.prev = last_label;
             label_line_nr = line_nr;
             continue;
         }
@@ -158,8 +159,10 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
                 if (labeled === Labeled.INST){
                     // out.warnings.push(warn(line_nr, `Label at instruction->data boundary`));
                 }
-                last_label.type = Label_Type.DW;
-                last_label.index = out.data.length;
+                for (let label: undefined | Label = last_label; label; label = label.prev) {
+                    label.type = Label_Type.DW;
+                    label.index = out.data.length;                    
+                }
             }
             labeled = Labeled.DW;
             let i = 0;
