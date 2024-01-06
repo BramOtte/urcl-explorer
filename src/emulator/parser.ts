@@ -412,7 +412,9 @@ function parse_instructions(line_nr: number, inst_i: number, out: Parser_output,
         const [type, value] = parse_operant(()=>strings[i++], line_nr, inst_i, out.labels, out.constants, out, errors, warnings) ?? [];
         if (type === Operant_Type.String){
             errors.push(warn(line_nr, "Strings are not allowed in instructions"));
-        } else if (type !== undefined){
+        } else if (type === Operant_Type.NoInit) {
+            errors.push(warn(line_nr, "'*' are not allowed in instructions"));
+        } if (type !== undefined){
             types.push(type);
             values.push(value as number);
         }
@@ -541,6 +543,9 @@ function parse_operant(
                 return undefined;
             }
             return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
+        }
+        case '*': {
+            return [Operant_Type.NoInit, 0xCDCDCDCD];
         }
         case '"': {
             let i = 1;

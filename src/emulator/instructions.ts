@@ -44,7 +44,8 @@ export enum Operant_Prim {
 
 export enum Operant_Type {
     Reg = Operant_Prim.Reg, Imm = Operant_Prim.Imm,
-    Memory, Label, Data_Label, Constant, String
+    Memory, Label, Data_Label, Constant, String,
+    NoInit
 }
 
 export enum Operant_Operation {
