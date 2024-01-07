@@ -144,8 +144,10 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
             continue
         }
-        if (line.toUpperCase().startsWith("DW")){
-            let [_, ...value_strs] = line.split(" ");
+        // TODO: make DW and RW have separate memory pools
+        const [start, ...value_strs] = line.split(" ");
+        let upper = start.toUpperCase();
+        if (upper === "DW" || upper === "RW"){
             if (value_strs.length > 1){
                 if (value_strs[0][0] !== "[" || value_strs.at(-1)?.at(-1) !== "]"){
                     out.warnings.push(warn(line_nr, `Omitting square brackets around a value list is not standard`));
@@ -184,7 +186,8 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     for (let line_nr = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
         const [start, ...parts] = line.split(" "); 
-        if (start.toUpperCase() === "DW"){
+        const upper = start.toUpperCase();
+        if (upper === "DW" || upper === "RW"){
             if (parts.length > 1){
                 parts[0] = parts[0].replace("[", "").trim();
                 if (parts[0].length === 0){parts.shift();}
