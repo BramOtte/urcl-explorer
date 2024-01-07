@@ -413,7 +413,7 @@ function parse_instructions(line_nr: number, inst_i: number, out: Parser_output,
         if (type === Operant_Type.String){
             errors.push(warn(line_nr, "Strings are not allowed in instructions"));
         } else if (type === Operant_Type.NoInit) {
-            errors.push(warn(line_nr, "'*' are not allowed in instructions"));
+            errors.push(warn(line_nr, "Uninitialized arguments '_' are not allowed in instructions"));
         } if (type !== undefined){
             types.push(type);
             values.push(value as number);
@@ -544,7 +544,7 @@ function parse_operant(
             }
             return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
         }
-        case '*': {
+        case '_': {
             return [Operant_Type.NoInit, 0xCDCDCDCD];
         }
         case '"': {
