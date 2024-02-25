@@ -168,7 +168,7 @@ export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
         };
         
         // TODO: make sure interrupting this operation is properly handled
-        WebAssembly.instantiate(byte_code, imports).then(module => {
+        return WebAssembly.instantiate(byte_code, imports).then(module => {
             const exports = module.instance.exports as unknown as WASM_Exports;
     
             this.jit_run = max_duration => {
