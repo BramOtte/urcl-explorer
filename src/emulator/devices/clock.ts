@@ -5,9 +5,11 @@ export class Clock implements Device {
     wait_end = 0;
     time_out?: any;
     last_mark = 0;
+    program_start = performance.now();
 
     inputs = {
         [IO_Port.WAIT]: this.wait_in,
+        [IO_Port.TIME]: () => performance.now() - this.program_start,
     }
     outputs = {
         [IO_Port.WAIT]: this.wait_out,
@@ -38,5 +40,6 @@ export class Clock implements Device {
         if (this.time_out !== undefined){
             clearTimeout(this.time_out);
         }
+        this.program_start = performance.now();
     }
 }

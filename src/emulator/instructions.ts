@@ -108,6 +108,7 @@ export enum IO_Port {
     DBG_INT,
     
     BENCHMARK,
+    TIME,
 }
 
 export interface Instruction_Ctx {
