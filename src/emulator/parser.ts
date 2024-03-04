@@ -93,8 +93,8 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
 {
     const out = new Parser_output();
     Object.assign(out.constants, options.constants ?? {});
-    out.lines = source.split('\n').map(line => 
-        line.replace(/,/g, "").replace(/\s+/g, " ").replace(/\/\/.*/g, "").trim()
+    out.lines = source.split('\n').map(line =>
+        line.replace(/\/\/.*/g, "").trim()
     );
     //TODO: multiline comments
     for (let i = 0; i < enum_count(URCL_Header); i++){
@@ -125,7 +125,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             inst_i++; continue;
         }
         if (line.startsWith("@")){
-            const [macro, ...parts] = line.split(" ");
+            const [macro, ...parts] = split_words(line);
             if (macro.toLowerCase() === "@define"){
                 if (parts.length < 2){
                     out.warnings.push(warn(line_nr, `Expected 2 arguments for @define macro, got [${parts}]`));
@@ -145,7 +145,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             continue
         }
         // TODO: make DW and RW have separate memory pools
-        const [start, ...value_strs] = line.split(" ");
+        const [start, ...value_strs] = split_words(line);
         let upper = start.toUpperCase();
         if (upper === "DW" || upper === "RW"){
             if (value_strs.length > 1){
@@ -176,7 +176,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             }
             continue;
         }
-        out.errors.push(warn(line_nr, `Unknown identifier ${line.split(" ")[0]}`));
+        out.errors.push(warn(line_nr, `Unknown identifier ${start}`));
     }
     out.heap_offset = out.data.length;
     out.data.length = 0;
@@ -185,7 +185,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     }
     for (let line_nr = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
-        const [start, ...parts] = line.split(" "); 
+        const [start, ...parts] = split_words(line); 
         const upper = start.toUpperCase();
         if (upper === "DW" || upper === "RW"){
             if (parts.length > 1){
@@ -307,7 +307,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
 function parse_header(line: string, line_nr: number, headers: Header_Obj, errors: Warning[]):
     boolean
 {
-    const [header_str, opOrVal_str, val_str] = line.split(" ") as (string | undefined)[];
+    const [header_str, opOrVal_str, val_str] = split_words(line) as (string | undefined)[];
     if (header_str === undefined){
         return false;
     }
@@ -388,8 +388,7 @@ function parse_label(line: string, line_nr: number, inst_i: number, out: Label_O
 function split_instruction
 (line: string, line_nr: number, inst_i: number, out: Instruction_Out, errors: Warning[]): boolean
 {
-    const [opcode_str, ...ops] = line
-        .replace(/' /g, "'\xA0").replace(/,/g, "").split(" ");
+    const [opcode_str, ...ops] = split_words(line);
     const opcode = enum_from_str(Opcode, opcode_str.toUpperCase().replace("@", "__"));
     if (opcode === undefined){
         return false;
@@ -613,4 +612,48 @@ function str_until(string: string, sub_string: string){
     const end = string.indexOf(sub_string);
     if (end < 0){return string;}
     return string.slice(0, end);
+}
+
+const space = ' '.charCodeAt(0);
+const string_quote = '"'.charCodeAt(0);
+const char_quote = '\"'.charCodeAt(0);
+const backslash = '\\'.charCodeAt(0);
+const comma = ','.charCodeAt(0);
+
+function is_white(x: number) {
+    return x <= space || x === comma;
+
+}
+
+function split_words(line: string): string[] {
+    const out: string[] = [];
+    for (let i = 0; i < line.length; i += 1) {
+        for (; i < line.length && is_white(line.charCodeAt(i)); i += 1);
+        const start = i;
+        const first_char = line.charCodeAt(i);
+        i += 1;
+        if (first_char === string_quote || first_char === char_quote ) {
+            for (; i < line.length; i += 1) {
+                const c = line.charCodeAt(i);
+                if (c == backslash) {
+                    i += 1;
+                    continue;
+                }
+                if (c === first_char) {
+                    i += 1;
+                    break;
+                }
+            }
+        }
+
+        for (; i < line.length && !is_white(line.charCodeAt(i)); i += 1);
+
+        out.push(line.substring(start, i));
+    }
+
+    if (out.length == 0) {
+        out.push("");
+    }
+
+    return out;
 }
