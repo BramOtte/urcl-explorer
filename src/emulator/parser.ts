@@ -616,7 +616,7 @@ function str_until(string: string, sub_string: string){
 
 const space = ' '.charCodeAt(0);
 const string_quote = '"'.charCodeAt(0);
-const char_quote = '\"'.charCodeAt(0);
+const char_quote = '\''.charCodeAt(0);
 const backslash = '\\'.charCodeAt(0);
 const comma = ','.charCodeAt(0);
 
