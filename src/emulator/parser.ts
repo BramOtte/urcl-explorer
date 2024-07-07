@@ -1,4 +1,5 @@
 import { Break, BreakFlag, break_flag } from "./breaks.js";
+import { derive_constants_from_headers } from "./compiler.js";
 import { Constants, Header_Operant, IO_Port as IO_Port, Opcode, Opcodes_operant_lengths as Opcodes_operant_counts, Operant_Prim, Operant_Type, Register, register_count, URCL_Header, urcl_headers } from "./instructions.js";
 import { enum_count, enum_from_str, enum_strings, f16_encode, f32_encode, i53, is_digit, warn, Warning, Word } from "./util.js";
 
@@ -91,6 +92,8 @@ enum Labeled {
 
 export function parse(source: string, options: Parse_Options = {}): Parser_output
 {
+    let did_parse_headers = false;
+
     const out = new Parser_output();
     Object.assign(out.constants, options.constants ?? {});
     out.lines = source.split('\n').map(line =>
@@ -110,13 +113,31 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         inst_is.push(inst_i);
         const line = out.lines[line_nr];
         if (line === ""){continue;};
+        
+        if (parse_header(line, line_nr, out.headers, out.warnings)){
+            if (did_parse_headers) {
+                out.errors.push(warn(line_nr, "Headers must be at the start of the program"));
+            }
+            continue;
+        } else {
+            // this should only run for actual code but right now runs simply if there is anything thats not header, comment or whitespace
+            const constants = derive_constants_from_headers(out.headers);
+            for (const [key, value] of Object.entries(constants)) {
+                const str = ""+ value
+                out.constants[key] = str;
+                out.constants[key.toUpperCase()] = str;
+            }
+
+            did_parse_headers = true;
+        }
+
         last_label = label;
         if (label = parse_label(line, line_nr, inst_i, out, out.warnings)){
             label.prev = last_label;
             label_line_nr = line_nr;
             continue;
         }
-        if (parse_header(line, line_nr, out.headers, out.warnings)){continue;}
+
         if (split_instruction(line, line_nr, inst_i, out, out.errors)){
             if (last_label && labeled === Labeled.DW){
                 out.warnings.push(warn(label_line_nr, `Label at boundary, add DW after or instruction before it`));

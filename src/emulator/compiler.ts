@@ -23,24 +23,8 @@ export interface Debug_Info {
 export function compile(parsed: Parser_output): [Program, Debug_Info]
 {
     const {headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks} = parsed;
-    const in_ram = parsed.headers[URCL_Header.RUN]?.value === Header_Run.RAM;
-    const header_bits = parsed.headers[URCL_Header.BITS].value;
-    const bits = header_bits <= 8 ? 8 :
-        header_bits <= 16 ? 16 :
-        header_bits <= 32 ? 32 : undefined;
-    if (bits === undefined){
-        throw new Error("bits can not exceed 32");
-    }
-    parsed.headers[URCL_Header.BITS].value = bits;
-    const msb       = 1 << (bits-1);
-    const smsb      = 1 << (bits-2);
-    const max       = 0xFF_FF_FF_FF >>> (32 - bits);
-    const smax      = max >>> 1;
-    const uhalf     = max & (max << (bits/2));
-    const lhalf     = max - uhalf;
-    const minreg    = headers[URCL_Header.MINREG].value;
-    const minheap   = headers[URCL_Header.MINHEAP].value;
-    const minstack  = headers[URCL_Header.MINSTACK].value;
+    
+    const { max, smax, bits, minreg, msb, smsb, uhalf, lhalf, minheap, minstack } = derive_constants_from_headers(headers);
 
     const heap_offset = parsed.data.length;
 
@@ -106,6 +90,29 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
     ];
 }
 
+
+export function derive_constants_from_headers(headers: Header_Obj) {
+    const in_ram = headers[URCL_Header.RUN]?.value === Header_Run.RAM;
+    const header_bits = headers[URCL_Header.BITS].value;
+    const bits = header_bits <= 8 ? 8 :
+        header_bits <= 16 ? 16 :
+            header_bits <= 32 ? 32 : undefined;
+    if (bits === undefined) {
+        throw new Error("bits can not exceed 32");
+    }
+    headers[URCL_Header.BITS].value = bits;
+    const msb = 1 << (bits - 1);
+    const smsb = 1 << (bits - 2);
+    const max = 4294967295 >>> (32 - bits);
+    const smax = max >>> 1;
+    const uhalf = max & (max << (bits / 2));
+    const lhalf = max - uhalf;
+    const minreg = headers[URCL_Header.MINREG].value;
+    const minheap = headers[URCL_Header.MINHEAP].value;
+    const minstack = headers[URCL_Header.MINSTACK].value;
+
+    return { max, smax, bits, minreg, msb, smsb, uhalf, lhalf, minheap, minstack };
+}
 
 function program_to_bytecode(parsed: Parser_output,  inst_sizeof = (opcode: Opcode) => 5){
     const operant_types = parsed.operant_types;
