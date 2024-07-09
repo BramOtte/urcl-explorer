@@ -421,22 +421,6 @@ try {
         storage_msg.innerText = `loaded storage device with ${storage_device.word_count} words, ${storage_loads++ % 2 === 0 ? "flip" : "flop"}`;
     }
 
-    const bits = emulator._bits
-    const total_register_count = emulator.registers.length
-    const memory_size = emulator.memory.length
-    const instruction_count = emulator.program.opcodes.length;
-
-    output_element.innerText += `
-compilation done
-bits: ${bits} /8
-register-count: ${total_register_count} /12
-memory-size: ${memory_size} /256
-instruction-count: ${instruction_count} /256
-`;
-    if (bits == 8 && total_register_count <= 10 + register_count && memory_size <= 256 && instruction_count <= 256) {
-        output_element.innerText += "Program follows competition limitations 🎊\n"
-    }
-
     if (animation_frame){
         cancelAnimationFrame(animation_frame);
     }
