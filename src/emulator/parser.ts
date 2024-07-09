@@ -555,46 +555,47 @@ function parse_operant(
             return [Operant_Type.Imm, port];
         }
         case '\'': {
-            let char_lit;
-            if (operant.length === 1){
-                operant += " " + get_operant() ?? "";
+            if (operant.length < 2 || operant.at(-1) !== '\''){
+                errors.push(warn(line_nr, `Missing end of char`));
+                return [Operant_Type.Imm, 0];
             }
+            
+            let char_lit;
             try {
                 char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"')) as string;
             } catch (e) {
                 errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
             }
+
+            if (char_lit.length != 1) {
+                warnings.push(warn(line_nr, `Character literal should only contain one character but contains ${char_lit.length}`));
+            }
+
             return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
         }
         case '_': {
             return [Operant_Type.NoInit, 0xCDCDCDCD];
         }
         case '"': {
-            let i = 1;
             const value = data.length;
-            while (true){
-                i = operant.indexOf('"', 1);
-                if (i > 0 && operant[i-1] !== "\\" || operant[i-2] === "\\"){
-                    let string = "";
-                    try {
-                        string = JSON.parse(operant) as string;
-                    } catch (e) {
-                        errors.push(warn(line_nr, `Invalid string ${operant}\n  ${e}`));
-                        return undefined;
-                    }
-                    for (let i = 0; i < string.length; i++){
-                        data.push(string.codePointAt(i) ?? 0);
-                    }
-                    return [Operant_Type.String, value];
-                }
-                const next = get_operant();
-                if (next === undefined){
-                    errors.push(warn(line_nr, `missing end of string`));
-                    return [Operant_Type.String, value];
-                }
-                operant += " " + next; 
+
+            if (operant.length < 2 || operant.at(-1) !== '"'){
+                errors.push(warn(line_nr, `missing end of string ${operant}`));
+                return [Operant_Type.String, value];
             }
+            
+            let string = "";
+            try {
+                string = JSON.parse(operant) as string;
+            } catch (e) {
+                errors.push(warn(line_nr, `Invalid string ${operant}\n  ${e}`));
+                return undefined;
+            }
+            for (let i = 0; i < string.length; i++){
+                data.push(string.codePointAt(i) ?? 0);
+            }
+            return [Operant_Type.String, value];
         }
         case '&': warnings.push(warn(line_nr, `Compiler constants with & are deprecated`));
         case '@': {
@@ -640,6 +641,9 @@ const string_quote = '"'.charCodeAt(0);
 const char_quote = '\''.charCodeAt(0);
 const backslash = '\\'.charCodeAt(0);
 const comma = ','.charCodeAt(0);
+const square_open = '['.charCodeAt(0);
+const square_close = ']'.charCodeAt(0);
+
 
 function is_white(x: number) {
     return x <= space || x === comma;
@@ -648,26 +652,34 @@ function is_white(x: number) {
 
 function split_words(line: string): string[] {
     const out: string[] = [];
-    for (let i = 0; i < line.length; i += 1) {
+    for (let i = 0; i < line.length;) {
         for (; i < line.length && is_white(line.charCodeAt(i)); i += 1);
         const start = i;
         const first_char = line.charCodeAt(i);
         i += 1;
-        if (first_char === string_quote || first_char === char_quote ) {
-            for (; i < line.length; i += 1) {
-                const c = line.charCodeAt(i);
-                if (c == backslash) {
-                    i += 1;
-                    continue;
+        switch (first_char) {
+            case string_quote: case char_quote: {
+                for (; i < line.length; i += 1) {
+                    const c = line.charCodeAt(i);
+                    if (c === backslash) {
+                        i += 1;
+                        continue;
+                    }
+                    if (c === first_char) {
+                        i += 1;
+                        break;
+                    }
                 }
-                if (c === first_char) {
-                    i += 1;
-                    break;
-                }
-            }
-        }
 
-        for (; i < line.length && !is_white(line.charCodeAt(i)); i += 1);
+                for (; i < line.length && !is_white(line.charCodeAt(i)); i += 1);
+            } break;
+
+            case square_open: case square_close: break;
+            
+            default: {
+                for (; i < line.length && !is_white(line.charCodeAt(i)); i += 1);
+            } break;
+        }
 
         out.push(line.substring(start, i));
     }
