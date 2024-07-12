@@ -162,7 +162,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             if (macro.toLowerCase() === "@debug") {
                 continue;
             }
-            out.warnings.push(warn(line_nr, `Unknown marco ${macro}`));
+            out.warnings.push(warn(line_nr, `Unknown macro ${macro}`));
             continue
         }
         // TODO: make DW and RW have separate memory pools
