@@ -10,9 +10,13 @@ export interface Gamepad_Options {
 }
 
 
-const {A, B, SELECT, START, LEFT, RIGHT, UP, DOWN} = Gamepad_Key;
+const {
+    A, B, SELECT, START, LEFT, RIGHT, UP, DOWN,
+    Y, X, LB, RB, LEFT2, RIGHT2, UP2, DOWN2,
+    LT, RT, LStick, RStick,
+} = Gamepad_Key;
 
-function k(key: number, pad = 0): Game_Key{
+function k(key: number, pad = 0): Game_Key {
     return {key, pad}; 
 }
 
@@ -21,7 +25,8 @@ export class KeyboardPad implements PadI {
     buttons = 0;
     constructor (options: Gamepad_Options = {}){
         this.keymap = options.keymap ?? {
-            keyk: k(A), keyj: k(B), keyn: k(START), keyv: k(SELECT), keya: k(LEFT), keyd: k(RIGHT), keyw: k(UP), keys: k(DOWN),
+            KeyK: k(A), KeyJ: k(B), KeyN: k(START), KeyV: k(SELECT), KeyA: k(LEFT), KeyD: k(RIGHT), KeyW: k(UP), KeyS: k(DOWN),
+            KeyI: k(Y), KeyU: k(X), ShiftLeft: k(LB), KeyL: k(RB), ArrowLeft: k(LEFT2), ArrowRight: k(RIGHT2), ArrowUp: k(UP2), ArrowDown: k(DOWN2),
         };
         addEventListener("keydown", this.onkeydown);
         addEventListener("keyup", this.onkeyup);
@@ -42,7 +47,7 @@ export class KeyboardPad implements PadI {
     
 
     private key(e: KeyboardEvent): Game_Key | undefined {
-        return this.keymap[e.code.toLowerCase()]
+        return this.keymap[e.code]
     }
     private onkeydown = (e: KeyboardEvent) => {
         const k = this.key(e);

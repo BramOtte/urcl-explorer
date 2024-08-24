@@ -7,7 +7,7 @@ import { compile } from "./emulator/compiler.js";
 import { Clock } from "./emulator/devices/clock.js";
 import { Console_IO } from "./emulator/devices/console-io.js";
 import { Color_Mode, Display } from "./emulator/devices/display.js";
-import { Gamepad_Key, Gamepad_Exes, Pad } from "./emulator/devices/gamepad.js";
+import { Gamepad_Key, Gamepad_Axis, Pad } from "./emulator/devices/gamepad.js";
 import { Gl_Display } from "./emulator/devices/gl-display.js";
 import { Keyboard } from "./emulator/devices/keyboard.js";
 import { KeyboardPad } from "./emulator/devices/keyboardpad.js";
@@ -390,7 +390,7 @@ try {
     const parsed = parse(source, {
         constants: Object.fromEntries([
             ...enum_strings(Gamepad_Key).map(key => [`@${key}`, `${1 << (Gamepad_Key[key as any] as any)}`]),
-            ...enum_strings(Gamepad_Exes).map(key => [`@${key}`, `${Gamepad_Exes[key as any]}`])
+            ...enum_strings(Gamepad_Axis).map(key => [`@${key}`, `${Gamepad_Axis[key as any]}`])
         ]),
     });
 

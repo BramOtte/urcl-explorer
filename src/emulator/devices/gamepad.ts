@@ -10,11 +10,13 @@ export interface PadI {
 }
 
 export enum Gamepad_Key {
-    A, B, SELECT, START, LEFT, RIGHT, UP, DOWN
+    A, B, SELECT, START, LEFT, RIGHT, UP, DOWN,
+    Y, X, LB, RB, LEFT2, RIGHT2, UP2, DOWN2,
+    LT, RT, LStick, RStick
 }
 
-export enum Gamepad_Exes {
-    LEFT_X, LEFT_Y, RIGHT_X, RIGHT_Y, 
+export enum Gamepad_Axis {
+    LEFT_X, LEFT_Y, AXIS3, AXIS4, RIGHT_X, RIGHT_Y, 
 }
 
 export class Pad implements Device {
