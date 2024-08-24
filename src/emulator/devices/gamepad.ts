@@ -15,8 +15,10 @@ export enum Gamepad_Key {
     LT, RT, LStick, RStick
 }
 
+// TODO: map these to the correct axis depending on controller
 export enum Gamepad_Axis {
-    LEFT_X, LEFT_Y, AXIS3, AXIS4, RIGHT_X, RIGHT_Y, 
+    LEFT_X, LEFT_Y,
+    RIGHT_X, RIGHT_Y,
 }
 
 export class Pad implements Device {
