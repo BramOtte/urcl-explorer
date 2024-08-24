@@ -1,3 +1,5 @@
+BITS == 16
+
 @DEFINE key r8 // contains which buttons are down
 @DEFINE last r7 // contains which bottons where down last frame
 @DEFINE down r6 // contains which buttons went down this frame
@@ -22,6 +24,8 @@ AND up up last
 
 // the down registers contains all buttons that went down
 // so we AND it with the bit for UP to check if the UP button went down
+
+// 8 bit buttons
 AND r1 down @UP // W
 BRZ .up r1
     OUT %TEXT '^'
@@ -61,6 +65,52 @@ AND r1 down @SELECT // V
 BRZ .select r1
     OUT %TEXT '?'
 .select
+
+// 16 bit buttons
+AND r1 down @UP2 // Arrow Up
+BRZ .up2 r1
+    OUT %TEXT '^'
+    OUT %TEXT '2'
+.up2
+
+AND r1 down @DOWN2 // Arrow Down
+BRZ .down2 r1
+    OUT %TEXT 'v'
+    OUT %TEXT '2'
+.down2
+
+AND r1 down @LEFT2 // Arrow Left
+BRZ .left2 r1
+    OUT %TEXT '<'
+    OUT %TEXT '2'
+.left2
+
+AND r1 down @RIGHT2 // Arrow Right
+BRZ .right2 r1
+    OUT %TEXT '>'
+    OUT %TEXT '2'
+.right2
+
+AND r1 down @X // I
+BRZ .X r1
+    OUT %TEXT 'X'
+.X
+
+AND r1 down @Y // U
+BRZ .Y r1
+    OUT %TEXT 'Y'
+.Y
+
+AND r1 down @LB // LeftShift
+BRZ .LB r1
+    OUT %TEXT 'L'
+.LB
+
+AND r1 down @RB // L
+BRZ .RB r1
+    OUT %TEXT 'R'
+.RB
+
 OUT %BUFFER 2
 
 OUT %AXIS @LEFT_X

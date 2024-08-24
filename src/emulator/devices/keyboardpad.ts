@@ -26,7 +26,7 @@ export class KeyboardPad implements PadI {
     constructor (options: Gamepad_Options = {}){
         this.keymap = options.keymap ?? {
             KeyK: k(A), KeyJ: k(B), KeyN: k(START), KeyV: k(SELECT), KeyA: k(LEFT), KeyD: k(RIGHT), KeyW: k(UP), KeyS: k(DOWN),
-            KeyI: k(Y), KeyU: k(X), ShiftLeft: k(LB), KeyL: k(RB), ArrowLeft: k(LEFT2), ArrowRight: k(RIGHT2), ArrowUp: k(UP2), ArrowDown: k(DOWN2),
+            KeyU: k(Y), KeyI: k(X), ShiftLeft: k(LB), KeyL: k(RB), ArrowLeft: k(LEFT2), ArrowRight: k(RIGHT2), ArrowUp: k(UP2), ArrowDown: k(DOWN2),
         };
         addEventListener("keydown", this.onkeydown);
         addEventListener("keyup", this.onkeyup);
