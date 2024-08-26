@@ -206,4 +206,13 @@ export class Display implements Device {
     private set height(value: number){
         this.ctx.canvas.height = value;
     }
+
+
+    update_display() {
+        // TODO: fill in stub
+    }
+
+    flush() {
+        // TODO: fill in stub
+    }
 }

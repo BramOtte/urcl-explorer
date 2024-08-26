@@ -195,13 +195,21 @@ const console_io = new Console_IO({
     }
 );
 const canvas = document.getElementsByTagName("canvas")[0];
-const gl = canvas.getContext("webgl2");
-if (!gl){
-    throw new Error("Unable to get webgl rendering context");
+let ctx: CanvasRenderingContext2D | WebGL2RenderingContext | null = canvas.getContext("webgl2");
+
+if (!ctx) {
+    console.warn("Unable to get webgl2 rendering context, falling back to 2d context");
+    ctx = canvas.getContext("2d");
 }
+
+if (!ctx) {
+    throw new Error("Unable to get rendering context");
+}
+
 canvas.width = width || 32;
 canvas.height = height || 32;
-const display = new Gl_Display(gl, color);
+
+const display = ctx instanceof CanvasRenderingContext2D ? new Display(ctx, 32, color) : new Gl_Display(ctx, color);
 const color_mode_input = document.getElementById("color-mode") as HTMLOptionElement;
 if (color !== undefined) color_mode_input.value = Color_Mode[color];
 color_mode_input.addEventListener("change", change_color_mode);
