@@ -70,7 +70,6 @@ export class Console_IO implements Device {
         [IO_Port.ASCII]: this.text_out,
         [IO_Port.CHAR5]: this.text_out,
         [IO_Port.CHAR6]: this.text_out,
-        [IO_Port.ASCII]: this.text_out,
         [IO_Port.UTF8]: this.text_out,
         [IO_Port.UTF16]: this.text_out,
         [IO_Port.UTF32]: this.text_out,
