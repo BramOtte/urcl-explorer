@@ -637,7 +637,7 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.SSETG]: s => {s.const(-1).const(0).sb().sc()   .u8(WASM_Opcode.i32_gt_s)     .u8(WASM_Opcode.select).wa()},
     [Opcode.SSETLE]: s => {s.const(-1).const(0).sb().sc()   .u8(WASM_Opcode.i32_le_s)     .u8(WASM_Opcode.select).wa()},
     [Opcode.SSETGE]: s => {s.const(-1).const(0).sb().sc()   .u8(WASM_Opcode.i32_ge_s)     .u8(WASM_Opcode.select).wa()},
-    [Opcode.ABS]: s => {s.const(0).b().u8(WASM_Opcode.i32_sub)  .b()   .b().const(0).u8(WASM_Opcode.i32_lt_s).u8(WASM_Opcode.select).wa()},
+    [Opcode.ABS]: s => {s.const(0).sb().u8(WASM_Opcode.i32_sub)  .sb()   .sb().const(0).u8(WASM_Opcode.i32_lt_s).u8(WASM_Opcode.select).wa()},
     [Opcode.__ASSERT]: s => {s.a().u8(WASM_Opcode.i32_eqz); panic_if(s)},
     [Opcode.__ASSERT0]: s => {s.a().const(0).u8(WASM_Opcode.i32_ne); panic_if(s)},
     [Opcode.__ASSERT_EQ]: s => {s.a().b().u8(WASM_Opcode.i32_ne); panic_if(s)},
