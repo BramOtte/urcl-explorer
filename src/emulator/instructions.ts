@@ -109,6 +109,8 @@ export enum IO_Port {
     
     BENCHMARK,
     TIME,
+
+    FAIL_ASSERT,
 }
 
 export interface Instruction_Ctx {

@@ -400,7 +400,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
                 return;
             }
             if (this.outs[port] === undefined){
-                this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}`);
+                this.warn(`unsupported output device port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}, ${value}`);
                 this.outs[port] = value
             }
             return;
@@ -411,7 +411,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
                 const char = JSON.stringify(String.fromCodePoint(value));
                 char_str = `'${char.substring(1, char.length-1)}'`;
             } catch {}
-            this.debug(`Written to port ${port} (${IO_Port[port]}) value=0x${value.toString(16)} ${char_str}`);
+            this.debug(`Written to port ${port} (${IO_Port[port]}) value=0x${value.toString(16)}, ${value}, ${char_str}`);
         }
         device(value);
     } catch (e){

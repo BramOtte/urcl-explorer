@@ -1,6 +1,6 @@
 import { IntArray, Step_Result, UintArray } from "../IEmu";
 import { Debug_Info, Program } from "../compiler";
-import { Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../instructions";
+import { IO_Port, Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../instructions";
 import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } from "./wasm";
 import { WASM_Writer } from "./wasm_writer";
 
@@ -345,7 +345,7 @@ class Context extends WASM_Writer {
     
     arg(index: number, signed: boolean) {
         const prim = this.program.operant_prims[this.pc][index];
-        const value = this.program.operant_values[this.pc][index];
+        const value = this.program.operant_values[this.pc][index] ?? 0;
         if (prim === Operant_Prim.Reg) {
             if (signed) {
                 this.read_reg_s(value);
@@ -608,8 +608,8 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.SETLE]: s => {s.const(-1).const(0).b().c()  .u8(WASM_Opcode.i32_le_u)   .u8(WASM_Opcode.select).wa()},
     [Opcode.SETC]: s => {s.const(-1).const(0).b().c()   .u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_lt_u)   .u8(WASM_Opcode.select).wa()},
     [Opcode.SETNC]: s => {s.const(-1).const(0).b().c()   .u8(WASM_Opcode.i32_add).mask_u().b().u8(WASM_Opcode.i32_ge_u)   .u8(WASM_Opcode.select).wa()},
-    [Opcode.LLOD]: s => {s.b().c().u8(WASM_Opcode.i32_add).address().mask_u().load_u().wa()},
-    [Opcode.LSTR]: s => {s.a().b().u8(WASM_Opcode.i32_add).address().mask_u().c().store()},
+    [Opcode.LLOD]: s => {s.b().c().u8(WASM_Opcode.i32_add).mask_u().address().load_u().wa()},
+    [Opcode.LSTR]: s => {s.a().b().u8(WASM_Opcode.i32_add).mask_u().address().c().store()},
     [Opcode.IN]: s => {
         s.b().read_reg(Register.PC).u8(WASM_Opcode.call).uvar(s.in_func)
             .const(Step_Result.Input).u8(WASM_Opcode.i32_eq).if()
@@ -638,10 +638,10 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     [Opcode.SSETLE]: s => {s.const(-1).const(0).sb().sc()   .u8(WASM_Opcode.i32_le_s)     .u8(WASM_Opcode.select).wa()},
     [Opcode.SSETGE]: s => {s.const(-1).const(0).sb().sc()   .u8(WASM_Opcode.i32_ge_s)     .u8(WASM_Opcode.select).wa()},
     [Opcode.ABS]: s => {s.const(0).sb().u8(WASM_Opcode.i32_sub)  .sb()   .sb().const(0).u8(WASM_Opcode.i32_lt_s).u8(WASM_Opcode.select).wa()},
-    [Opcode.__ASSERT]: s => {s.a().u8(WASM_Opcode.i32_eqz); panic_if(s)},
-    [Opcode.__ASSERT0]: s => {s.a().const(0).u8(WASM_Opcode.i32_ne); panic_if(s)},
-    [Opcode.__ASSERT_EQ]: s => {s.a().b().u8(WASM_Opcode.i32_ne); panic_if(s)},
-    [Opcode.__ASSERT_NEQ]: s => {s.a().b().u8(WASM_Opcode.i32_eq); panic_if(s)},
+    [Opcode.__ASSERT]: s => {s.a().u8(WASM_Opcode.i32_eqz); fail_assert(s)},
+    [Opcode.__ASSERT0]: s => {s.a().const(0).u8(WASM_Opcode.i32_ne); fail_assert(s)},
+    [Opcode.__ASSERT_EQ]: s => {s.a().b().u8(WASM_Opcode.i32_ne); fail_assert(s)},
+    [Opcode.__ASSERT_NEQ]: s => {s.a().b().u8(WASM_Opcode.i32_eq); fail_assert(s)},
     [Opcode.UMLT]: s => {
         s.b().extend_u().c().extend_u().u8(s.bits <= 16 ? WASM_Opcode.i32_mul : WASM_Opcode.i64_mul)
             .const64(s.bits).u8(s.bits <= 16 ? WASM_Opcode.i32_shr_u : WASM_Opcode.i64_shr_u)
@@ -654,6 +654,10 @@ const stuff: Record<Opcode, undefined | ((s: Context) => void)> = {
     },
 };
 
-function panic_if(s: Context) {
-    return s.if().const(s.pc)._write_reg(Register.PC).const(420).const(s.pc).u8(WASM_Opcode.call).uvar(s.out_func).a().u8(WASM_Opcode.return).end()
+
+function fail_assert(s: Context) {
+    return s.if().const(s.pc)._write_reg(Register.PC)
+        .const(IO_Port.FAIL_ASSERT).a().u8(WASM_Opcode.call).uvar(s.out_func)
+        .const(IO_Port.FAIL_ASSERT).b().u8(WASM_Opcode.call).uvar(s.out_func)
+        .const(Step_Result.Input).break_ret().end()
 }
