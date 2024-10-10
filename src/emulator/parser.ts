@@ -113,10 +113,24 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
         inst_is.push(inst_i);
         const line = out.lines[line_nr];
         if (line === ""){continue;};
+        const [start, ...value_strs] = split_words(line);
+
+        if (start.toLowerCase() === "@define"){
+            if (value_strs.length < 2){
+                out.warnings.push(warn(line_nr, `Expected 2 arguments for @define macro, got [${value_strs}]`));
+                continue;
+            }
+            const [name, value] = value_strs;
+            if (out.constants[name.toUpperCase()] !== undefined){
+                out.errors.push(warn(line_nr, `Redefinition of macro ${name}`));
+            }
+            out.constants[name.toUpperCase()] = value;
+            continue
+        }
         
         if (parse_header(line, line_nr, out.headers, out.warnings)){
             if (did_parse_headers) {
-                out.errors.push(warn(line_nr, "Headers must be at the start of the program"));
+                out.warnings.push(warn(line_nr, "Headers must be at the start of the program"));
             }
             continue;
         } else {
@@ -146,27 +160,13 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
             inst_i++; continue;
         }
         if (line.startsWith("@")){
-            const [macro, ...parts] = split_words(line);
-            if (macro.toLowerCase() === "@define"){
-                if (parts.length < 2){
-                    out.warnings.push(warn(line_nr, `Expected 2 arguments for @define macro, got [${parts}]`));
-                    continue;
-                }
-                const [name, value] = parts;
-                if (out.constants[name.toUpperCase()] !== undefined){
-                    out.errors.push(warn(line_nr, `Redefinition of macro ${name}`));
-                }
-                out.constants[name.toUpperCase()] = value;
-                continue
-            }
-            if (macro.toLowerCase() === "@debug") {
+            if (start.toLowerCase() === "@debug") {
                 continue;
             }
-            out.warnings.push(warn(line_nr, `Unknown macro ${macro}`));
+            out.warnings.push(warn(line_nr, `Unknown macro ${start}`));
             continue
         }
         // TODO: make DW and RW have separate memory pools
-        const [start, ...value_strs] = split_words(line);
         let upper = start.toUpperCase();
         if (upper === "DW" || upper === "RW"){
             if (value_strs.length > 1){
