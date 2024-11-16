@@ -12,11 +12,14 @@
   },
   "devDependencies": {
     "@types/gifencoder": "^2.0.1",
-    "@types/node": "^16.7.13"
+    "@types/node": "22.9.0"
   },
   "dependencies": {
-    "esbuild": "^0.15.16",
-    "node-fetch": "^3.1.0"
+    "canvas": "^2.11.2",
+    "discord.js": "14.16.3",
+    "esbuild": "0.24.0",
+    "gifencoder": "^2.0.1",
+    "node-fetch": "3.3.2"
   },
   "description": "An IDE for URCL",
   "directories": {

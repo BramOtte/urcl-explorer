@@ -1,11 +1,11 @@
 import fsp from "fs/promises";
 import fs from "fs";
-import { urcl2c } from "../emulator/urcl2c";
+import { urcl2c } from "../emulator/urcl2c.js";
 import { exit, stdout } from "process";
-import { parse } from "../emulator/parser";
-import { compile } from "../emulator/compiler";
-import { IO_Port, Opcode, Opcodes_operants, Operant_Operation } from "../emulator/instructions";
-import { Emulator, Step_Result } from "../emulator/emulator";
+import { parse } from "../emulator/parser.js";
+import { compile } from "../emulator/compiler.js";
+import { IO_Port, Opcode, Opcodes_operants, Operant_Operation } from "../emulator/instructions.js";
+import { Emulator, Step_Result } from "../emulator/emulator.js";
 
 const file_name = process.argv[2];
 if (file_name === undefined) {

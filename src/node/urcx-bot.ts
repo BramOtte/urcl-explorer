@@ -1,9 +1,9 @@
 // https://github.com/benjaminadk/gif-encoder-2
 import fsp from "fs/promises";
-import ds, { Message, MessageAttachment } from "discord.js";
+import ds, {Attachment, AttachmentBuilder, Message} from "discord.js";
 import {emu_reply, emu_start} from "./bots/bot-emu.js";
 import GivEncoder from "gifencoder";
-import Canvas from "canvas";
+import {Canvas} from "canvas";
 import { Step_Result } from "../emulator/emulator.js";
 import { my_exec } from "./exec.js";
 import { preprocess } from "../emulator/preprocessor.js";
@@ -24,7 +24,7 @@ if (!token){
     token = env.split("=")[1].replace(/\s/g, '');
 }
 
-const client = new ds.Client({intents: ds.Intents.FLAGS.GUILDS | ds.Intents.FLAGS.GUILD_MESSAGES});
+const client = new ds.Client({intents: ds.GatewayIntentBits.Guilds | ds.GatewayIntentBits.GuildMessages | ds.GatewayIntentBits.MessageContent});
 
 const max_msg = 2000;
 const max_file = 8_000_000;
@@ -38,7 +38,7 @@ function reply_text(msg: ds.Message, text: string, file = false) {
     }
     const buffer = Buffer.from(text, "utf8")
     if (buffer.length <= max_file){
-        return msg.reply({files: [new MessageAttachment(buffer, "text.txt")]});
+        return msg.reply({files: [new AttachmentBuilder(buffer).setName("text.txt")]});
     }
     const from_sides = max_file / 2
     const top = buffer.subarray(0, from_sides)
@@ -47,7 +47,7 @@ function reply_text(msg: ds.Message, text: string, file = false) {
 
     const error_msg = `File to big leaving out the middle part`;
 
-    return msg.reply({content: error_msg, files: [new MessageAttachment(cut, "text.txt")]});
+    return msg.reply({content: error_msg, files: [new AttachmentBuilder(cut).setName("text.txt")]});
 }
 
 
@@ -204,7 +204,7 @@ async function onmessage (msg: Message) {
         const code = errors.length > 0 ? 1 : 0;
         const rep_msg = `exit code ${code}` + (errors ? `\nerrors: \`\`\`\n${expand_warnings(errors, source.replaceAll("\r", "").split("\n"))}\`\`\`` : "");
         
-        await msg.reply({files: [new MessageAttachment(Buffer.from(out, "utf8"), "output.txt")], content: rep_msg});
+        await msg.reply({files: [new AttachmentBuilder(Buffer.from(out, "utf8")).setName("output.txt")], content: rep_msg});
     }
     else if (content.startsWith("!")){
         const reply = `unknown command ${JSON.stringify(content)} try sending one of:\n`
@@ -221,16 +221,16 @@ async function onmessage (msg: Message) {
 
     async function reply(msg: ds.Message, res: ReturnType<typeof emu_start>){
         let {out, info, screens, all_screens, scale, state, quality, storage} = await res;
-        let files: MessageAttachment[] = [];
-        let screen_at: undefined | MessageAttachment;
+        let files: AttachmentBuilder[] = [];
+        let screen_at: undefined | AttachmentBuilder;
         const to_draw = state == Step_Result.Halt ? all_screens : screens;
         if (to_draw.length > 0){
             const w = to_draw[0].width, h =  to_draw[0].height
             const width = w * scale, height = h * scale;
             const max_images = 0| 1_000_000 / (width * height);
             
-            const canvas = Canvas.createCanvas(width, height);
-            const ctx = canvas.getContext("2d", {alpha: false});
+            const canvas = new Canvas(width, height, "image") as unknown as HTMLCanvasElement & Canvas;
+            const ctx = canvas.getContext("2d", {alpha: false}) as CanvasRenderingContext2D;
             ctx.imageSmoothingEnabled = false;
             ctx.fillStyle = "black";
             if (to_draw.length > 1){
@@ -255,13 +255,13 @@ async function onmessage (msg: Message) {
                 }
                 encoder.finish();
                 const buf = encoder.out.getData();
-                screen_at = new MessageAttachment(buf, "screen.gif");
+                screen_at = new ds.AttachmentBuilder(buf).setName("screen.gif");
             } else {
                 ctx.fillRect(0,0, width, height);
                 ctx.putImageData(to_draw[0], 0, 0, 0, 0, width, height);
                 ctx.drawImage(canvas, 0, 0, w, h, 0, 0, width, height);
                 const buf = canvas.toBuffer();
-                screen_at = new MessageAttachment(buf, "screen.png");
+                screen_at = new ds.AttachmentBuilder(buf).setName("screen.png");
             }
         }
         msg = await reply_text(msg, info)
@@ -270,7 +270,7 @@ async function onmessage (msg: Message) {
             files.push(screen_at);
         }
         if (storage){
-            files.push(new MessageAttachment(Buffer.from(storage), "storage.bin"));
+            files.push(new ds.AttachmentBuilder(Buffer.from(storage)).setName("storage.bin"));
         }
         
         if (files.length > 0){

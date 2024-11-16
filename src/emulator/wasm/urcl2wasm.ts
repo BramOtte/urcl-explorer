@@ -1,8 +1,8 @@
-import { IntArray, Step_Result, UintArray } from "../IEmu";
-import { Debug_Info, Program } from "../compiler";
-import { IO_Port, Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../instructions";
-import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } from "./wasm";
-import { WASM_Writer } from "./wasm_writer";
+import { IntArray, Step_Result, UintArray } from "../IEmu.js";
+import { Debug_Info, Program } from "../compiler.js";
+import { IO_Port, Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../instructions.js";
+import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } from "./wasm.js";
+import { WASM_Writer } from "./wasm_writer.js";
 
 export interface WASM_Exports {
     run(max: number): [Step_Result, number],
@@ -95,7 +95,7 @@ export function create_urcl_memory(program: Program): URCL_Memory {
     };
 }
 
-export function urcl2wasm(program: Program, memory: URCL_Memory, run_type: Run_Type, debug?: Debug_Info): Uint8Array {
+export function urcl2wasm(program: Program, memory: URCL_Memory, run_type: Run_Type = Run_Type.Count_Instrutions, debug?: Debug_Info): Uint8Array {
     const s = new Context(memory, run_type, program, debug);
     s.bytes(magic).u32(version)
         .u8(Section_Type.type)

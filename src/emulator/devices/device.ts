@@ -1,4 +1,4 @@
-import { IO_Port } from "../instructions";
+import { IO_Port } from "../instructions.js";
 
 export type Device_Input = ((callback: (value: number) => void) => void | number) | (() => number);
 export type Device_Output = (value: number) => void;

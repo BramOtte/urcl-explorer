@@ -5,12 +5,27 @@ import { Emulator, Step_Result } from "../../emulator/emulator.js";
 import { parse } from "../../emulator/parser.js";
 import { Arr, enum_strings, expand_warnings, memoryToString, registers_to_string } from "../../emulator/util.js";
 import { parse_argv } from "../args.js";
-import Canvas from "canvas"
+import {Canvas} from "canvas"
 import { Color_Mode, Display } from "../../emulator/devices/display.js";
 import { URCL_Header } from "../../emulator/instructions.js";
 import { Storage } from "../../emulator/devices/storage.js";
 import { RNG } from "../../emulator/devices/rng.js";
+import { Response } from "node-fetch";
 
+const allowed_domains = [
+    "github.io",
+    "github.com",
+    "githubusercontent.com",
+]
+
+function setch(path: string) {
+    const url = new URL(path);
+    if (!allowed_domains.some((domain) => url.hostname.endsWith(domain))) {
+        return new Response(`disallowed host ${url.hostname} must be subdomain of: ${allowed_domains}`, {status: 400});
+    }
+
+    return fetch(path);
+}
 
 const emus: Map<any, ReturnType<typeof discord_emu>> = new Map();
 
@@ -56,10 +71,13 @@ function discord_emu(){
     let quality = 10;
     let text_end = "\n";
     let storage: undefined | Storage;
+    let no_video = false;
     let argv_res: any;
     const emulator = new Emulator({on_continue, warn: (str) => std_info += str + "\n", max_memory: () => 1024 * 1024 * 512});
     emulator.add_io_device(new RNG());
-    let display: Display = new Display(Canvas.createCanvas(1,1).getContext("2d") as CanvasRenderingContext2D, 8, Color_Mode.PICO8, true)
+    const canvas = new Canvas(1,1, "image");
+    const ctx = canvas.getContext("2d", {alpha: false}) as unknown as CanvasRenderingContext2D;
+    let display: Display = new Display(ctx, 8, Color_Mode.PICO8, true)
     
     const console_io = new Console_IO({
         read(callback){
@@ -110,13 +128,16 @@ function discord_emu(){
         stdout = "";
         std_info = "";
         emulator.reset();
-        emulator.shrink_buffer();
         storage = undefined;
         display.buffers.length = 0;
     }
     function o(){
         const out = stdout;
         const info = std_info;
+        if (no_video && display.buffers) {
+            display.buffers = display.buffers.slice(display.buffers.length-1);
+            rendered_count = 1;
+        }
         const all_screens = display.buffers.slice();
         const screens = all_screens.slice(rendered_count);
         std_info = "";
@@ -150,8 +171,9 @@ function discord_emu(){
             __mem_start: 0,
             __mem_end: -1,
             __little_endian: false,
+            __no_video: false,
         });
-        const {args, flags: {__width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size, __little_endian}} = argv_res;
+        const {args, flags: {__width, __height, __color, __scale, __quality, __text_end, __help, __storage, __storage_size, __little_endian, __no_video}} = argv_res;
         const usage = `Usage:
 start emulator: 
     !urcx-emu [<...options>] [<source url>]
@@ -191,6 +213,9 @@ options:
     --scale <number>
         sets the scale of the display output; defaults to 1, meaning the output is the same size as the buffer
 
+    --no-video
+        Always send the display as an image even if more frames have been drawn
+
     --storage <file>
         the file the storage device should open
     
@@ -205,6 +230,8 @@ options:
             return o();
         }
 
+        no_video = __no_video;
+
         text_end = __text_end.val === TextEnd.LF ? "\n" : (__text_end.val === TextEnd.Null ? "\0" : "");
         scale = __scale;
         quality = __quality;
@@ -215,7 +242,7 @@ options:
                 std_info += `ERROR: no source specified`
                 return o();
             }
-            source = await (await fetch(file_name)).text();
+            source = await (await setch(file_name)).text();
             s_name = file_name.split("/").at(-1);
         }
 
@@ -239,7 +266,7 @@ options:
         if (__storage || __storage_size){
             let bytes: Uint8Array;
             if (__storage){
-                const buf = await (await fetch(__storage)).arrayBuffer();
+                const buf = await (await setch(__storage)).arrayBuffer();
                 bytes = new Uint8Array(buf);
             } else {
                 bytes = new Uint8Array();
@@ -249,9 +276,9 @@ options:
             emulator.add_io_device(storage);
         }
         
-        const canvas = Canvas.createCanvas(__width, __height);
-        const ctx = canvas.getContext("2d", {alpha: false});
-        display = new Display(ctx as CanvasRenderingContext2D, program.headers[URCL_Header.BITS].value, __color.val, true);
+        const canvas = new Canvas(__width, __height, "image");
+        const ctx = canvas.getContext("2d", {"alpha": false}) as unknown as CanvasRenderingContext2D;
+        display = new Display(ctx, program.headers[URCL_Header.BITS].value, __color.val, true);
         emulator.add_io_device(display);
 
         state = Step_Result.Continue;

@@ -1,4 +1,4 @@
-import { Export_Type, RefType, Section_Type, WASM_Opcode, WASM_Type } from "./wasm";
+import { Export_Type, RefType, Section_Type, WASM_Opcode, WASM_Type } from "./wasm.js";
 
 const text_encoder = new TextEncoder();
 const text_decoder = new TextDecoder();
