@@ -1,0 +1,108 @@
+BITS 32
+MINHEAP 64000
+
+IMM r8 M0
+
+.loop
+    IN r1 %NUMB
+    IN r0 %TEXT
+    IN r2 %NUMB
+
+    // OUT %NUMB r1
+    // OUT %TEXT ' '
+    // OUT %NUMB r2
+    // OUT %TEXT '\n'
+    
+    STR r8 r1
+    INC r8 r8
+    STR r8 r2
+    INC r8 r8
+
+    IN r1 %TEXT
+    BRZ .exit r1
+    JMP .loop
+
+.exit
+// OUT %TEXT '\n'
+// OUT %TEXT '\n'
+
+
+IMM r1 M0
+CAL	.sort
+IMM r1 M1
+CAL .sort
+
+IMM r1 M0
+IMM r7 0
+.sub_loop
+    LOD r2 r1
+    INC r1 r1
+    LOD r3 r1
+    INC r1 r1
+    SUB r4 r2 r3
+    ABS r4 r4
+    ADD r7 r7 r4
+
+    // OUT %NUMB r2
+    // OUT %TEXT '-'
+    // OUT %NUMB r3
+    // OUT %TEXT '='
+    // OUT %NUMB r4
+    // OUT %TEXT '\n'
+
+    BRL .sub_loop r1 r8
+
+OUT %NUMB r7
+OUT %TEXT '\n'
+
+IMM r1 M0
+IMM r7 0
+.sim_loop
+    LOD r3 r1
+
+    IMM r2 M1
+    .count_loop
+        LOD r4 r2
+
+        BNE .skip_count r3 r4
+        ADD r7 r7 r3        
+        .skip_count
+
+        ADD r2 r2 2
+        BRL .count_loop r2 r8
+
+    ADD r1 r1 2
+    BRL .sim_loop r1 r8
+
+OUT %NUMB r7
+OUT %TEXT '\n'
+
+
+HLT
+.sort
+    .sort_loop
+        MOV r2 r1
+        LOD r3 r1
+        .sort_loop2
+            ADD r2 r2 2
+            BGE	.sort_loop2_break r2 r8
+            LOD r4 r2            
+            BLE .no_swap r3 r4
+
+            SUB r2 r2 2
+            STR r2 r4
+
+            ADD r2 r2 2
+            STR r2 r3
+
+            JMP .sort_loop
+            .no_swap
+            MOV r3 r4
+            BRL .sort_loop2 r2 r8
+        .sort_loop2_break
+        
+        ADD r1 r1 2
+        BRL .sort_loop r1 r8
+
+    RET
+
