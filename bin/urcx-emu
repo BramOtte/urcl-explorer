@@ -1,2 +1,2 @@
 #!/bin/sh
-node ../js/node/urcx-emu.js $@
+node ${0%/*}/../js/node/urcx-emu.js $@
