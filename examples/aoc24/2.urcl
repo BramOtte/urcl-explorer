@@ -1,0 +1,66 @@
+BITS 16
+
+IMM r8 0
+
+.loop
+    IMM r7 1
+
+    IN r1 %NUMB
+    IN r2 %TEXT
+
+    IN r3 %NUMB
+    IN r2 %TEXT
+
+
+    OUT %NUMB r1
+    OUT %TEXT ' '
+    OUT %NUMB r3
+    OUT %TEXT ' '
+
+
+    SUB r4 r3 r1
+    ABS r6 r4
+    AND r4 r4 @MSB
+
+    BRZ .incorrect r6
+    BRG .incorrect r6 3
+    JMP .correct
+    .incorrect
+        IMM r7 0
+    .correct
+
+    .line_loop
+        IN r1 %NUMB
+        IN r2 %TEXT
+        OUT %NUMB r1
+        OUT %TEXT ' '
+
+        SUB r5 r1 r3
+        ABS r6 r5
+        AND r5 r5 @MSB
+
+        MOV r3 r1
+
+        BNE .incorrect2 r4 r5
+        BRZ .incorrect2 r6
+        BRG .incorrect2 r6 3
+
+        JMP .correct2
+        .incorrect2
+            IMM r7 0
+
+        .correct2
+
+        BRE .line_loop r2 ' '
+    OUT %NUMB r7
+    OUT %TEXT '\n'
+
+    ADD r8 r8 r7
+
+    BNZ .loop r2
+
+
+.done
+OUT %NUMB r8
+OUT %TEXT '\n'
+OUT %TEXT '\n'
