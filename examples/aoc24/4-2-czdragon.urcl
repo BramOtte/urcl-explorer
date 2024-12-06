@@ -1,0 +1,115 @@
+// Advent of code 2024, day 4 part 2:
+// The word search puzzle isn't actually an XMAS puzzle, it's an X-MAS puzzle in which
+// you're supposed to find two MAS in the shape of an X. One way to achieve that is like this:
+// M.S
+// .A.
+// M.S
+// Result is the total count of all found X-MAS
+BITS 16
+MINREG 10
+MINHEAP 0
+MINSTACK 64
+@define x r1
+@define y r2 // stored as multiple of "line" (for fast indexing)
+@define maxx r3 // exclusive
+@define maxy r4 // exclusive, same as y, contains file size (in bytes)
+@define line r5
+@define index r6
+@define tmp r7
+@define counter r8
+// 1.2
+// .A.
+// 3.4
+@define chars_14 r9
+@define chars_23 r10
+IMM x 0
+IMM y 0
+CAL .get_maxx
+CAL .get_maxy
+IMM counter 0
+MOV y line // because there is NO check for boundaries afterwards
+.y_loop
+  IMM x 1 // because there is NO check for boundaries afterwards
+  .x_loop
+    CAL .check
+    INC x x
+    BRL .x_loop x maxx
+  ADD y y line
+  BRL .y_loop y maxy
+OUT %NUMB counter
+HLT
+
+.getc // tmp = file[x, y]
+ADD index x y
+RSH tmp index
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd index
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.get_maxx
+  CAL .getc
+  INC x x
+  BRE .windows_enter tmp '\r'
+  BNE .get_maxx tmp '\n'
+.linux_enter
+DEC maxx x // not counting the enter
+MOV line x // but counting to the first char of next line
+DEC maxx maxx // because there is NO check for boundaries afterwards
+RET
+.windows_enter
+DEC maxx x
+INC line x
+DEC maxx maxx // because there is NO check for boundaries afterwards
+RET
+
+.get_maxy
+IN maxy %ADDR // get file size (in words)
+LSH maxy maxy // convert to bytes
+SUB maxy maxy line // because there is NO check for boundaries afterwards
+RET
+
+.check
+//check middle A
+CAL .getc
+BNE .ret tmp 'A'
+//sum opposite chars
+//1
+SUB x x 1
+SUB y y line
+CAL .getc
+ADD x x 1
+ADD y y line
+MOV chars_14 tmp
+//2
+ADD x x 1
+SUB y y line
+CAL .getc
+SUB x x 1
+ADD y y line
+MOV chars_23 tmp
+//3
+SUB x x 1
+ADD y y line
+CAL .getc
+ADD x x 1
+SUB y y line
+ADD chars_23 chars_23 tmp
+//4
+ADD x x 1
+ADD y y line
+CAL .getc
+SUB x x 1
+SUB y y line
+ADD chars_14 chars_14 tmp
+//check
+BNE .ret chars_14 chars_23
+ADD tmp 'M' 'S'
+BNE .ret chars_14 tmp
+  INC counter counter
+.ret
+RET

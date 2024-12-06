@@ -1,0 +1,93 @@
+// TODO: cleanup
+// MINREG 6
+// MINSTACK 0
+// MINHEAP 0
+@DEFINE LEN 17
+
+DW [69 69]
+.array
+DW [221 165 205 49 220 217 186 5 116 80 67 50 213 208 96 33 99]
+
+IMM R6 .array
+IMM R1 LEN
+CAL .heap_sort
+HLT
+
+.heap_sort
+    IMM R2 0         // R2 = 0
+    .loop            // while R2 < LEN:
+        LLOD R4 .array R2         // R4 = array[R2]
+        CAL .out_numb     // out_numb(R4)
+        INC R2 R2         // R2 += 1
+        BRL .loop R2 LEN
+    OUT %TEXT '\n'
+    OUT %TEXT '\n'
+
+    IMM R1 LEN
+    IMM R2 LEN
+    .construct_loop         // while R2 != 0:
+        DEC R2 R2         // R2 -= 1
+        MOV R3 R2
+        CAL .bubble_down        // bubble_down(R2, R1)
+        BNZ .construct_loop R2
+
+
+
+    IMM R2 0         // R2 = 0
+    .print_loop         // while R1 != 0:
+        DEC R1 R1           // R1 -= 1
+        LOD R4 .array       // R4 = array[0]
+
+        CAL .out_numb       // out_numb(R2)
+        INC R2 R2           // R2 += 1
+
+        LLOD R4 .array R1           // R4 = array[R1]
+        STR .array R4       // array[0] = R4
+        // LSTR .array R1 r4   // array[R1] = R4
+
+        IMM R3 0
+        CAL .bubble_down    // bubble_down(0, R1)
+        BNZ .print_loop R1
+RET
+
+.bubble_down            // def bubble_down(index: R3, R1) // uses .array and mutates R3, R4 and R5;
+    LSH R3 R3
+    INC R3 R3                 // R3 = R3 * 2 + 1
+    BGE .ret R3 R1          // if R3 >= R1: return
+    LLOD R4 .array R3              // R4 = array[R3]
+    INC R3 R3                 // R3 += 1
+    BGE .R4 R3 R1         // if R3 >= R1: goto R4
+    LLOD R5 .array R3             // R5 = array[R3]
+    BLE .R4 R5 R4    // if R3 < R1 && R5 < R4:
+        DEC R3 R3
+        RSH R3 R3                 // R3 = (R3 - 1) / 2
+        LLOD R4 .array R3              // R4 = array[R3]
+        BLE .ret R5 R4     // if R5 >= R4: return
+        LSTR .array R3 R5             // array[R3] = R5
+        INC R3 R3
+        LSH R3 R3                 // R3 = (R3 + 1) * 2
+        LSTR .array R3 R4              // array[R3] = R4
+        JMP .bubble_down        // bubble_down(R3, R1)
+    .R4                   // else:
+        DEC R3 R3
+        RSH R3 R3                 // R3 = (R3 - 1) / 2
+        LLOD R5 .array R3             // R5 = array[R3]
+        BLE .ret R4 R5     // if R4 >= R5: return
+        LSTR .array R3 R4              // array[R3] = R4
+        LSH R3 R3                 
+        INC R3 R3                 // R3 = R3 * 2 + 1
+        LSTR .array R3 R5             // array[R3] = R5
+        JMP .bubble_down        // bubble_down(R3, R1)
+.ret
+RET
+
+.out_numb
+    OUT %NUMB R4
+    OUT %TEXT ' '
+
+    AND R3 R2 3
+    BNE .out_numb_skip R3 3
+    OUT %TEXT '\n'
+    .out_numb_skip
+
+    RET

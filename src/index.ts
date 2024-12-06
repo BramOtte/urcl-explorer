@@ -552,16 +552,20 @@ function update_views(){
 }
 change_color_mode();
 
+let storage_promise: undefined | Promise<unknown>;
 
 started = true;
 if (srcurl){
-    fetch(srcurl).then(res => res.text()).then((text) => {
+    fetch(srcurl).then(res => res.text()).then(async (text) => {
+        await storage_promise;
         if (source_input.value){
             return;
         }
         save();
         source_input.value = text;
-        compile_and_run();
+        if (auto_run_input.checked) {
+            compile_and_run();
+        }
     });
 }
 else
@@ -575,7 +579,7 @@ autofill:
 }
 
 if (storage_url) {
-    fetch(storage_url).then(res => res.arrayBuffer()).then(buffer => {
+    storage_promise = fetch(storage_url).then(res => res.arrayBuffer()).then(buffer => {
         if (storage_uploaded != null) {
             return;
         }

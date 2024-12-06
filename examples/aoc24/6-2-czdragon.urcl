@@ -1,0 +1,188 @@
+// Advent of code 2024, day 6 part 2:
+// The map [input] shows a room with obstacles and a guard in it.
+// '^' => guard is currently facing up from the perspective of the map.
+// '#' => obstruction
+// '.' => free space
+// Guard repeatedly follows these steps until he goes outside of the map:
+// - If there is something directly in front of you, turn right 90 degrees.
+// - Otherwise, take a step forward.
+// For how many squares we can add an obstacle to them so that the guard gets stuck in an infinite loop?
+BITS 16
+MINREG 20
+MINHEAP 8000
+MINSTACK 16
+@define x r1
+@define y r2
+@define direction_x r3
+@define direction_y r4
+@define maxx r5 // exclusive
+@define maxy r6 // exclusive
+@define line r7 // maxx + enter (platform specific)
+@define index r8
+@define tmp r9
+@define counter r10
+@define guard_x r11
+@define guard_y r12
+@define addr_bottom r13
+@define addr_top r14
+@define direction_bit r15
+@define obstacle_x r16
+@define obstacle_y r17
+IMM x 0
+IMM y 0
+CAL .get_maxx
+CAL .get_maxy
+IMM counter 0
+IMM obstacle_y 0
+.obstacle_y_loop
+  IMM obstacle_x 0
+  .obstacle_x_loop
+    JMP .check_obstacle_position
+    .back_from_check_obstacle_position
+    INC obstacle_x obstacle_x
+    BRL .obstacle_x_loop obstacle_x maxx
+  INC obstacle_y obstacle_y
+  BRL .obstacle_y_loop obstacle_y maxy
+OUT %NUMB counter
+HLT
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.getc // tmp = file[x, y]
+MLT tmp y line
+ADD index x tmp
+RSH tmp index
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd index
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.get_maxx
+  CAL .getc
+  INC x x
+  BRE .windows_enter tmp '\r'
+  BNE .get_maxx tmp '\n'
+.linux_enter
+DEC maxx x // not counting the enter (x has already increased btw)
+MOV line x // but counting to the first char of next line
+RET
+.windows_enter
+DEC maxx x
+INC line x
+RET
+
+.get_maxy
+IN maxy %ADDR // get file size (in words)
+INC maxy maxy // add '\n' at the end
+LSH maxy maxy // convert to bytes
+DIV maxy maxy line // calculate line count
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.check_obstacle_position
+CAL .find_guard
+MOV x obstacle_x
+MOV y obstacle_y
+CAL .getc
+BRE .back_from_check_obstacle_position tmp '#'
+BRE .back_from_check_obstacle_position tmp '^'
+CAL .fill_ram_with_0s
+IMM direction_x 0
+IMM direction_y -1
+.loop
+  JMP .visit_square
+  .back_from_visit_square
+  JMP .move_boundcheck
+  .back_from_move_boundcheck
+  JMP .loop
+
+.fill_ram_with_0s
+IMM tmp 0
+.fill_loop
+  STR tmp 0
+  INC tmp tmp
+  BRL .fill_loop tmp @HEAP
+RET
+
+.find_guard
+IMM y 0
+.y_loop
+  IMM x 0
+  .x_loop
+    CAL .getc
+    BNE .not_found tmp '^'
+    .found
+      MOV guard_x x
+      MOV guard_y y
+      RET
+    .not_found
+    INC x x
+    BRL .x_loop x maxx
+  INC y y
+  BRL .y_loop y maxy
+OUT %TEXT 'X' // guard not found
+HLT
+
+.visit_square
+// calculate addresses (4 bits per square)
+MLT tmp guard_y maxx
+ADD index guard_x tmp // index = guard_x + guard_y * maxx
+BSR addr_top index 2
+AND addr_bottom index 3
+BSL addr_bottom addr_bottom 2
+// (0,-1)-> 1<<3, (1,0)-> 1<<2, (0,1)-> 1<<1, (-1,0)-> 1<<0
+// 0bURDL = up right down left
+BNE ~+2 direction_y -1
+  IMM direction_bit 8
+BNE ~+2 direction_x 1
+  IMM direction_bit 4
+BNE ~+2 direction_y 1
+  IMM direction_bit 2
+BNE ~+2 direction_x -1
+  IMM direction_bit 1
+// load previous state from RAM
+LOD tmp addr_top
+BSR tmp tmp addr_bottom
+AND tmp tmp 15 //take the 4 bits i'm interested in
+AND tmp tmp direction_bit
+BNZ .found_infinite_loop tmp // if it is 0 => not visited with this state
+.newly_visited
+// save with the new direction bit
+BSL index direction_bit addr_bottom
+LOD tmp addr_top
+OR tmp tmp index // or ADD or XOR
+STR addr_top tmp
+JMP .back_from_visit_square
+.found_infinite_loop // this obstacle produces a loop for the guard
+
+INC counter counter
+JMP .back_from_check_obstacle_position // return to the obstacle loop
+
+.move_boundcheck
+ADD x guard_x direction_x
+ADD y guard_y direction_y
+BRN .end x
+BRN .end y
+BGE .end x maxx
+BGE .end y maxy
+BNE ~+3 obstacle_x x
+BNE ~+2 obstacle_y y
+  JMP .only_rotation
+CAL .getc
+BNE .actual_move tmp '#'
+.only_rotation // rotate right: (0,-1)->(1,0)
+  MOV tmp direction_x
+  NEG direction_x direction_y
+  MOV direction_y tmp
+  JMP .back_from_move_boundcheck
+.actual_move
+MOV guard_x x
+MOV guard_y y
+JMP .back_from_move_boundcheck
+.end // this obstacle doesn't produce a loop for the guard
+JMP .back_from_check_obstacle_position

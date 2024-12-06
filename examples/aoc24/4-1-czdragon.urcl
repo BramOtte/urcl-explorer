@@ -1,0 +1,119 @@
+// Advent of code 2024, day 4 part 1:
+// This word search allows words to be horizontal, vertical, diagonal, written backwards, or even overlapping other words.
+// Result is the total count of all found XMAS words
+BITS 16
+MINREG 11
+MINHEAP 0
+MINSTACK 64
+@define x r1
+@define y r2 // stored as multiple of "line" (for fast indexing)
+@define dx r3
+@define dy r4 // same as y
+@define maxx r5 // exclusive
+@define maxy r6 // exclusive, same as y, contains file size (in bytes)
+@define line r7
+@define index r8
+@define tmp r9
+@define char r8
+@define i r10
+@define counter r11
+IMM x 0
+IMM y 0
+CAL .get_maxx
+CAL .get_maxy
+IMM counter 0
+IMM y 0
+.y_loop
+  IMM x 0
+  .x_loop
+    CAL .check_8_directions
+    INC x x
+    BRL .x_loop x maxx
+  ADD y y line
+  BRL .y_loop y maxy
+OUT %NUMB counter
+HLT
+
+.getc // tmp = file[x, y]
+ADD index x y
+RSH tmp index
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd index
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.get_maxx
+  CAL .getc
+  INC x x
+  BRE .windows_enter tmp '\r'
+  BNE .get_maxx tmp '\n'
+.linux_enter
+DEC maxx x // not counting the enter
+MOV line x // but counting to the first char of next line
+RET
+.windows_enter
+DEC maxx x
+INC line x
+RET
+
+.get_maxy
+IN maxy %ADDR // get file size (in words)
+LSH maxy maxy // convert to bytes
+RET
+
+.check_8_directions
+IMM dx 0
+NEG dy line
+CAL .check_this_direction
+IMM dx 1
+NEG dy line
+CAL .check_this_direction
+IMM dx 1
+IMM dy 0
+CAL .check_this_direction
+IMM dx 1
+MOV dy line
+CAL .check_this_direction
+IMM dx 0
+MOV dy line
+CAL .check_this_direction
+IMM dx -1
+MOV dy line
+CAL .check_this_direction
+IMM dx -1
+IMM dy 0
+CAL .check_this_direction
+IMM dx -1
+NEG dy line
+CAL .check_this_direction
+RET
+
+.check_this_direction
+PSH x
+PSH y
+IMM i 0
+.checking_loop
+  BRN .not_found x
+  BRN .not_found y
+  BGE .not_found x maxx
+  BGE .not_found y maxy
+  CAL .getc
+  LLOD char i .searched_string
+  BNE .not_found tmp char
+  ADD x x dx
+  ADD y y dy
+  INC i i
+  BRL .checking_loop i M0
+.found
+INC counter counter
+.not_found
+POP y
+POP x
+RET
+
+.searched_string
+DW "XMAS"

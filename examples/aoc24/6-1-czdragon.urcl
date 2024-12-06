@@ -1,0 +1,145 @@
+// Advent of code 2024, day 6 part 1:
+// The map [input] shows a room with obstacles and a guard in it.
+// '^' => guard is currently facing up from the perspective of the map.
+// '#' => obstruction
+// '.' => free space
+// Guard repeatedly follows these steps until he goes outside of the map:
+// - If there is something directly in front of you, turn right 90 degrees.
+// - Otherwise, take a step forward.
+// How many unique squares does guard visit before exiting the map?
+BITS 16
+MINREG 16
+MINHEAP 2000
+MINSTACK 2
+@define x r1
+@define y r2
+@define direction_x r3
+@define direction_y r4
+@define maxx r5 // exclusive
+@define maxy r6 // exclusive
+@define line r7 // maxx + enter (platform specific)
+@define index r8
+@define tmp r9
+@define counter r10
+@define guard_x r11
+@define guard_y r12
+@define addr_bottom r13
+@define addr_top r14
+IMM x 0
+IMM y 0
+CAL .get_maxx
+CAL .get_maxy
+CAL .find_guard
+CAL .fill_ram_with_0s
+IMM direction_x 0
+IMM direction_y -1
+IMM counter 0
+.loop
+  CAL .visit_square
+  CAL .move_boundcheck
+  JMP .loop
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.getc // tmp = file[x, y]
+MLT tmp y line
+ADD index x tmp
+RSH tmp index
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd index
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.get_maxx
+  CAL .getc
+  INC x x
+  BRE .windows_enter tmp '\r'
+  BNE .get_maxx tmp '\n'
+.linux_enter
+DEC maxx x // not counting the enter (x has already increased btw)
+MOV line x // but counting to the first char of next line
+RET
+.windows_enter
+DEC maxx x
+INC line x
+RET
+
+.get_maxy
+IN maxy %ADDR // get file size (in words)
+INC maxy maxy // add '\n' at the end
+LSH maxy maxy // convert to bytes
+DIV maxy maxy line // calculate line count
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.fill_ram_with_0s
+IMM tmp 0
+.fill_loop
+  STR tmp 0
+  INC tmp tmp
+  BRL .fill_loop tmp @HEAP
+RET
+
+.find_guard
+IMM y 0
+.y_loop
+  IMM x 0
+  .x_loop
+    CAL .getc
+    BNE .not_found tmp '^'
+    .found
+      MOV guard_x x
+      MOV guard_y y
+      RET
+    .not_found
+    INC x x
+    BRL .x_loop x maxx
+  INC y y
+  BRL .y_loop y maxy
+OUT %TEXT 'X' // guard not found
+HLT
+
+.visit_square
+MLT tmp guard_y maxx
+ADD index guard_x tmp // index = guard_x + guard_y * maxx
+BSR addr_top index 4
+AND addr_bottom index 15
+LOD tmp addr_top
+BSR tmp tmp addr_bottom
+BEV .newly_visited tmp
+  RET
+.newly_visited
+LOD tmp addr_top
+BSL index 1 addr_bottom
+OR tmp tmp index // or ADD or XOR
+STR addr_top tmp
+INC counter counter
+RET
+
+.move_boundcheck
+ADD x guard_x direction_x
+ADD y guard_y direction_y
+BRN .end x
+BRN .end y
+BGE .end x maxx
+BGE .end y maxy
+CAL .getc
+BNE .actual_move tmp '#'
+.only_rotation // rotate right: (0,-1)->(1,0)
+  MOV tmp direction_x
+  NEG direction_x direction_y
+  MOV direction_y tmp
+  RET
+.actual_move
+MOV guard_x x
+MOV guard_y y
+RET
+
+.end // guard exited the map
+OUT %NUMB counter
+HLT

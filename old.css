@@ -17,6 +17,10 @@ a:hover {
   color: white;
 }
 
+ul {
+  margin-top: 0.2em;
+}
+
 html, body {
   margin: 0;
   overflow: hidden;
