@@ -1,0 +1,166 @@
+// Advent of code 2024, day 3 part 2:
+// Traverse the string and look for substrings in following formats:
+// - "mul(%d,%d)" where %d is number 1-999
+// - "do()"
+// - "don't()"
+// "do" enables multiplications and "don't" disables them. Multiplications are enabled at the beginning.
+// sum all the products of all the enabled multiplications
+BITS 16
+MINREG 10
+MINHEAP 0
+MINSTACK 10
+@define file_index r1
+@define file_len r2
+@define i r3
+@define tmp r4
+@define a r5
+@define b r6
+@define sum_u r7 // upper 16 bits of answer
+@define sum_l r8 // lower 16 bits of answer
+@define num r9
+@define enabled r10
+@define @nullchar 0
+@define @apostrophe 39 // '\'' is BROKEN @BRAM PLS FIX
+CAL .file_len
+IMM sum_u 0
+IMM sum_l 0
+IMM enabled 1
+.loop
+  CAL .check_for_substring
+  INC file_index file_index
+  BRL .loop file_index file_len
+CAL .printnum
+HLT
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.getc // tmp = file[i]
+BRL .getc_ok i file_len
+  IMM tmp @nullchar
+  RET
+.getc_ok
+RSH tmp i
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd i
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.file_len
+IN file_len %ADDR // get file size (in words)
+LSH file_len file_len // convert to bytes
+RET
+
+.getnum // load number from i onwards to num, 0 if no number is present
+IMM num 0
+.getnum_loop
+  CAL .getc
+  BRL .ret tmp '0'
+  BRG .ret tmp '9'
+  SUB tmp tmp '0'
+  MLT num num 10
+  ADD num num tmp
+  INC i i
+  JMP .getnum_loop
+RET
+
+.printnum // print number {sum_u,sum_l}
+// max is 655_359_999
+DIV a sum_l 10_000 // upper 4-5 digits
+MOD b sum_l 10_000// lower 4 digits
+BRZ .printnum_skip sum_u
+.printnum_loop
+  ADD a a 6
+  ADD b b 5_536
+  BRL ~+3 b 10_000
+    INC a a
+    SUB b b 10_000
+  DEC sum_u sum_u
+  BNZ .printnum_loop sum_u
+.printnum_skip
+BRZ ~+2 a
+  OUT %NUMB a
+OUT %NUMB b
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.check_for_substring
+.do //"do()"
+MOV i file_index
+CAL .getc
+BNE .dont tmp 'd'
+INC i i
+CAL .getc
+BNE .dont tmp 'o'
+INC i i
+CAL .getc
+BNE .dont tmp '('
+INC i i
+CAL .getc
+BNE .dont tmp ')'
+IMM enabled 1
+RET
+.dont //"don't()"
+MOV i file_index
+CAL .getc
+BNE .mul tmp 'd'
+INC i i
+CAL .getc
+BNE .mul tmp 'o'
+INC i i
+CAL .getc
+BNE .mul tmp 'n'
+INC i i
+CAL .getc
+BNE .mul tmp @apostrophe
+INC i i
+CAL .getc
+BNE .mul tmp 't'
+INC i i
+CAL .getc
+BNE .mul tmp '('
+INC i i
+CAL .getc
+BNE .mul tmp ')'
+IMM enabled 0
+RET
+.mul //"mul(%d,%d)"
+BNZ ~+2 enabled
+  RET
+MOV i file_index
+CAL .getc
+BNE .ret tmp 'm'
+INC i i
+CAL .getc
+BNE .ret tmp 'u'
+INC i i
+CAL .getc
+BNE .ret tmp 'l'
+INC i i
+CAL .getc
+BNE .ret tmp '('
+INC i i
+CAL .getnum
+BRE .ret num 0
+MOV a num
+CAL .getc
+BNE .ret tmp ','
+INC i i
+CAL .getnum
+BRE .ret num 0
+MOV b num
+CAL .getc
+BNE .ret tmp ')'
+//multiply and add to answer
+MLT tmp a b
+BNC ~+2 sum_l tmp
+  INC sum_u sum_u
+ADD sum_l sum_l tmp
+UMLT tmp a b
+ADD sum_u sum_u tmp
+.ret
+RET
