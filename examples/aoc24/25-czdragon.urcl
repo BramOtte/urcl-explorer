@@ -1,0 +1,125 @@
+// Advent of code 2024, day 25:
+// There are sets of 5x7 grids; locks and keys
+// Locks have all '#' in top row, keys in bottom row
+// In other rows, keys and locks have pins '#' or free space '.'
+// Try matching all the keys to all the locks
+// If some of the '#' overlap, you can't put that key into that lock
+// How many lock - key pairs that fit each other are there?
+
+// This program is windows only: enter is expected to be \r\n
+// To make it linux compatible, use block_size 43, enter_size 1
+// Decrease values in LUT: decrease first row by 1, second by 2...
+
+BITS 16
+MINREG 8
+MINHEAP 0
+MINSTACK 4
+@define i r1
+@define tmp r2
+@define sum r3
+@define idx r4
+@define idx_max r5
+@define idx_main r6
+@define is_key r7
+@define lut_idx r7
+@define key_val r8
+@define lock_val r2
+@define @block_size 51 // 43
+@define @enter_size 2 // 1
+IMM sum 0
+IMM idx_main 0
+CAL .idx_max
+.main_loop
+  MOV idx idx_main
+  CAL .is_key
+  BNZ ~+2 is_key
+    CAL .test_lock
+  INC idx_main idx_main
+  BRL .main_loop idx_main idx_max
+.end
+OUT %NUMB sum
+HLT
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.ret
+RET
+
+.is_key
+IMM is_key 1
+MLT i idx @block_size
+CAL .getc
+BNE .ret tmp '#'
+INC i i
+CAL .getc
+BNE .ret tmp '#'
+INC i i
+CAL .getc
+BNE .ret tmp '#'
+INC i i
+CAL .getc
+BNE .ret tmp '#'
+INC i i
+CAL .getc
+BNE .ret tmp '#'
+IMM is_key 0
+RET
+
+.test_lock
+IMM idx 0
+.test_lock_loop
+  CAL .is_key
+  BRZ .test_lock_skip is_key
+    IMM lut_idx .lut
+    .lut_check_loop
+      // get one key element
+      MLT i idx @block_size
+      LOD tmp lut_idx
+      ADD i i tmp
+      CAL .getc
+      MOV key_val tmp
+      // get one lock element
+      MLT i idx_main @block_size
+      LOD tmp lut_idx
+      ADD i i tmp
+      CAL .getc
+      MOV lock_val tmp
+      // if not equal and are both '#': doesn't fit -> skip
+      BNE ~+2 key_val lock_val 
+        BRE .test_lock_skip key_val '#'
+      INC lut_idx lut_idx
+      BRL .lut_check_loop lut_idx M0
+    INC sum sum
+  .test_lock_skip
+  INC idx idx
+  BRL .test_lock_loop idx idx_max
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.getc // tmp = file[i]
+RSH tmp i
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd i
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.idx_max
+// 51 per lock/key + 47 for the last one
+IN idx_max %ADDR
+ADD idx_max idx_max @enter_size
+LSH idx_max idx_max
+DIV idx_max idx_max @block_size
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.lut
+DW [ 7 8 9 10 11 ]
+DW [ 14 15 16 17 18 ]
+DW [ 21 22 23 24 25 ]
+DW [ 28 29 30 31 32 ]
+DW [ 35 36 37 38 39 ]

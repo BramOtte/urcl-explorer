@@ -1,0 +1,150 @@
+// Advent of code 2024, day 8 part 1:
+// The map [input] shows an area with antenas.
+// Whenever there are two antenas in the row (even diagonally), they will produce an "antinode" like this:
+// 0..0..#...
+// 0 is the frequency of both antenas and # is their antinode.
+// Count all antinodes inside the area (bounds)
+BITS 16
+MINREG 16
+MINHEAP 2000
+MINSTACK 10
+@define x r1
+@define y r2
+@define maxx r3 // exclusive
+@define maxy r4 // exclusive
+@define line r5 // maxx + enter (platform specific)
+@define index r6
+@define tmp r7
+@define counter r8
+@define antena_x r9
+@define antena_y r10
+@define addr_bottom r11
+@define addr_top r12
+@define antena_frequency r13
+@define dx r14
+@define dy r15
+IMM x 0
+IMM y 0
+CAL .get_maxx
+CAL .get_maxy
+CAL .fill_ram_with_0s
+IMM counter 0
+IMM antena_y 0
+.y_loop
+  IMM antena_x 0
+  .x_loop
+    MOV x antena_x
+    MOV y antena_y
+    CAL .getc
+    BRE .not_antena tmp '.'
+      CAL .check
+    .not_antena
+    INC antena_x antena_x
+    BRL .x_loop antena_x maxx
+  INC antena_y antena_y
+  BRL .y_loop antena_y maxy
+OUT %NUMB counter
+HLT
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.getc // tmp = file[x, y]
+MLT tmp y line
+ADD index x tmp
+RSH tmp index
+OUT %ADDR tmp
+IN tmp %BUS
+BOD .odd index
+BSR tmp tmp 8
+RET
+.odd
+AND tmp tmp 255
+RET
+
+.get_maxx
+  CAL .getc
+  INC x x
+  BRE .windows_enter tmp '\r'
+  BNE .get_maxx tmp '\n'
+.linux_enter
+DEC maxx x // not counting the enter (x has already increased btw)
+MOV line x // but counting to the first char of next line
+RET
+.windows_enter
+DEC maxx x
+INC line x
+RET
+
+.get_maxy
+IN maxy %ADDR // get file size (in words)
+INC maxy maxy // add '\n' at the end
+LSH maxy maxy // convert to bytes
+DIV maxy maxy line // calculate line count
+RET
+
+//~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+.fill_ram_with_0s
+IMM tmp 0
+.fill_loop
+  STR tmp 0
+  INC tmp tmp
+  BRL .fill_loop tmp @HEAP
+RET
+
+.check
+MOV antena_frequency tmp
+IMM y 0
+.check_y_loop
+  IMM x 0
+  .check_x_loop
+    CAL .getc
+    BNE .not_found tmp antena_frequency
+    .found
+      PSH x
+      PSH y
+      SUB dx x antena_x
+      SUB dy y antena_y
+      OR tmp dx dy
+      BRZ .dont_check tmp // checking the same spot as antena
+      ADD x x dx
+      ADD y y dy
+      CAL .bound_check
+      BRZ .dont_check tmp // outside of bounds
+        CAL .visit_square
+      .dont_check
+      POP y
+      POP x
+    .not_found
+    INC x x
+    BRL .check_x_loop x maxx
+  INC y y
+  BRL .check_y_loop y maxy
+RET
+
+.bound_check
+IMM tmp 0
+BRN .ret x
+BRN .ret y
+BGE .ret x maxx
+BGE .ret y maxy
+IMM tmp 1
+.ret
+RET
+
+.visit_square // if ([x, y] != 1) { [x, y] = 1; counter++; }
+MLT tmp y maxx
+ADD index x tmp // index = x + y * maxx
+BSR addr_top index 4
+AND addr_bottom index 15
+LOD tmp addr_top
+BSR tmp tmp addr_bottom
+BEV .newly_visited tmp
+  RET
+.newly_visited
+LOD tmp addr_top
+BSL index 1 addr_bottom
+OR tmp tmp index // or ADD or XOR
+STR addr_top tmp
+INC counter counter
+RET
