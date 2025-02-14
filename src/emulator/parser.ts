@@ -410,7 +410,22 @@ function split_instruction
 (line: string, line_nr: number, inst_i: number, out: Instruction_Out, errors: Warning[]): boolean
 {
     const [opcode_str, ...ops] = split_words(line);
-    const opcode = enum_from_str(Opcode, opcode_str.toUpperCase().replace("@", "__"));
+    let upper = opcode_str.toUpperCase().replace("@", "__");
+
+    if (upper === "OUT%") {
+        upper = "OUT";
+    }
+    
+    if (upper === "IN%") {
+        upper = "IN";
+        if (ops.length >= 2) {
+            const tmp = ops[0];
+            ops[0] = ops[1];
+            ops[1] = tmp;
+        } 
+    }
+
+    const opcode = enum_from_str(Opcode, upper);
     if (opcode === undefined){
         return false;
     }
@@ -643,7 +658,7 @@ const backslash = '\\'.charCodeAt(0);
 const comma = ','.charCodeAt(0);
 const square_open = '['.charCodeAt(0);
 const square_close = ']'.charCodeAt(0);
-
+const percent = '%'.charCodeAt(0);
 
 function is_white(x: number) {
     return x <= space || x === comma;
@@ -677,11 +692,11 @@ function split_words(line: string): string[] {
             case square_open: case square_close: break;
             
             default: {
-                for (; i < line.length && !is_white(line.charCodeAt(i)); i += 1);
+                for (; i < line.length && !is_white(line.charCodeAt(i)) && line.charCodeAt(i) !== percent; i += 1);
             } break;
         }
 
-        out.push(line.substring(start, i));
+        out.push(line.substring(start, i + Number(line.charCodeAt(i) === percent)));
     }
 
     if (out.length == 0) {
