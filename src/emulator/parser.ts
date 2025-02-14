@@ -577,7 +577,8 @@ function parse_operant(
             
             let char_lit;
             try {
-                char_lit = JSON.parse(operant.replace(/"/g, "\\\"").replace(/'/g, '"')) as string;
+                const escaped = '"' + operant.replace(/"/g, "\\\"").slice(1, -1) + '"';
+                char_lit = JSON.parse(escaped) as string;
             } catch (e) {
                 errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
                 return undefined;
