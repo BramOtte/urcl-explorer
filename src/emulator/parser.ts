@@ -664,19 +664,21 @@ function escape_char(text: string, i: number): [string, number | undefined] {
         case 'v': return ['\v', i+2];
         case '0': return ['\0', i+2];
         case 'u': {
-            const end = i + 5;
+            const end = i + 6;
             if (end >= text.length) {
                 return ["expected 4 hex digits after \\u escape sequence", undefined];
             }
-            const code = Number.parseInt(text.substring(i+1, end), 16);
+            const code = Number.parseInt(text.substring(i+2, end), 16);
+            console.log(text, code);
             return [String.fromCharCode(code), end];
         };
         case 'x': {
-            const end = i + 3;
+            const end = i + 5;
             if (end >= text.length) {
                 return ["expected 2 hex digits after \\x escape sequence", undefined];
             }
-            const code = Number.parseInt(text.substring(i+1, end), 16);
+            const code = Number.parseInt(text.substring(i+2, end), 16);
+            console.log(text, code);
             return [String.fromCharCode(code), end];
         };
         default: {
@@ -684,7 +686,7 @@ function escape_char(text: string, i: number): [string, number | undefined] {
         }
     }}
 
-    return [text[0], i+1];
+    return [text[i], i+1];
 }
 
 function str_until(string: string, sub_string: string){
