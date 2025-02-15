@@ -574,6 +574,10 @@ function parse_operant(
                 errors.push(warn(line_nr, `Missing end of char`));
                 return [Operant_Type.Imm, 0];
             }
+            if (operant.length < 3) {
+                errors.push(warn(line_nr, `Empty char litteral`));
+                return [Operant_Type.Imm, 0];    
+            }
             
             let [char_lit, i] = escape_char(operant.substring(1, operant.length-1), 0, errors);
             if (i === undefined) {
@@ -594,14 +598,13 @@ function parse_operant(
             }
             const text = operant.substring(1, operant.length-1);
             
-            let string = "";
             for (let i = 0; i < text.length; ) {
                 const [c, j] = escape_char(text, i, errors);
                 if (j === undefined) {
-                    return;
+                    break;
                 }
                 i = j;
-                string += c;
+                data.push(c.codePointAt(0) ?? 0);
             }
             return [Operant_Type.String, value];
         }
@@ -639,6 +642,9 @@ function parse_operant(
 }
 
 function escape_char(text: string, i: number, errors: Warning[]): [string, number | undefined] {
+    if (i >= text.length) {
+        return ["", undefined]
+    }
     if (text[i] === '\\') { switch (text[i+1]) {
         case '"': return ['"', i+2];
         case '\'': return ['\'', i+2];
