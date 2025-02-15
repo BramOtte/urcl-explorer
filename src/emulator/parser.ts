@@ -663,6 +663,15 @@ function escape_char(text: string, i: number): [string, number | undefined] {
         case 't': return ['\t', i+2];
         case 'v': return ['\v', i+2];
         case '0': return ['\0', i+2];
+        case 'U': {
+            const end = i + 10;
+            if (end >= text.length) {
+                return ["expected 8 hex digits after \\U escape sequence", undefined];
+            }
+            const code = Number.parseInt(text.substring(i+2, end), 16);
+            console.log(text, code);
+            return [String.fromCodePoint(code), end];
+        };
         case 'u': {
             const end = i + 6;
             if (end >= text.length) {
