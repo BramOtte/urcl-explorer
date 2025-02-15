@@ -575,17 +575,9 @@ function parse_operant(
                 return [Operant_Type.Imm, 0];
             }
             
-            let char_lit;
-            try {
-                const escaped = '"' + operant.replace(/"/g, "\\\"").slice(1, -1) + '"';
-                char_lit = JSON.parse(escaped) as string;
-            } catch (e) {
-                errors.push(warn(line_nr, `Invalid character ${operant}\n  ${e}`));
+            let [char_lit, i] = escape_char(operant.substring(1, operant.length-1), 0, errors);
+            if (i === undefined) {
                 return undefined;
-            }
-
-            if (char_lit.length != 1) {
-                warnings.push(warn(line_nr, `Character literal should only contain one character but contains ${char_lit.length}`));
             }
 
             return [Operant_Type.Imm, char_lit.codePointAt(0) ?? char_lit.charCodeAt(0)];
@@ -600,16 +592,16 @@ function parse_operant(
                 errors.push(warn(line_nr, `missing end of string ${operant}`));
                 return [Operant_Type.String, value];
             }
+            const text = operant.substring(1, operant.length-1);
             
             let string = "";
-            try {
-                string = JSON.parse(operant) as string;
-            } catch (e) {
-                errors.push(warn(line_nr, `Invalid string ${operant}\n  ${e}`));
-                return undefined;
-            }
-            for (let i = 0; i < string.length; i++){
-                data.push(string.codePointAt(i) ?? 0);
+            for (let i = 0; i < text.length; ) {
+                const [c, j] = escape_char(text, i, errors);
+                if (j === undefined) {
+                    return;
+                }
+                i = j;
+                string += c;
             }
             return [Operant_Type.String, value];
         }
@@ -644,6 +636,43 @@ function parse_operant(
             }
         }
     }
+}
+
+function escape_char(text: string, i: number, errors: Warning[]): [string, number | undefined] {
+    if (text[i] === '\\') { switch (text[i+1]) {
+        case '"': return ['"', i+2];
+        case '\'': return ['\'', i+2];
+        case '\/': return ['/', i+2];
+        case '\\': return ['\\', i+2];
+        case 'b': return ['\b', i+2];
+        case 'f': return ['\f', i+2];
+        case 'n': return ['\n', i+2];
+        case 'r': return ['\r', i+2];
+        case 't': return ['\t', i+2];
+        case 'v': return ['\v', i+2];
+        case '0': return ['\0', i+2];
+        case 'u': {
+            const end = i + 5;
+            if (end >= errors.length) {
+                return ["expected 4 hex digits after \\u escape sequence", undefined];
+            }
+            const code = Number.parseInt(text.substring(i+1, end), 16);
+            return [String.fromCharCode(code), end];
+        };
+        case 'x': {
+            const end = i + 3;
+            if (end >= errors.length) {
+                return ["expected 2 hex digits after \\x escape sequence", undefined];
+            }
+            const code = Number.parseInt(text.substring(i+1, end), 16);
+            return [String.fromCharCode(code), end];
+        };
+        default: {
+            return [`Unexpected escape sequence \\${text[i+1]}`, undefined];
+        }
+    }}
+
+    return [text[0], i+1];
 }
 
 function str_until(string: string, sub_string: string){
