@@ -579,8 +579,11 @@ function parse_operant(
                 return [Operant_Type.Imm, 0];    
             }
             
-            let [char_lit, i] = escape_char(operant.substring(1, operant.length-1), 0, errors);
+            let [char_lit, i] = escape_char(operant.substring(1, operant.length-1), 0);
             if (i === undefined) {
+                if (char_lit) {
+                    errors.push(warn(line_nr, char_lit));
+                }
                 return undefined;
             }
 
@@ -599,8 +602,11 @@ function parse_operant(
             const text = operant.substring(1, operant.length-1);
             
             for (let i = 0; i < text.length; ) {
-                const [c, j] = escape_char(text, i, errors);
+                const [c, j] = escape_char(text, i);
                 if (j === undefined) {
+                    if (c) {
+                        errors.push(warn(line_nr, c));
+                    }
                     break;
                 }
                 i = j;
@@ -641,7 +647,7 @@ function parse_operant(
     }
 }
 
-function escape_char(text: string, i: number, errors: Warning[]): [string, number | undefined] {
+function escape_char(text: string, i: number): [string, number | undefined] {
     if (i >= text.length) {
         return ["", undefined]
     }
@@ -659,7 +665,7 @@ function escape_char(text: string, i: number, errors: Warning[]): [string, numbe
         case '0': return ['\0', i+2];
         case 'u': {
             const end = i + 5;
-            if (end >= errors.length) {
+            if (end >= text.length) {
                 return ["expected 4 hex digits after \\u escape sequence", undefined];
             }
             const code = Number.parseInt(text.substring(i+1, end), 16);
@@ -667,7 +673,7 @@ function escape_char(text: string, i: number, errors: Warning[]): [string, numbe
         };
         case 'x': {
             const end = i + 3;
-            if (end >= errors.length) {
+            if (end >= text.length) {
                 return ["expected 2 hex digits after \\x escape sequence", undefined];
             }
             const code = Number.parseInt(text.substring(i+1, end), 16);
