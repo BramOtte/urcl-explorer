@@ -673,7 +673,7 @@ function escape_char(text: string, i: number): [string, number | undefined] {
             return [String.fromCharCode(code), end];
         };
         case 'x': {
-            const end = i + 5;
+            const end = i + 4;
             if (end >= text.length) {
                 return ["expected 2 hex digits after \\x escape sequence", undefined];
             }
