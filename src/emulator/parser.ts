@@ -669,7 +669,6 @@ function escape_char(text: string, i: number): [string, number | undefined] {
                 return ["expected 8 hex digits after \\U escape sequence", undefined];
             }
             const code = Number.parseInt(text.substring(i+2, end), 16);
-            console.log(text, code);
             return [String.fromCodePoint(code), end];
         };
         case 'u': {
@@ -678,7 +677,6 @@ function escape_char(text: string, i: number): [string, number | undefined] {
                 return ["expected 4 hex digits after \\u escape sequence", undefined];
             }
             const code = Number.parseInt(text.substring(i+2, end), 16);
-            console.log(text, code);
             return [String.fromCharCode(code), end];
         };
         case 'x': {
@@ -687,7 +685,6 @@ function escape_char(text: string, i: number): [string, number | undefined] {
                 return ["expected 2 hex digits after \\x escape sequence", undefined];
             }
             const code = Number.parseInt(text.substring(i+2, end), 16);
-            console.log(text, code);
             return [String.fromCharCode(code), end];
         };
         default: {
