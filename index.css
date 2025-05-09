@@ -71,6 +71,12 @@ textarea {
   border: 0px;
 }
 
+#source-tab {
+  overflow: auto;
+  max-width: 50em;
+  max-height: 50em;
+}
+
 button {
   background: #444;
   color: #EEE;
@@ -105,6 +111,7 @@ input::-webkit-inner-spin-button {
 
 /* Firefox */
 input[type=number] {
+  appearance: textfield;
   -moz-appearance: textfield;
 }
 
@@ -116,4 +123,33 @@ select {
 }
 .major-button {
   margin: 0.5em;
+}
+#share-button {
+  font-family: codicon;
+}
+#right-area label {
+  padding-right: 0.5em;
+}
+#build-output-tab pre {
+  white-space: pre-wrap;
+}
+#display-tab canvas {
+  width: 75%;
+  display: block;
+}
+#right-area details > a {
+  margin-bottom: 0.2rem;
+  margin-top: 0.5rem;
+}
+.fullwidth {
+  width: 100% !important;
+}
+buffer-view {
+  width: 100%;
+  height: 10vh;
+  resize: vertical;
+}
+#flex-wrapper {
+  display: flex;
+  gap: 2rem;
 }

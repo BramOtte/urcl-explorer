@@ -133,11 +133,11 @@
 </head>
 <body class="container-fluid">
     <div class="row">
-        <button id="compile-and-reset-button" class="btn btn-primary col major-button">Compile</button>
-        <button id="pause-button" class="btn btn-danger col major-button">Pause</button>
-        <button id="compile-and-run-button" class="btn btn-success col major-button">Compile & Run</button>
-        <button id="step-button" class="btn btn-warning col major-button">Step</button>
-        <button id="share-button" class="btn btn-info col major-button" style="font-family: codicon;">&#xeb15;</button>
+        <button id="compile-and-reset-button" class="btn btn-primary col major-button" type="button">Compile</button>
+        <button id="pause-button" class="btn btn-danger col major-button" type="button">Pause</button>
+        <button id="compile-and-run-button" class="btn btn-success col major-button" type="button">Compile &amp; Run</button>
+        <button id="step-button" class="btn btn-warning col major-button" type="button">Step</button>
+        <button id="share-button" class="btn btn-info col major-button" type="button">&#xeb15;</button>
     </div>
     <main class="row">
         <div class="col-sm col-push-5">
@@ -165,7 +165,7 @@
                 </li>
             </ul>
             <div id="left-area">
-                <div id="source-tab" style="overflow: auto; max-width: 50em; max-height: 50em;">
+                <div id="source-tab">
                     <editor-window id="urcl-source"></editor-window>
                 </div>
             </div>
@@ -196,25 +196,25 @@
             </ul>
             <div id="right-area">
                 <div id="configuration-tab">
-                    <span style="padding-right: 0.5em;">Clock Speed Hz</span><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
-                    <span style="padding-right: 0.5em;">Auto Run</span><input type="checkbox" id="auto-run-input" checked> <br>
+                    <label for="clock-speed-input">Clock Speed Hz</label><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
+                    <label for="auto-run-input">Auto Run</label><input type="checkbox" id="auto-run-input" checked> <br>
                     <div>
-                        <input type="radio" name="jit-radio" id="jit-radio-none" checked>Interpret
-                        <input type="radio" name="jit-radio" id="jit-radio-js">JS JIT
-                        <input type="radio" name="jit-radio" id="jit-radio-wasm">WASM JIT
+                        <input type="radio" name="jit-radio" id="jit-radio-none" checked><label for="jit-radio-none">Interpret</label>
+                        <input type="radio" name="jit-radio" id="jit-radio-js"><label for="jit-radio-js">JS JIT</label>
+                        <input type="radio" name="jit-radio" id="jit-radio-wasm"><label for="jit-radio-wasm">WASM JIT</label>
                     </div>
                     <div>
-                        <input type="radio" name="count-radio" id="count-radio-inst" checked>Count instructions
-                        <input type="radio" name="count-radio" id="count-radio-jumps">Count jumps
-                        <input type="radio" name="count-radio" id="count-radio-none">Uninterrupted
+                        <input type="radio" name="count-radio" id="count-radio-inst" checked><label for="count-radio-inst">Count instructions</label>
+                        <input type="radio" name="count-radio" id="count-radio-jumps"><label for="count-radio-jumps">Count jumps</label>
+                        <input type="radio" name="count-radio" id="count-radio-none"><label for="count-radio-none">Uninterrupted</label>
                     </div>
                     <br>
-                    <span style="padding-right: 0.5em;">Storage File</span><input id="storage-input" type="file"><span id="storage-msg"></span><br>
-                    <span style="padding-right: 0.5em;">Minimum storage size</span><input id="storage-size" type="number" step="1"> words<br>
-                    <span style="padding-right: 0.5em;">Little Endian</span><input id="storage-little" type="checkbox"><br>
-                    <button id="storage-update">Update Storage</button>
-                    <button id="storage-download">Update & Download Storage</button><br>
-                    <span style="padding-right: 0.5em;">URCL -> C</span><input type="checkbox" id="c-out-check">
+                    <label for="storage-input">Storage File</label><input id="storage-input" type="file"><label id="storage-msg"></label><br>
+                    <label for="storage-size">Minimum storage size</label><input id="storage-size" type="number" step="1"> words<br>
+                    <label for="storage-little">Little Endian</label><input id="storage-little" type="checkbox"><br>
+                    <button id="storage-update" type="button">Update Storage</button>
+                    <button id="storage-download" type="button">Update &amp; Download Storage</button><br>
+                    <label for="c-out-check">URCL → C</label><input type="checkbox" id="c-out-check">
                     <pre id="c-out"></pre>
                 </div>
                 <div style="display: flex;">
@@ -245,7 +245,7 @@
                         </details>
                         <details open>
                             <summary>Advent of code 2024</summary>
-                            <a style="margin-bottom: 0.2rem; margin-top: 0.5rem" href="https://adventofcode.com/2024">Advent of Code website</a>
+                            <a href="https://adventofcode.com/2024">Advent of Code website</a>
                             <ul>
                                 <li><a href="?srcurl=examples/aoc24/1.urcl">day 1 part 1 and 2</a></li>
                                 <li><a href="?srcurl=examples/aoc24/2.urcl">day 2 part 1</a></li>
@@ -262,7 +262,7 @@
                         </details>
                         <details open>
                             <summary>URCL competition 1</summary>
-                            <a style="margin-bottom: 0.2rem; margin-top: 0.5rem" href="pages/competitions/1">About</a>
+                            <a href="pages/competitions/1">About</a>
                             <ul>
                                 <li><a href="?srcurl=examples/urcl/console-flappy.urcl">Flappy Bird</a></li>
                                 <li><a href="?srcurl=https://raw.githubusercontent.com/rickroller314/mycabbages/main/garden.urcl">Garden by GLaDOS</a></li>
@@ -271,8 +271,8 @@
                         </details>
                     </div>
                     <div id="build-output-tab">
-                        <pre id="output" style="white-space: pre-wrap;"></pre>
-                        <pre id="debug-output" style="white-space: pre-wrap;"></pre>
+                        <pre id="output"></pre>
+                        <pre id="debug-output"></pre>
                     </div>
                 </div>
             </div>
@@ -280,16 +280,16 @@
                 <h3>Registers</h3>
                 <pre id="register-view"></pre>
                 <h3>Memory</h3>
-                <span style="padding-right: 0.5em;">Auto Update</span><input type="checkbox" id="update-mem-input"> <br>
-                <buffer-view id="memory-view" style="width: 100%; height: 10vh; resize: vertical;"></buffer-view>
+                <label>Auto Update</label><input type="checkbox" id="update-mem-input"> <br>
+                <buffer-view id="memory-view"></buffer-view>
             </div>
-            <div style="display: flex; gap: 2rem;">
+            <div id="flex-wrapper">
                 <div id="console-tab">
-                    <scroll-out id="stdout" style="width: 100%;"></scroll-out>
-                    <textarea id="stdin" type="text" style="width: 100%;"></textarea>
+                    <scroll-out id="stdout" class="fullwidth"></scroll-out>
+                    <textarea id="stdin" type="text" class="fullwidth"></textarea>
                     <br>
-                    <span style="padding-right: 0.5em;">Null Terminate</span><input type="checkbox" id="null-terminate"><br>
-                    <button style="width: 100%;" id="copy-console">Copy Output</button>
+                    <label>Null Terminate</label><input type="checkbox" id="null-terminate"><br>
+                    <button id="copy-console" type="button" class="fullwidth">Copy Output</button>
                 </div>
                 <div id="display-tab">
                     Color Mode
@@ -307,9 +307,9 @@
                     </select>
                     Width <input type="number" id="display-width" value="32">
                     Height <input type="number" id="display-height" value="32">
-                    <button id="display-fullscreen">Fullscreen</button><br>
+                    <button id="display-fullscreen" type="button">Fullscreen</button><br>
                     <div id="pref-display"></div>
-                    <canvas style="width: 75%; display: block;" width="32" height="32"></canvas>
+                    <canvas width="32" height="32"></canvas>
                 </div>
             </div>
         </div>
