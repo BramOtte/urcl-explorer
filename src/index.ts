@@ -17,9 +17,8 @@ import { Sound } from "./emulator/devices/sound.js";
 import { Storage } from "./emulator/devices/storage.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { parse } from "./emulator/parser.js";
-import { Arr, enum_from_str, enum_strings, expand_warning, registers_to_string, memoryToString, format_int } from "./emulator/util.js";
+import { enum_from_str, enum_strings, expand_warning, registers_to_string, format_int, fillin_template } from "./emulator/util.js";
 import { Scroll_Out } from "./scroll-out/scroll-out.js";
-import { register_count } from "./emulator/instructions.js";
 import { BufferView } from "./buffer_view/buffer_view.js";
 import { urcl2c } from "./emulator/urcl2c.js";
 import { Run_Type } from "./emulator/wasm/urcl2wasm.js";
@@ -63,10 +62,51 @@ const jit_radio_js = document.getElementById("jit-radio-js") as HTMLInputElement
 const jit_radio_wasm = document.getElementById("jit-radio-wasm") as HTMLInputElement;
 const count_radio_jumps = document.getElementById("count-radio-jumps") as HTMLInputElement;
 const count_radio_none = document.getElementById("count-radio-none") as HTMLInputElement;
+const bundle_button = document.getElementById("bundle-button");
 
+const bundle_settings = document.getElementById("bundle-settings");
 
+if (bundle_button) bundle_button.onclick = async () => {
+    const title = "your title";
+    const settings = {
+        code: source_input.value,
+        search: url.search,
+    };
 
-const url = new URL(location.href, location.origin)
+    const [template, js] = await Promise.all([
+        fetch("bundle.template.html").then(r => r.text()),
+        fetch("js/index.js").then(r => r.text()),
+    ]);
+    
+    const html = fillin_template(template, [
+        ["TITLE", title],
+        [`<script type="module" src="js/index.js"></script>`, `<script type=module>${js}</script>`],
+        [`{"code": "OUT %COLOR 1"}`, JSON.stringify(settings)],
+    ])
+
+    const data_url = URL.createObjectURL(new Blob([html], {type: "text/html"}));
+    const a = document.createElement("a");
+    a.download = `index.html`;
+    a.href = data_url;
+    a.click();
+};
+
+let url = location.origin == null || location.origin == "null" ? new URL(location.href) : new URL(location.href, location.origin);
+if (bundle_settings) {
+    const settings = JSON.parse(bundle_settings.textContent.trim());
+    if (typeof settings.search === "string") {
+        url.search = settings.search;
+    } else {
+        url.search = "";
+    }
+    if (typeof settings.code === "string") {
+        queueMicrotask(() => {
+            source_input.value = settings.code;
+            compile_and_run();
+        })
+    }
+}
+
 const srcurl = url.searchParams.get("srcurl");
 const storage_url = url.searchParams.get("storage");
 const width = parseInt(url.searchParams.get("width") ?? "");
@@ -310,6 +350,11 @@ function save() {
         clearTimeout(save_timeout);
         save_timeout = undefined;
     }
+
+    if (bundle_settings) {
+        return;
+    }
+
     localStorage.setItem("history-size", ""+history_size);
     const offset = (Math.max(0, 0| (Number(localStorage.getItem("history-offset")) || 0)) + 1)  % history_size;
     localStorage.setItem("history-offset", ""+offset);
@@ -403,6 +448,7 @@ try {
     });
 
     source_input.set_errors([...parsed.errors, ...parsed.warnings]);
+    console.log(source);
 
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines)+"\n").join("");
@@ -555,7 +601,7 @@ change_color_mode();
 let storage_promise: undefined | Promise<unknown>;
 
 started = true;
-if (srcurl){
+if (srcurl && !bundle_settings){
     fetch(srcurl).then(res => res.text()).then(async (text) => {
         await storage_promise;
         if (source_input.value){
@@ -571,6 +617,10 @@ if (srcurl){
 else
 autofill:
 {
+    if (bundle_settings) {
+        break autofill;
+    }
+
     const offset = Number(localStorage.getItem("history-offset"));
     if (!Number.isInteger(offset)){
         break autofill;

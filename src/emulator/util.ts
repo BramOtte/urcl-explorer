@@ -246,3 +246,21 @@ export function format_int(n: number){
 export function bound(n: number, min: number, max: number){
     return Math.max(min, Math.min(max, n));
 }
+
+
+export function fillin_template(template: string, data: [replace: string, by: string][]) {
+    let output = "";
+    let ti = 0;
+
+    for (const [replace, by] of data) {
+        let s = template.indexOf(replace, ti);
+        if (s < 0) {
+            throw new Error("Missing " + replace);
+        }
+        output += template.substring(ti, s) + by;
+        ti = s + replace.length;
+    }
+    output += template.substring(ti);
+
+    return output;
+}

@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITLE</title>
+<style>
+html, body {
+display: flex;
+justify-content: center;
+padding: 0%;
+margin: 0%;
+overflow: hidden;
+height: 100vh;
+width: 100vw;
+background-color: black;
+}
+canvas {
+width: 100%;
+height: 100%;
+object-fit: contain;
+image-rendering: crisp-edges;
+image-rendering: pixelated;
+}
+</style>
+<script type="module" src="js/index.js"></script>
+</head>
+<body>
+<div style="height: 100%;">
+    <canvas></canvas>
+</div>
+
+<div style="display: none;">
+<div id="bundle-settings">
+{"code": "OUT %COLOR 1"}
+</div>
+<button id="share-button" style="font-size: 1em;">copy share url</button>
+<button id="bundle-button">bundle</button>
+<editor-window id="urcl-source" value="OUT %COLOR 1">
+</editor-window>
+<button id="compile-and-reset-button">Compile</button>
+<button id="pause-button">Pause</button>
+<button id="compile-and-run-button">Compile and run</button>
+<button id=step-button disabled>Step</button>
+<span style="padding-right: 0.5em;">Clock Speed Hz</span><input type="number" id="clock-speed-input"> <output id="clock-speed-output"></output><br>
+<span style="padding-right: 0.5em;">Auto Run</span><input type="checkbox" id="auto-run-input" checked> <br>
+<input type="radio" name="jit-radio" id="jit-radio-none">Interpret
+<input type="radio" name="jit-radio" id="jit-radio-js">JS JIT
+<input type="radio" name="jit-radio" id="jit-radio-wasm" checked>WASM JIT
+<input type="radio" name="count-radio" id="count-radio-inst">Count instructions
+<input type="radio" name="count-radio" id="count-radio-jumps" checked>Count jumps
+<input type="radio" name="count-radio" id="count-radio-none">Uninterrupted
+<span style="padding-right: 0.5em;">Storage File</span><input id="storage-input" type="file"><span id="storage-msg"></span><br>
+<span style="padding-right: 0.5em;">Minimum storage size</span><input id="storage-size" type="number" step="1"> words<br>
+<span style="padding-right: 0.5em;">Little Endian</span><input id="storage-little" type="checkbox"><br>
+<button id="storage-update">Update Storage</button>
+<button id="storage-download">Update & Download Storage</button><br>
+<span style="padding-right: 0.5em;">URCL -> C</span><input type="checkbox" id="c-out-check">
+<pre id="c-out"></pre>
+<pre id="output"></pre>
+<pre id="debug-output"></pre>
+<pre id="register-view"></pre>
+auto update <input type="checkbox" id="update-mem-input" checked> <br>
+<buffer-view id="memory-view" style="width: 100%; height: 10vh; resize: vertical;"></buffer-view>
+<scroll-out id="stdout"></scroll-out>
+<textarea id="stdin" type="text"></textarea>
+null terminate<input type="checkbox" id="null-terminate"> <br>
+<button style="width: 100%;" id="copy-console">Copy Output</button>
+<select id="color-mode" value="PICO8">
+width <input type="number" id="display-width" value="32"><button id="display-fullscreen">fullscreen</button><br>
+height <input type="number" id="display-height" value="32"><br>
+<div id="pref-display"></div>
+</div>
+</body>
+</html>
