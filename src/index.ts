@@ -206,8 +206,9 @@ console_input.addEventListener("keydown", e => {
         } else {
             console_input.value += "\n";
         }
-        
-        input_callback();
+        const cb = input_callback;
+        input_callback = undefined;
+        cb();
     }
 })
 
