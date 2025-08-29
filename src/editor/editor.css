@@ -55,14 +55,33 @@ editor-window textarea {
     caret-color: white;
 }
 
-.pc-line {
-    color: greenyellow;
+editor-window .line-nrs > div {
     position: relative;
 }
-.pc-line::before {
-    content: ">";
+
+editor-window .line-nrs > div::before {
     position: absolute;
     right: 100%;
+    content: "o";
+    color: darkgray;
+}
+
+.pc-line {
+    color: greenyellow;
+}
+
+editor-window .line-nrs > .pc-line::before {
+    content: ">" !important;
+    color: greenyellow;
+}
+
+editor-window .line-nrs > div:hover::before {
+    color: rgb(206, 47, 47);
+}
+
+editor-window .line-nrs > .debug-line::before {
+    color: red;
+    content: "@";
 }
 
 .opcode, .dw, .name {

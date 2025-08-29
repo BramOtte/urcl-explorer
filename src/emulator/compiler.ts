@@ -11,7 +11,8 @@ export interface Program {
     data: Word[];
 }
 export interface Debug_Info {
-    pc_line_nrs: Arr<number>;
+    pc_to_linenr: Arr<number>;
+    linenr_to_pc: Arr<undefined|number>
     lines: string[];
     file_name?: string;
     program_breaks: Record<number, BreakFlag>;
@@ -22,7 +23,7 @@ export interface Debug_Info {
 
 export function compile(parsed: Parser_output): [Program, Debug_Info]
 {
-    const {headers, opcodes, operant_types, operant_values, instr_line_nrs, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks} = parsed;
+    const {headers, opcodes, operant_types, operant_values, pc_to_linenr: pc_to_linenr, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks} = parsed;
     
     const { max, smax, bits, minreg, msb, smsb, uhalf, lhalf, minheap, minstack } = derive_constants_from_headers(headers);
 
@@ -84,9 +85,16 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
         memory_breaks[Number(key) + heap_offset] = value;
     }
 
+    const linenr_to_pc: Arr<undefined|number> = [];
+
+    for (let pc = 0; pc < pc_to_linenr.length; pc++) {
+        const linenr = pc_to_linenr[pc];
+        linenr_to_pc[linenr] = pc;
+    }
+
     return [
         {headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data},
-        {pc_line_nrs: instr_line_nrs, lines, program_breaks, memory_breaks, register_breaks, port_breaks}
+        {pc_to_linenr: pc_to_linenr, linenr_to_pc, lines, program_breaks, memory_breaks, register_breaks, port_breaks}
     ];
 }
 
@@ -121,7 +129,7 @@ function program_to_bytecode(parsed: Parser_output,  inst_sizeof = (opcode: Opco
     const instr_pc: number[] = [];
     let pc = 0;
     for (let inst_i = 0; inst_i < parsed.opcodes.length; inst_i++){
-        pc_line_nrs[pc] = parsed.instr_line_nrs[inst_i];
+        pc_line_nrs[pc] = parsed.pc_to_linenr[inst_i];
         instr_pc[inst_i] = pc;
         const opcode = parsed.opcodes[inst_i];
         pc += inst_sizeof(opcode);

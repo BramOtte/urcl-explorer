@@ -2,6 +2,11 @@ import { pad_left, Warning } from "../emulator/util.js";
 import { l } from "../l.js";
 import { regex_end, Token, tokenize } from "./tokenizer.js";
 
+export interface DebugToggleHandler {
+    set_debug_toggle(line_nr: number, expression?: string): void;
+    get_debug_toggle(line_nr: number): undefined | string;
+}
+
 export class Editor_Window extends HTMLElement {
     private line_nrs: HTMLElement;
     private code: HTMLElement;
@@ -15,12 +20,13 @@ export class Editor_Window extends HTMLElement {
     back_button: HTMLButtonElement;
     forward_button: HTMLButtonElement;
 
+    public debug_toggle_handler?: DebugToggleHandler;
 
     tab_width = 4
     constructor(){
         super();
         l(this, {}, 
-            this.line_nrs = l("div", {className: "line-nrs"}),
+            this.line_nrs = l("div", {className: "line-nrs", onclick: this.click_linenr_cb.bind(this)}),
             this.code = l("div", {className: "code"},
                 this.input = l("textarea", {spellcheck: false}),
                 this.colors = l("code", {className: "colors"})
@@ -63,7 +69,23 @@ export class Editor_Window extends HTMLElement {
     add_error(line_nr: number, msg: string) {
         this._add_error(line_nr, msg);
         this.render_lines();
-    } 
+    }
+
+    public set_debug_toggle(line_nr: number, expression?: string) {
+        const line = this.line_nrs.children.item(line_nr-1);
+        if (!(line instanceof HTMLElement)) {
+            return;
+        }
+        const current_nr = Number(line.textContent);
+        if (line_nr !== current_nr) {
+            return;
+        }
+        if (expression === undefined) {
+            line.classList.remove("debug-line")
+        } else {
+            line.classList.add("debug-line")
+        }
+    }
 
     private _add_error(line_nr: number, message: string) {
         if (this._errors[line_nr]) {
@@ -212,7 +234,27 @@ export class Editor_Window extends HTMLElement {
         this.call_input_listeners();
     }
 
-    private render_lines(){
+    private click_linenr_cb(event: MouseEvent) {
+        const target = event.target;
+        if (target === this.line_nrs || !(target instanceof HTMLDivElement)) {
+            return;
+        }
+        if (!this.debug_toggle_handler) {
+            return;
+        }
+        
+        const line_nr = Number(target.textContent);        
+        const current_state = this.debug_toggle_handler.get_debug_toggle(line_nr);
+        if (current_state === undefined) {
+            this.set_debug_toggle(line_nr, "");
+            this.debug_toggle_handler.set_debug_toggle(line_nr, "");
+        } else {
+            this.set_debug_toggle(line_nr, undefined);
+            this.debug_toggle_handler.set_debug_toggle(line_nr, undefined);
+        }
+    }
+
+    public render_lines(){
         this.input.style.height = "0px";
         const height = this.input.scrollHeight
         this.input.style.height = height + "px";
@@ -242,6 +284,11 @@ export class Editor_Window extends HTMLElement {
 
         const start = Math.floor(pixel_start / ch);
         const end = Math.min(this.lines.length, Math.ceil(pixel_end / ch));
+
+        for (let i = start; i < end; i++) {
+            const expression = this.debug_toggle_handler?.get_debug_toggle(i+1)
+            this.set_debug_toggle(i+1, expression);
+        }
 
         this.colors.style.top = (start*ch) + "px";
 

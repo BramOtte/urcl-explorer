@@ -22,6 +22,7 @@ import { Scroll_Out } from "./scroll-out/scroll-out.js";
 import { BufferView } from "./buffer_view/buffer_view.js";
 import { urcl2c } from "./emulator/urcl2c.js";
 import { Run_Type } from "./emulator/wasm/urcl2wasm.js";
+import { Break, break_flag } from "./emulator/breaks.js";
 
 let animation_frame: number | undefined;
 let running = false;
@@ -316,6 +317,39 @@ emulator.add_io_device(new Mouse(canvas));
 
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
+source_input.debug_toggle_handler = {
+    set_debug_toggle(line_nr, expression) {
+        const info = emulator?.debug_info;
+        if (!info) {
+            return;
+        }
+        const pc = info.linenr_to_pc[line_nr-1];
+        if (pc === undefined) {
+            return;
+        }
+        if (expression === undefined) {
+            info.program_breaks[pc] = break_flag([]);
+        } else {
+            info.program_breaks[pc] = break_flag([Break.ONREAD]);
+        }
+        emulator.check_debug_info();
+    },
+
+    get_debug_toggle(line_nr) {
+        const info = emulator?.debug_info;
+        if (!info) {
+            return
+        }
+        const pc = info.linenr_to_pc[line_nr-1];        
+        if (pc === undefined) {
+            return
+        }
+
+        const flags = info.program_breaks[pc];
+        
+        return flags ? "" : undefined;
+    }
+}
 
 let save_timeout: undefined | number;
 let save_timeout_time = 5000;
@@ -449,7 +483,6 @@ try {
     });
 
     source_input.set_errors([...parsed.errors, ...parsed.warnings]);
-    console.log(source);
 
     if (parsed.errors.length > 0){
         output_element.innerText = parsed.errors.map(v => expand_warning(v, parsed.lines)+"\n").join("");
@@ -484,6 +517,7 @@ try {
     pause_button.disabled = false;
     step_button.disabled = false;
     running = false;
+    source_input.render_lines();
     update_views();
     return true;
 } catch (e){
@@ -590,7 +624,7 @@ function update_views(){
     }
     register_view.innerText = 
         registers_to_string(emulator)
-    const lines = emulator.debug_info.pc_line_nrs
+    const lines = emulator.debug_info.pc_to_linenr;
     const line = lines[Math.min(emulator.pc, lines.length-1)];
     source_input.set_pc_line(line);
     source_input.set_line_profile(lines, emulator.pc_counters);

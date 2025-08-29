@@ -81,10 +81,7 @@ export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
         this.debug_reached = false;
         this.pc = 0;
 
-        this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
-        this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
-        this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
-        this.do_debug_program = Object.keys(debug_info.program_breaks).length > 0;
+        this.check_debug_info();
 
         if (run === Header_Run.RAM){
             throw new Error("emulator currently doesn't support running in ram");
@@ -121,6 +118,14 @@ export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
 
     compiled = JIT_Type.None;
     run_type = Run_Type.Count_Instrutions;
+
+    public check_debug_info() {
+        const debug_info = this.debug_info;
+        this.do_debug_memory = Object.keys(debug_info.memory_breaks).length > 0;
+        this.do_debug_registers = Object.keys(debug_info.register_breaks).length > 0;
+        this.do_debug_ports = Object.keys(debug_info.port_breaks).length > 0;
+        this.do_debug_program = Object.keys(debug_info.program_breaks).length > 0;
+    }
 
     jit_init_wasm(run_type: Run_Type) {
         if (this.compiled === JIT_Type.WASM && this.run_type === run_type) {
@@ -579,7 +584,7 @@ step(): Step_Result {
     }
 
     error(msg: string): never {
-        const {pc_line_nrs, lines, file_name} = this.debug_info;
+        const {pc_to_linenr: pc_line_nrs, lines, file_name} = this.debug_info;
         const line_nr = pc_line_nrs[this.pc-1];
         if (this.options.error){
             this.options.error(msg, line_nr, file_name)
@@ -589,7 +594,7 @@ step(): Step_Result {
         throw Error(content);
     }
     get_line_nr(pc = this.pc): number {
-        return this.debug_info.pc_line_nrs[pc-1] || -2;
+        return this.debug_info.pc_to_linenr[pc-1] || -2;
     }
     get_line(pc = this.pc): string {
         const line = this.debug_info.lines[this.get_line_nr(pc)];
@@ -627,7 +632,7 @@ step(): Step_Result {
             const h = hex(v, w, " ");
             const value = pad_left(""+v, w);
             const opcode = pad_left(Opcode[this.program.opcodes[v]] ?? ".", w);
-            const linenr = pad_left(""+(this.debug_info.pc_line_nrs[v] ?? "."), w)
+            const linenr = pad_left(""+(this.debug_info.pc_to_linenr[v] ?? "."), w)
             const mem = pad_left(""+(this.memory[v] ?? "."), w);
             str += `\n${index}|${h}|${value}|${mem}|${linenr}|${opcode}`
         }

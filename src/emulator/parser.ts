@@ -57,7 +57,7 @@ export class Parser_output implements Label_Out, Instruction_Out {
     readonly headers           : Header_Obj = {} as Header_Obj;
     readonly constants         : Record<string, string> = {};
     readonly labels            : Record<string, Label> = {};
-    readonly instr_line_nrs    : i53[] = [];
+    readonly pc_to_linenr      : i53[] = [];
     readonly opcodes           : Opcode[] = [];
     readonly operant_strings   : string[][] = [];
     readonly operant_types     : Operant_Type[][] = [];
@@ -74,7 +74,7 @@ interface Label_Out {
 }
 interface Instruction_Out {
     readonly headers           : Header_Obj;
-    readonly instr_line_nrs    : i53[];
+    readonly pc_to_linenr    : i53[];
     readonly opcodes           : Opcode[];
     readonly operant_strings   : string[][];
     readonly operant_types     : Operant_Type[][];
@@ -202,7 +202,7 @@ export function parse(source: string, options: Parse_Options = {}): Parser_outpu
     out.heap_offset = out.data.length;
     out.data.length = 0;
     for (let inst_i = 0; inst_i < out.opcodes.length; inst_i++){
-        parse_instructions(out.instr_line_nrs[inst_i], inst_i, out, out.errors, out.warnings);
+        parse_instructions(out.pc_to_linenr[inst_i], inst_i, out, out.errors, out.warnings);
     }
     for (let line_nr = 0; line_nr < out.lines.length; line_nr++){
         const line = out.lines[line_nr];
@@ -437,7 +437,7 @@ function split_instruction
     }
     out.opcodes[inst_i] = opcode;
     out.operant_strings[inst_i] = ops;
-    out.instr_line_nrs[inst_i] = line_nr;
+    out.pc_to_linenr[inst_i] = line_nr;
     
     return true;
 }

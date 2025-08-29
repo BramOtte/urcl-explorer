@@ -178,7 +178,7 @@ while (1) switch (${ctx.pc}) {
             throw new Error(`unimplemented opcode ${opcode} (${Opcode[opcode]})`);
         }
         if (debug_info) {
-            c += `// ${debug_info.lines[debug_info.pc_line_nrs[i]]}\n`;
+            c += `// ${debug_info.lines[debug_info.pc_to_linenr[i]]}\n`;
         }
         c += `case ${i}: {${inst(ctx)}} ${ctx.pc} = ${i+1};\n`;
     }
