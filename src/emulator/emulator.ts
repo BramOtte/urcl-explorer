@@ -523,6 +523,18 @@ step(): Step_Result {
     }
     // this method only needs to be called for the IN instruction
     finish_step_in(port: number, result: Word){
+        if (this.program.opcodes[this.pc] !== Opcode.IN) {
+            this.warn(`finish_step_in called with ${port}(${IO_Port[port]}) ${result} when there is no active IN instruction.\n\tThis is a bug in URCX.`);
+            return;
+        }
+
+        const expected_port = this.b;
+        
+        if (port != expected_port) {
+            this.warn(`finish step_in called for unexpected port ${port}(${IO_Port[port]}), expected ${expected_port}(${IO_Port[expected_port]}).\n\tThis is a bug in URCX.`);
+            return;
+        }
+
         const pc = this.pc++;
         const type = this.program.operant_prims[pc][0];
         const value = this.program.operant_values[pc][0];
