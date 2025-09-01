@@ -13,6 +13,7 @@ export class Editor_Window extends HTMLElement {
     private input: HTMLTextAreaElement;
     private colors: HTMLElement;
     profile_check: HTMLInputElement;
+    follow_check: HTMLInputElement;
     private profiled: boolean[] = [];
     private profile_present: boolean = false;
     private lines: string[] = [];
@@ -45,10 +46,11 @@ export class Editor_Window extends HTMLElement {
         
         this.profile_check = l("input", {type: "checkbox"})
         const profile_text = l("span", {}, `Show line-profile`);
-        this.parentElement?.insertBefore(l("div", {}, this.back_button, this.forward_button, this.saved_marker, this.profile_check, profile_text), this);
 
-        // this.parentElement?.insertBefore(l("div", {}, this.profile_check, profile_text), this);
+        this.follow_check = l("input", {type: "checkbox", oninput: () => this.set_pc_line(this.pc_line)})
+        const follow_text = l("span", {}, `Auto scroll`);
 
+        this.parentElement?.insertBefore(l("div", {}, this.back_button, this.forward_button, this.saved_marker, this.profile_check, profile_text, this.follow_check, follow_text), this);
 
         const resize_observer = new ResizeObserver(() => this.render_lines());
         resize_observer.observe(this);
@@ -128,6 +130,10 @@ export class Editor_Window extends HTMLElement {
             child.classList.add("pc-line");
         }
         this.pc_line = line;
+
+        if (this.follow_check.checked) {
+            child.scrollIntoView({"behavior": "smooth", "block": "end"});
+        }
     }
     public set_line_profile(pc_to_line: ArrayLike<number>, counts: ArrayLike<number>){
         const length = pc_to_line.length;
