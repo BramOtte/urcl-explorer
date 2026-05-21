@@ -11,8 +11,10 @@ jobs:
       
       - uses: actions/checkout@v5
 
-      - run: esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text
+      - run: ./esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text
       
+      - run: rm ./esbuild
+
       - uses: actions/git-pages@v2
         with:
           site: 'https://${{ forge.repository_owner }}.codeberg.page/${{ forge.repository_name }}/'
