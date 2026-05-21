@@ -7,7 +7,7 @@ Keep in mind that currently there is **no** saving functionality build into the 
 
 ## Run 🏃‍♂️
 ### Github Pages
-You only need your browser to use urcl-explorer just go to [github pages](https://bramotte.github.io/urcl-explorer) and start writing and running URCL code.
+You only need your browser to use urcl-explorer just go to [codeberg pages](https://bramotte.codeberg.page/urcl-explorer) or [github pages](https://bramotte.github.io/urcl-explorer) and start writing and running URCL code.
 
 ### Local Server
 To use the URCL website offline you will need to clone the repository to your computer, run a static http server and then connect to that server using your browser.
