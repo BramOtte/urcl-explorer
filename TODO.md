@@ -7,7 +7,7 @@
 * take into account bit opperants
 * Make == optional
 
-## URCL++ Standart
+## URCL++ Standard
 
 ## Misc
 * check if all array access is bounds checked
@@ -43,8 +43,6 @@
 * save and load code from localstorage
 * 3d device
 * integrate existing tools into urcl explorer with python and C# runtime
-* compile URCL code to js for greater speed
-* compile URCL code to wasm for maximum speed
 * add new cool things to this TODO list
 * support URCL binary format
 * warning for read before write
@@ -79,3 +77,5 @@
 * Rgb6 rgb12
 * Fix to much memory error report
 * Add endianess toggle
+* compile URCL code to js for greater speed
+* compile URCL code to wasm for maximum speed
