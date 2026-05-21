@@ -1,0 +1,18 @@
+name: Publish
+on:
+  push: [master]
+jobs:
+  publish:
+    runs-on: codeberg-tiny
+    steps:
+      - run: curl -fsSL https://esbuild.github.io/dl/v0.28.0 | sh
+      
+      - uses: actions/checkout@v5
+
+      - run: esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text
+      
+      - uses: actions/git-pages@v2
+        with:
+          site: 'https://${{ forge.repository_owner }}.codeberg.page/repository-name/${{ forge.repository_name }}/'
+          token: ${{ forge.token }}
+          source: .
