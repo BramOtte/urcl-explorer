@@ -8,12 +8,11 @@ jobs:
     runs-on: codeberg-tiny
     steps:
       - run: curl -fsSL https://esbuild.github.io/dl/v0.28.0 | sh
+      - run: mv esbuild /bin/
       
       - uses: actions/checkout@v5
 
-      - run: ./esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text
-      
-      - run: rm ./esbuild
+      - run: /bin/esbuild src/index.ts --bundle --outdir=js --format=esm --sourcemap --loader:.vert=text --loader:.frag=text
 
       - uses: actions/git-pages@v2
         with:
