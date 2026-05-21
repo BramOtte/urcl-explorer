@@ -13,6 +13,6 @@ jobs:
       
       - uses: actions/git-pages@v2
         with:
-          site: 'https://${{ forge.repository_owner }}.codeberg.page/repository-name/${{ forge.repository_name }}/'
+          site: 'https://${{ forge.repository_owner }}.codeberg.page/${{ forge.repository_name }}/'
           token: ${{ forge.token }}
           source: .
