@@ -65,7 +65,6 @@ export function memoryToString(view: Arr, from = 0x0, length = 0x1000, bits = 8,
             while (color_i < colors.length && colors[color_i][0] <= i) {
                 color = colors[color_i][1];
                 color_i += 1;
-                console.log(color)
             }
             if (color == undefined) {
                 subs.push(hex(view[i], hexes));

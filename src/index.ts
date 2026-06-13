@@ -24,6 +24,16 @@ import { urcl2c } from "./emulator/urcl2c.js";
 import { Run_Type } from "./emulator/wasm/urcl2wasm.js";
 import { Break, break_flag } from "./emulator/breaks.js";
 
+let url = location.origin == null || location.origin == "null" ? new URL(location.href) : new URL(location.href, location.origin);
+
+let dumb: null | string | boolean = url.searchParams.get("dumb");
+if (dumb != null) {
+    dumb = dumb == "1" || dumb == "on" || dumb == "true";
+    localStorage.setItem("dumb", dumb ? "1" : "0");
+} else {
+    dumb = localStorage.getItem("dumb") == "1";
+}
+
 let animation_frame: number | undefined;
 let running = false;
 let started = false;
@@ -32,8 +42,19 @@ let last_step = performance.now();
 let clock_speed = 0;
 let clock_count = 0;
 
-const source_input = document.getElementById("urcl-source") as Editor_Window;
-source_input.profile_check.addEventListener("change", update_views);
+const source_input_ = document.getElementById("urcl-source") as Editor_Window;
+
+let source_input: Editor_Window | HTMLTextAreaElement;
+if (dumb) {
+    source_input = document.createElement("textarea");
+    source_input.value = source_input_.value;
+    source_input_.replaceWith(source_input);
+} else {
+    source_input = source_input_;
+    source_input.profile_check.addEventListener("change", update_views);
+    source_input.fancy_limit = Number(url.searchParams.get("fancy-limit")) || source_input.fancy_limit;
+}
+
 const output_element = document.getElementById("output") as HTMLElement;
 const debug_output_element = document.getElementById("debug-output") as HTMLElement;
 const memory_view = document.getElementById("memory-view") as BufferView;
@@ -92,7 +113,6 @@ if (bundle_button) bundle_button.onclick = async () => {
     a.click();
 };
 
-let url = location.origin == null || location.origin == "null" ? new URL(location.href) : new URL(location.href, location.origin);
 if (bundle_settings) {
     const settings = JSON.parse(bundle_settings.textContent.trim());
     if (typeof settings.search === "string") {
@@ -113,8 +133,6 @@ const storage_url = url.searchParams.get("storage");
 const width = parseInt(url.searchParams.get("width") ?? "");
 const height = parseInt(url.searchParams.get("height") ?? "");
 const color = enum_from_str(Color_Mode, url.searchParams.get("color") ?? "");
-
-source_input.fancy_limit = Number(url.searchParams.get("fancy-limit")) || source_input.fancy_limit;
 
 memory_update_input.oninput = () => update_views();
 
@@ -300,7 +318,9 @@ const emulator = new Emulator({
             if (end >= 0) {
                 msg = msg.substring(0, end);
             }
-            source_input.add_error(line_nr, msg);
+            if (source_input instanceof Editor_Window) {
+                source_input.add_error(line_nr, msg);
+            }
         }
         output_element.innerText += `${msg}\n`
     },
@@ -311,7 +331,9 @@ const emulator = new Emulator({
             if (end >= 0) {
                 msg = msg.substring(0, end);
             }
-            source_input.add_error(line_nr, msg);
+            if (source_input instanceof Editor_Window) {
+                source_input.add_error(line_nr, msg);
+            }
         }
         throw new Error(msg);
     }
@@ -329,6 +351,8 @@ emulator.add_io_device(new Mouse(canvas));
 
 source_input.oninput = oninput;
 auto_run_input.onchange = oninput;
+
+if (source_input instanceof Editor_Window) {
 source_input.debug_toggle_handler = {
     set_debug_toggle(line_nr, expression) {
         const info = emulator?.debug_info;
@@ -362,6 +386,7 @@ source_input.debug_toggle_handler = {
         return flags ? "" : undefined;
     }
 }
+}
 
 let save_timeout: undefined | number;
 let save_timeout_time = 5000;
@@ -389,6 +414,9 @@ document.addEventListener("keydown", e => {
 
 const history_size = 8;// Math.max(1, 0| (Number(localStorage.getItem("history-size")) || 8));
 function save() {
+    if (!(source_input instanceof Editor_Window)) {
+        return;
+    }
     if (source_input.saved) {
         return;
     }
@@ -409,6 +437,7 @@ function save() {
     source_input.mark_saved();
 }
 
+if (source_input instanceof Editor_Window) {
 source_input.forward_button.addEventListener("click", e => {
     if (!source_input.saved) {
         save()
@@ -422,7 +451,9 @@ source_input.forward_button.addEventListener("click", e => {
     localStorage.setItem("history-offset", ""+offset);
     source_input.set_value_saved(value);
 });
+}
 
+if (source_input instanceof Editor_Window) {
 source_input.back_button.addEventListener("click", e => {
     if (!source_input.saved) {
         save()
@@ -435,6 +466,7 @@ source_input.back_button.addEventListener("click", e => {
     localStorage.setItem("history-offset", ""+offset);
     source_input.set_value_saved(value);
 });
+}
 
 const compile_and_run_button = document.getElementById("compile-and-run-button") as HTMLButtonElement;
 const pause_button = document.getElementById("pause-button") as HTMLButtonElement;
@@ -497,6 +529,7 @@ function compile_cached():  [Program, Debug_Info] | [undefined, undefined] {
         ]),
     });
 
+    if (source_input instanceof Editor_Window) {
     source_input._errors.length = 0;
 
     for (const label of Object.values(parsed.labels)) {
@@ -510,6 +543,7 @@ function compile_cached():  [Program, Debug_Info] | [undefined, undefined] {
 
     for (const error of [...parsed.errors, ...parsed.warnings]) {
         source_input.add_error(error.line_nr, error.message)
+    }
     }
 
     if (parsed.errors.length > 0){
@@ -557,7 +591,9 @@ try {
     pause_button.disabled = false;
     step_button.disabled = false;
     running = false;
+    if (source_input instanceof Editor_Window) {
     source_input.render_lines();
+    }
     update_views();
     return true;
 } catch (e){
@@ -666,8 +702,10 @@ function update_views(){
         registers_to_string(emulator)
     const lines = emulator.debug_info.pc_to_linenr;
     const line = lines[Math.min(emulator.pc, lines.length-1)];
+    if (source_input instanceof Editor_Window) {
     source_input.set_pc_line(line);
     source_input.set_line_profile(lines, emulator.pc_counters);
+    }
     console_output.flush();
     display.flush();
 }
@@ -700,7 +738,9 @@ autofill:
     if (!Number.isInteger(offset)){
         break autofill;
     }
+    if (source_input instanceof Editor_Window) {
     source_input.set_value_saved(localStorage.getItem(`history-${offset}`) ?? "");
+    }
 }
 
 if (storage_url) {
