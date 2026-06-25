@@ -223,7 +223,7 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
                     } else {
                         inst = inst
                             .replaceAll(`s.${letter}`, `${value}`)
-                            .replaceAll(`s.s${letter}`, `${value}`);
+                            .replaceAll(`s.s${letter}`, `${this.signed(value)}`);
                     }
                 } else {
                     inst = inst
@@ -255,6 +255,8 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
         step += `}\nreturn ${Step_Result.Halt};\n`;
         run += `default: return [${Step_Result.Halt}, i]`;
         run += `}\nreturn [${Step_Result.Continue}, i]`;
+
+        console.log(step);
 
         this.jit_step = new Function(step) as Step;
         this.jit_run = new Function(max_duration, run) as Run;
