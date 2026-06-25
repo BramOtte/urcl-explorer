@@ -1,6 +1,7 @@
 import { IntArray, Step_Result, UintArray } from "../IEmu.js";
 import { Debug_Info, Program } from "../compiler.js";
 import { IO_Port, Opcode, Operant_Prim, Register, URCL_Header, register_count } from "../instructions.js";
+import { sign_extend } from "../util.js";
 import { Export_Type, Section_Type, WASM_Opcode, WASM_Type, magic, version } from "./wasm.js";
 import { WASM_Writer } from "./wasm_writer.js";
 
@@ -353,7 +354,7 @@ class Context extends WASM_Writer {
                 this.read_reg(value);
             }
         } else {
-            this.const(value);
+            this.const(sign_extend(value, this.bits));
         }
 
         return this;

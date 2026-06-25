@@ -6,6 +6,11 @@ export type Reg = number;
 export type Word = number;
 export type Ln_Nr = number;
 
+
+export function sign_extend(v: number, bits: number){
+    return (v << (32 - bits)) >> (32 - bits);
+}
+
 export interface Warning {
     line_nr: number,
     message: string

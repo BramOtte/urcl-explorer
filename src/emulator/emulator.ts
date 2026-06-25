@@ -1,4 +1,4 @@
-import { Word, registers_to_string, indent, hex, pad_center, pad_left } from "./util.js";
+import { Word, registers_to_string, indent, hex, pad_center, pad_left, sign_extend } from "./util.js";
 import {Opcode, Operant_Operation, Operant_Prim, Opcodes_operants, Instruction_Ctx, URCL_Header, IO_Port, Register, Header_Run, register_count, inst_fns, Opcodes_operant_lengths} from "./instructions.js";
 import { Debug_Info, Program } from "./compiler.js";
 import { Device, Device_Host, Device_Input, Device_Output, Device_Reset } from "./devices/device.js";
@@ -22,10 +22,7 @@ export enum JIT_Type {
 
 export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
     private signed(v: number){
-        if (this._bits === 32){
-            return 0| v;
-        }
-        return (v & this.sign_bit) === 0 ? v : v | (0xffff_ffff << this._bits);
+        return sign_extend(v, this._bits);
     }
     a = 0;
     b = 0;
