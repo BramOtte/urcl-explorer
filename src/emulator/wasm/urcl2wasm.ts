@@ -354,7 +354,7 @@ class Context extends WASM_Writer {
                 this.read_reg(value);
             }
         } else {
-            this.const(sign_extend(value, this.bits));
+            this.const(signed ? sign_extend(value, this.bits) : value);
         }
 
         return this;
