@@ -19,11 +19,12 @@ export interface Debug_Info {
     memory_breaks: Record<number, BreakFlag>;
     register_breaks: Record<number, BreakFlag>;
     port_breaks: Record<number, BreakFlag>;
+    operant_strings: string[][];
 }
 
 export function compile(parsed: Parser_output): [Program, Debug_Info]
 {
-    const {headers, opcodes, operant_types, operant_values, pc_to_linenr: pc_to_linenr, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks} = parsed;
+    const {headers, opcodes, operant_types, operant_values, pc_to_linenr: pc_to_linenr, lines, register_breaks, program_breaks, data_breaks, heap_breaks, port_breaks, operant_strings} = parsed;
     
     const { max, smax, bits, minreg, msb, smsb, uhalf, lhalf, minheap, minstack } = derive_constants_from_headers(headers);
 
@@ -94,7 +95,7 @@ export function compile(parsed: Parser_output): [Program, Debug_Info]
 
     return [
         {headers, opcodes, operant_prims: new_operant_types, operant_values: new_operant_values, data: parsed.data},
-        {pc_to_linenr: pc_to_linenr, linenr_to_pc, lines, program_breaks, memory_breaks, register_breaks, port_breaks}
+        {pc_to_linenr: pc_to_linenr, linenr_to_pc, lines, program_breaks, memory_breaks, register_breaks, port_breaks, operant_strings}
     ];
 }
 

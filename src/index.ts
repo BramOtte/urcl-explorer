@@ -17,7 +17,7 @@ import { Sound } from "./emulator/devices/sound.js";
 import { Storage } from "./emulator/devices/storage.js";
 import { Emulator, Step_Result } from "./emulator/emulator.js";
 import { Label_Type, parse } from "./emulator/parser.js";
-import { enum_from_str, enum_strings, expand_warning, registers_to_string, format_int, fillin_template } from "./emulator/util.js";
+import { enum_from_str, enum_strings, expand_warning, registers_to_dom, format_int, fillin_template } from "./emulator/util.js";
 import { Scroll_Out } from "./scroll-out/scroll-out.js";
 import { BufferView } from "./buffer_view/buffer_view.js";
 import { urcl2c } from "./emulator/urcl2c.js";
@@ -698,8 +698,7 @@ function update_views(){
         memory_view.emulator = emulator;
         memory_view.update();
     }
-    register_view.innerText = 
-        registers_to_string(emulator)
+    registers_to_dom(emulator, register_view);
     const lines = emulator.debug_info.pc_to_linenr;
     const line = lines[Math.min(emulator.pc, lines.length-1)];
     if (source_input instanceof Editor_Window) {

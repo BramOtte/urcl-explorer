@@ -47,10 +47,30 @@ export function hex_size(bits: number){
     return Math.ceil(bits / 4);
 }
 export function registers_to_string(emulator: Emulator) {
+    const names = emulator.register_names;
     const nibbles = hex_size(emulator._bits);
-    return Array.from({ length: register_count }, (_,i) => pad_center(Register[i], nibbles) + " ").join("") +
-        Array.from({ length: emulator.registers.length - register_count }, (_, i) => pad_left(`R${i + 1}`, nibbles) + " ").join("") + "\n" +
-        Array.from(emulator.registers, (v)=> hex(v, nibbles) + " ").join("");
+    const width = names.reduce((acc, val) => Math.max(acc, val.length), nibbles);
+    return names.map(name => pad_left(name, width)).join(" ") + "\n" +
+        Array.from(emulator.registers, (v)=> hex(v, width) + " ").join("");
+}
+
+export function registers_to_dom(emulator: Emulator, container: HTMLElement) {
+    const names = emulator.register_names;
+    const children = container.children;
+
+    for (let i = 0; i < names.length; i++) {
+        const name = names[i];
+        const value = emulator.registers[i];
+        let child = children[i] as HTMLElement | void;
+        if (!child) {
+            child = document.createElement("div");
+            container.appendChild(child);
+        }
+        child.innerText = `${name}\n${value}`;
+    }
+    for (let i = children.length - 1; i >= names.length; i--) {
+        children[i].remove();
+    }
 }
 
 export function memoryToString(view: Arr, from = 0x0, length = 0x1000, bits = 8, colors: [number, string][] = []) {

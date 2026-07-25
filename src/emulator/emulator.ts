@@ -103,6 +103,8 @@ export class Emulator implements Instruction_Ctx, Device_Host, URCL_Memory {
 
         Object.assign(this, create_urcl_memory(program));
 
+        this.register_names = Array.from({length: register_file_length}, (_, i) => i >= register_count ? `R${i-register_count}` : Register[i]);
+
         for (let i = 0; i < static_data.length; i++){
             this.memory[i] = static_data[i];
         }
@@ -280,6 +282,8 @@ while (performance.now() < end) for (let j = 0; j < ${burst_length}; j++) switch
     get buffer() {
         return this.wasm_memory.buffer
     }
+
+    register_names: string[] = [];
     registers: WordArray = new Uint8Array(this.buffer);
     registers_s: IntArray = new Int8Array(this.buffer);
     memory: WordArray = new Uint8Array(this.buffer);
@@ -497,7 +501,10 @@ step(): Step_Result {
     if (func(this)) {
         return Step_Result.Input;
     }
-    if (length >= 1 && op === Operant_Operation.SET)this.write(op_types[0], op_values[0], this.a);
+    if (length >= 1 && op === Operant_Operation.SET && op_types[0] == Operant_Prim.Reg) {
+        this.register_names[op_values[0]] = this.debug_info.operant_strings[pc][0];
+        this.write_reg(op_values[0], this.a);
+    }
 
     if (this._debug_message !== undefined){
         return Step_Result.Debug;

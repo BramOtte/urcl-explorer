@@ -49,7 +49,17 @@ textarea {
 }
 
 #register-view {
-  overflow-x: auto;
+  display: flex;
+  flex-wrap: wrap;
+  max-height: 25vh;
+  overflow-y: auto;
+}
+
+#register-view > div {
+  width: fit-content;
+  margin-inline: 0.5em;
+  margin-block: 0.25em;
+  text-align: right;
 }
 
 #stdout {
@@ -146,7 +156,7 @@ select {
 }
 buffer-view {
   width: 100%;
-  height: 10vh;
+  max-height: 25vh;
   resize: vertical;
 }
 #flex-wrapper {
